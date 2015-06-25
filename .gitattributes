@@ -1,0 +1,8 @@
+* text=auto
+*.groovy text diff=java
+*.gradle text diff=java
+*.properties text
+*.jar binary
+gradlew text eol=lf
+gradlew.bat text eol=crlf
+*.txt text

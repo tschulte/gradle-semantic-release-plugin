@@ -1,0 +1,81 @@
+// configuration of the Maven artifacts
+apply plugin: 'maven-publish'
+
+import java.text.SimpleDateFormat
+Date buildTimeAndDate = new Date()
+ext {
+    buildDate = new SimpleDateFormat('yyyy-MM-dd').format(buildTimeAndDate)
+    buildTime = new SimpleDateFormat('HH:mm:ss.SSSZ').format(buildTimeAndDate)
+}
+
+jar {
+    manifest {
+        attributes(
+            'Built-By': System.properties['user.name'],
+            'Created-By': System.properties['java.version'] + ' (' + System.properties['java.vendor'] + ' ' + System.properties["java.vm.version"] + ')',
+            'Build-Date': project.buildDate,
+            'Build-Time': project.buildTime,
+            'Specification-Title': project.name,
+            'Specification-Version': project.version,
+            'Specification-Vendor': 'Tobias Schulte',
+            'Implementation-Title': project.name,
+            'Implementation-Version': project.version,
+            'Implementation-Vendor': 'Tobias Schulte'
+        )
+    }
+}
+
+// add javadoc/source jar tasks as artifacts
+artifacts {
+    archives sourcesJar, javadocJar
+}
+
+def pomConfig = {
+    name project.name
+    description 'Gradle plugin to generate webstart and applet jnlp files'
+    url 'https://github.com/tschulte/gradle-jnlp-plugin'
+    inceptionYear '2014'
+    licenses {
+        license([:]) {
+            name 'The Apache Software License, Version 2.0'
+            url 'http://www.apache.org/licenses/LICENSE-2.0.txt'
+            distribution 'repo'
+        }
+    }
+    scm {
+        url 'https://github.com/tschulte/gradle-jnlp-plugin'
+    }
+    developers {
+        [
+            tschulte : 'Tobias Schulte'
+        ].each { devId, devName ->
+            developer {
+                id devId
+                name devName
+                roles {
+                    role 'Developer'
+                }
+            }
+        }
+    }
+}
+
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            from components.java
+
+            artifact sourcesJar {
+                classifier "sources"
+            }
+
+            artifact javadocJar {
+                classifier "javadoc"
+            }
+
+            pom.withXml {
+                asNode().children().last() + pomConfig
+            }
+        }
+    }
+}

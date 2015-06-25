@@ -1,0 +1,26 @@
+// Handles publication of distributions to Bintray
+
+apply plugin: 'com.jfrog.bintray'
+
+bintray {
+    user = bintrayUsername
+    key = bintrayKey
+    publications = ['mavenJava']
+    pkg {
+        repo = 'maven'
+        userOrg = 'tschulte'
+        name = 'gradle-semantic-release-plugin'
+        desc = 'At its core semantic-release is a set of conventions that gives you entirely automated, semver-compliant package publishing.'
+        licenses = ['Apache-2.0']
+        labels = ['gradle', 'plugin', 'semver', 'release', 'semantic-release']
+        websiteUrl = 'https://github.com/tschulte/gradle-semantic-release-plugin'
+        vcsUrl = 'https://github.com/tschulte/gradle-semantic-release-plugin'
+        publicDownloadNumbers = true
+        version {
+            vcsTag = project.version
+            attributes = [
+                'gradle-plugin': ['de.gliderpilot.semantic-release', project.group, project.name].join(':')
+            ]
+        }
+    }
+}
