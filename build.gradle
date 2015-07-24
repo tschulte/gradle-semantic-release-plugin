@@ -26,6 +26,7 @@ buildscript {
 dependencies {
     compile localGroovy()
     compile gradleApi()
+    compile 'org.ajoberstar:gradle-git:1.2.0'
     testCompile 'com.netflix.nebula:nebula-test:2.2.2', {
 		exclude module: 'groovy-all'
 	}
