@@ -15,15 +15,28 @@
  */
 package de.gliderpilot.gradle.semanticrelease
 
+import org.ajoberstar.gradle.git.release.base.BaseReleasePlugin
+import org.ajoberstar.gradle.git.release.base.ReleasePluginExtension
+import org.ajoberstar.gradle.git.release.opinion.Strategies
+import org.ajoberstar.gradle.git.release.semver.StrategyUtil
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 
-/**
- * This is the main plugin file. Put a description of your plugin here.
- */
 class GradleSemanticReleasePlugin implements Plugin<Project> {
-    void apply(Project project) {
 
-        project.task('release', type:GradleSemanticReleaseTask)
+    void apply(Project project) {
+        project.with {
+            GradleSemanticReleasePluginExtension semanticRelease = extensions.create("semanticRelease", GradleSemanticReleasePluginExtension)
+            plugins.apply(BaseReleasePlugin)
+            ReleasePluginExtension releaseExtension = project.extensions.findByType(ReleasePluginExtension)
+            releaseExtension.with {
+                grgit = semanticRelease.grgit
+                versionStrategy Strategies.FINAL.copyWith(normalStrategy: StrategyUtil.one(semanticRelease.onReleaseBranch, semanticRelease.semanticStrategy),
+                        preReleaseStrategy: semanticRelease.appendBranchName,
+                        allowDirtyRepo: true)
+                def snapshot = Strategies.SNAPSHOT.copyWith(normalStrategy: semanticRelease.semanticStrategy, preReleaseStrategy: semanticRelease.appendBranchName)
+                versionStrategy snapshot
+            }
+        }
     }
 }
