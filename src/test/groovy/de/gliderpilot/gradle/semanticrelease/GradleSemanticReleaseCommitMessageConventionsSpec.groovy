@@ -87,4 +87,18 @@ class GradleSemanticReleaseCommitMessageConventionsSpec extends Specification {
         "feat: blah blupp" | null
     }
 
+    def "subject does not contain type and component"() {
+        given:
+        Commit commit = new Commit(shortMessage: shortMessage)
+
+        expect:
+        conventions.subject(commit) == subject
+
+        where:
+        shortMessage | subject
+        "did this and that" | "did this and that"
+        "feat(core): blah blupp" | "blah blupp"
+        "feat: blah blupp" | "blah blupp"
+    }
+
 }
