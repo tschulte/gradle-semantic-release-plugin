@@ -59,4 +59,17 @@ class GradleSemanticReleaseCommitMessageConventionsSpec extends Specification {
         conventions.breaks(commit) == 'foo bar baz'
     }
 
+    def "finds type from shortMessage"() {
+        given:
+        Commit commit = new Commit(shortMessage: shortMessage)
+
+        expect:
+        conventions.type(commit) == type
+
+        where:
+        shortMessage | type
+        "did this and that" | null
+        "feat(core): blah blupp" | "feat"
+        "feat: blah blupp" | "feat"
+    }
 }
