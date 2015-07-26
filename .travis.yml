@@ -4,5 +4,5 @@ jdk: oraclejdk7
 env: TERM=dumb
 # after_success: ./gradlew jacocoRootReport coveralls
 before_install:
-  - "export DISPLAY=:99.0"
-  - "sh -e /etc/init.d/xvfb start"
+  - sudo apt-get update -qq
+  - sudo apt-get install -y git
