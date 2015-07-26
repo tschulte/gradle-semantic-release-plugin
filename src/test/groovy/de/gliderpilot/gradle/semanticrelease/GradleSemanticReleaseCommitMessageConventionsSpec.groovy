@@ -33,8 +33,30 @@ class GradleSemanticReleaseCommitMessageConventionsSpec extends Specification {
         conventions.closes(commit) == ['123', '456'] as SortedSet
     }
 
-        then:
-        issues == ['123', '456'] as SortedSet
+    def "finds breaking change on same line"() {
+        given:
+        Commit commit = new Commit(fullMessage: '''\
+            Subject
+
+            BREAKING CHANGE: foo bar baz
+        '''.stripIndent())
+
+        expect:
+        conventions.breaks(commit) == 'foo bar baz'
+    }
+
+    def "finds breaking change on next lines"() {
+        given:
+        Commit commit = new Commit(fullMessage: '''\
+            Subject
+
+            BREAKING CHANGE:
+
+            foo bar baz
+        '''.stripIndent())
+
+        expect:
+        conventions.breaks(commit) == 'foo bar baz'
     }
 
 }

@@ -20,4 +20,19 @@ class GradleSemanticReleaseCommitMessageConventions {
         }.flatten() as SortedSet
     }
 
+    def breakingChangeKeywords = ['BREAKING CHANGE:']
+    def breaks = { Commit commit ->
+        def pattern = /(?:${breakingChangeKeywords.join('|')})(.*)/
+        commit.fullMessage.readLines().inject(new StringBuilder()) { result, line ->
+            if (result) {
+                result << "$line\n"
+            } else {
+                def matcher = line =~ pattern
+                if (matcher)
+                    result << "${matcher.group(1)}\n"
+            }
+            result
+        }.toString().trim()
+    }
+
 }
