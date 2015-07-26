@@ -1,6 +1,9 @@
 package de.gliderpilot.gradle.semanticrelease
 
 import org.ajoberstar.gradle.git.release.semver.PartialSemVerStrategy
+import org.ajoberstar.gradle.git.release.semver.SemVerStrategy
+import org.ajoberstar.gradle.git.release.semver.StrategyUtil
+import org.ajoberstar.grgit.Commit
 import org.ajoberstar.grgit.Grgit
 import org.gradle.util.ConfigureUtil
 
@@ -25,6 +28,14 @@ class GradleSemanticReleasePluginExtension {
 
     def appendBranchNames(Closure closure) {
         ConfigureUtil.configure(closure, appendBranchName)
+    }
+
+    SemVerStrategy toSemanticReleaseStrategy(SemVerStrategy strategy) {
+        strategy.copyWith(
+                normalStrategy: semanticStrategy,
+                preReleaseStrategy: StrategyUtil.all(appendBranchName, strategy.preReleaseStrategy),
+                buildMetadataStrategy: StrategyUtil.all(strategy.buildMetadataStrategy, onReleaseBranch)
+        )
     }
 
 }

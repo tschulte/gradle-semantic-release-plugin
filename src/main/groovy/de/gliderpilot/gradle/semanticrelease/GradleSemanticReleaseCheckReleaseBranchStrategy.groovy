@@ -24,6 +24,9 @@ class GradleSemanticReleaseCheckReleaseBranchStrategy implements PartialSemVerSt
 
     @Override
     SemVerStrategyState infer(SemVerStrategyState state) {
+        if (state.inferredPreRelease || state.inferredBuildMetadata)
+            return state
+
         String branchName = state.currentBranch.name
 
         if (!(includes.isEmpty() || includes.any { branchName ==~ it })) {

@@ -63,6 +63,18 @@ class GradleSemanticReleaseCheckReleaseBranchStrategySpec extends Specification 
 		branchName << ['develop', 'feature/#123-foo-bar', 'dev-foo-bar']
 	}
 
+	@Unroll
+	def "no GradleException is thrown for branch #branchName if buildMetadata is set"() {
+		when:
+		strategy.infer(initialState(branchName).copyWith(inferredBuildMetadata: "SNAPSHOT"))
+
+		then:
+		notThrown(GradleException)
+
+		where:
+		branchName << ['develop', 'feature/#123-foo-bar', 'dev-foo-bar']
+	}
+
 	def initialState(String branchName) {
 		new SemVerStrategyState(currentBranch: new Branch(fullName: branchName))
 	}
