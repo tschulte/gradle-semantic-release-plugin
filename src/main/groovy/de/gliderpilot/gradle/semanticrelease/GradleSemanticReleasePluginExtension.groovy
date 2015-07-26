@@ -10,9 +10,14 @@ import org.gradle.util.ConfigureUtil
 class GradleSemanticReleasePluginExtension {
 
     final Grgit grgit = Grgit.open()
-    final PartialSemVerStrategy semanticStrategy = new GradleSemanticReleaseStrategy(grgit)
+    final GradleSemanticReleaseCommitMessageConventions commitMessageConventions = new GradleSemanticReleaseCommitMessageConventions()
+    final PartialSemVerStrategy semanticStrategy = new GradleSemanticReleaseStrategy(grgit, commitMessageConventions)
     final PartialSemVerStrategy onReleaseBranch = new GradleSemanticReleaseCheckReleaseBranchStrategy()
     final PartialSemVerStrategy appendBranchName = new GradleSemanticReleaseAppendBranchNameStrategy()
+
+    def commitMessages(Closure closure) {
+        ConfigureUtil.configure(closure, commitMessageConventions)
+    }
 
     def releaseBranches(Closure closure) {
         ConfigureUtil.configure(closure, onReleaseBranch)

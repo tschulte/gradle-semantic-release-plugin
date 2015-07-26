@@ -18,6 +18,7 @@ package de.gliderpilot.gradle.semanticrelease
 import com.github.zafarkhaja.semver.Version
 import org.ajoberstar.gradle.git.release.semver.NearestVersion
 import org.ajoberstar.gradle.git.release.semver.SemVerStrategyState
+import org.ajoberstar.grgit.Grgit
 import spock.lang.Specification
 import spock.lang.Subject
 
@@ -25,8 +26,10 @@ class GradleSemanticReleaseStrategySpec extends Specification {
 
 	SemVerStrategyState initialState = new SemVerStrategyState()
 
+	Grgit grgit = Mock()
+
 	@Subject
-	GradleSemanticReleaseStrategy strategy = new GradleSemanticReleaseStrategy()
+	GradleSemanticReleaseStrategy strategy = new GradleSemanticReleaseStrategy(grgit, new GradleSemanticReleaseCommitMessageConventions())
 
 	def "the initial version is 1.0.0"() {
 		expect:

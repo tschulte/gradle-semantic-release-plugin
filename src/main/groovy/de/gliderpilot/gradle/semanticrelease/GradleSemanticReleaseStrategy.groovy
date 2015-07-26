@@ -16,25 +16,18 @@
 package de.gliderpilot.gradle.semanticrelease
 
 import com.github.zafarkhaja.semver.Version
-import org.ajoberstar.gradle.git.release.semver.ChangeScope
-import org.ajoberstar.gradle.git.release.semver.NearestVersion
-import org.ajoberstar.gradle.git.release.semver.PartialSemVerStrategy
-import org.ajoberstar.gradle.git.release.semver.SemVerStrategyState
-import org.ajoberstar.gradle.git.release.semver.StrategyUtil
+import org.ajoberstar.gradle.git.release.semver.*
 import org.ajoberstar.grgit.Commit
 import org.ajoberstar.grgit.Grgit
-import org.gradle.api.GradleException
-
-import javax.script.*
-import org.gradle.api.internal.AbstractTask
-import org.gradle.api.tasks.TaskAction
 
 class GradleSemanticReleaseStrategy implements PartialSemVerStrategy {
 
-    Grgit grgit
+    final Grgit grgit
+    final GradleSemanticReleaseCommitMessageConventions commitMessageConventions
 
-    GradleSemanticReleaseStrategy(Grgit grgit) {
+    GradleSemanticReleaseStrategy(Grgit grgit, GradleSemanticReleaseCommitMessageConventions commitMessageConventions) {
         this.grgit = grgit
+        this.commitMessageConventions = commitMessageConventions
     }
 
     @Override
