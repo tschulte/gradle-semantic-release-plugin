@@ -72,4 +72,19 @@ class GradleSemanticReleaseCommitMessageConventionsSpec extends Specification {
         "feat(core): blah blupp" | "feat"
         "feat: blah blupp" | "feat"
     }
+
+    def "finds component from shortMessage"() {
+        given:
+        Commit commit = new Commit(shortMessage: shortMessage)
+
+        expect:
+        conventions.component(commit) == component
+
+        where:
+        shortMessage | component
+        "did this and that" | null
+        "feat(core): blah blupp" | "core"
+        "feat: blah blupp" | null
+    }
+
 }
