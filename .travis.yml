@@ -1,8 +1,10 @@
+sudo: false
 language: java
-script: ./gradlew clean build
+script: ./gradlew clean build -s
 jdk: oraclejdk7
 env: TERM=dumb
 # after_success: ./gradlew jacocoRootReport coveralls
-before_install:
-  - sudo apt-get update -qq
-  - sudo apt-get install -y git
+addons:
+  apt:
+    packages:
+    - git
