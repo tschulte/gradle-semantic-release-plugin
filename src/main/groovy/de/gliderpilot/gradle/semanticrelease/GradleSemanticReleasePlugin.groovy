@@ -27,12 +27,11 @@ class GradleSemanticReleasePlugin implements Plugin<Project> {
         project.with {
             plugins.apply GradleSemanticReleaseBasePlugin
             ReleasePluginExtension releaseExtension = project.extensions.findByType(ReleasePluginExtension)
+            GradleSemanticReleasePluginExtension semanticReleaseExtension = project.extensions.findByType(GradleSemanticReleasePluginExtension)
             releaseExtension.with {
-                versionStrategy Strategies.FINAL.copyWith(normalStrategy: StrategyUtil.one(semanticRelease.onReleaseBranch, semanticRelease.semanticStrategy),
-                        preReleaseStrategy: semanticRelease.appendBranchName,
-                        allowDirtyRepo: true)
-                def snapshot = Strategies.SNAPSHOT.copyWith(normalStrategy: semanticRelease.semanticStrategy, preReleaseStrategy: semanticRelease.appendBranchName)
-                versionStrategy snapshot
+                versionStrategy semanticReleaseExtension.toSemanticReleaseStrategy(Strategies.FINAL)
+                versionStrategy semanticReleaseExtension.toSemanticReleaseStrategy(Strategies.SNAPSHOT)
+                defaultVersionStrategy semanticReleaseExtension.toSemanticReleaseStrategy(Strategies.SNAPSHOT)
             }
         }
     }
