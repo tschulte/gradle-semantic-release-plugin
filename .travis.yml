@@ -1,6 +1,6 @@
 sudo: false
 language: java
-script: ./gradlew clean build -s
+script: ./gradlew clean build -is
 jdk: oraclejdk7
 env: TERM=dumb
 # after_success: ./gradlew jacocoRootReport coveralls
