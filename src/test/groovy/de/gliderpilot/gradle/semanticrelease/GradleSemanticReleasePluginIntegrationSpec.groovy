@@ -22,6 +22,7 @@ import spock.lang.Ignore
 /**
  * Created by tobias on 7/2/15.
  */
+ @Ignore
 class GradleSemanticReleasePluginIntegrationSpec extends IntegrationSpec {
 
     def setup() {
