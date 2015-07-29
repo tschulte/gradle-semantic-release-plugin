@@ -47,10 +47,10 @@ class GradleSemanticReleaseStrategy implements PartialSemVerStrategy {
             range previousVersion.toString(), state.currentHead
         }
 
-        if (log.any {})
-            StrategyUtil.incrementNormalFromScope(state, ChangeScope.MAJOR)
-        if (log.any {})
-            StrategyUtil.incrementNormalFromScope(state, ChangeScope.MINOR)
+        if (log.any(commitMessageConventions.&breaks))
+            return StrategyUtil.incrementNormalFromScope(state, ChangeScope.MAJOR)
+        if (log.any { commitMessageConventions.type(it) == 'feat' })
+            return StrategyUtil.incrementNormalFromScope(state, ChangeScope.MINOR)
         return StrategyUtil.incrementNormalFromScope(state, ChangeScope.PATCH)
     }
 }

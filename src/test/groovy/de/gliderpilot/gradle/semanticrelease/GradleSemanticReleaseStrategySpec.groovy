@@ -18,13 +18,12 @@ package de.gliderpilot.gradle.semanticrelease
 import com.github.zafarkhaja.semver.Version
 import org.ajoberstar.gradle.git.release.semver.NearestVersion
 import org.ajoberstar.gradle.git.release.semver.SemVerStrategyState
+import org.ajoberstar.grgit.Commit
 import org.ajoberstar.grgit.Grgit
 import spock.lang.Specification
 import spock.lang.Subject
 
 class GradleSemanticReleaseStrategySpec extends Specification {
-
-	SemVerStrategyState initialState = new SemVerStrategyState()
 
 	Grgit grgit = Mock()
 
@@ -32,33 +31,78 @@ class GradleSemanticReleaseStrategySpec extends Specification {
 	GradleSemanticReleaseStrategy strategy = new GradleSemanticReleaseStrategy(grgit, new GradleSemanticReleaseCommitMessageConventions())
 
 	def "the initial version is 1.0.0"() {
-		expect:
-		strategy.infer(initialState) == initialState.copyWith(inferredNormal: '1.0.0')
+		given:
+		def initialState = initialState()
+
+		when:
+		def inferredState = strategy.infer(initialState)
+
+		then:
+		inferredState == initialState.copyWith(inferredNormal: '1.0.0')
+		0 * grgit._
 	}
 
 	def "the initial version is 1.0.0 when the nearestVersion is less than 1.0.0"() {
+		given:
+		def initialState = initialState("0.1.0")
+
 		when:
-		initialState = initialState.copyWith(nearestVersion: new NearestVersion(normal: Version.valueOf("0.1.0")))
+		def inferredState = strategy.infer(initialState)
+
 		then:
-		strategy.infer(initialState) == initialState.copyWith(inferredNormal: '1.0.0')
+		inferredState == initialState.copyWith(inferredNormal: '1.0.0')
+		0 * grgit._
 	}
 
 	def "the version is not changed if no commits since last version"() {
-		when:
-		initialState = initialState.copyWith(nearestVersion: new NearestVersion(normal: Version.valueOf("1.1.0"), distanceFromNormal: 0))
-		then:
-		strategy.infer(initialState) == initialState
-	}
-
-/*
-	def "minor version is incremented if no feature commits are found"() {
 		given:
+		def initialState = initialState("1.1.0", 0)
+
 		when:
-		initialState = initialState.copyWith(nearestVersion: new NearestVersion(normal: Version.valueOf("1.2.3")))
+		def inferredState = strategy.infer(initialState)
 
 		then:
-
+		inferredState == initialState
+		0 * grgit._
 	}
+
+	def "patch version is incremented if no feature commits are found"() {
+		given:
+		def initialState = initialState("1.2.3", 1)
+
+		when:
+		def inferredState = strategy.infer(initialState)
+
+		then:
+		inferredState == initialState.copyWith(inferredNormal: "1.2.4")
+		1 * grgit.methodMissing("log", _) >> [new Commit(shortMessage: 'shortMessage', fullMessage: 'shortMessage\n\ndescription')]
+	}
+
+	def "minor version is incremented if feature commits are found"() {
+		given:
+		def initialState = initialState("1.2.3", 1)
+
+		when:
+		def inferredState = strategy.infer(initialState)
+
+		then:
+		inferredState == initialState.copyWith(inferredNormal: "1.3.0")
+		1 * grgit.methodMissing("log", _) >> [new Commit(shortMessage: 'feat: foo', fullMessage: 'feat: foo\n\ndescription')]
+	}
+
+	def "major version is incremented if breaking change commits are found"() {
+		given:
+		def initialState = initialState("1.2.3", 1)
+
+		when:
+		def inferredState = strategy.infer(initialState)
+
+		then:
+		inferredState == initialState.copyWith(inferredNormal: "2.0.0")
+		1 * grgit.methodMissing("log", _) >> [new Commit(shortMessage: 'feat: foo', fullMessage: 'feat: foo\n\ndescription\n\nBREAKING CHANGE: foo')]
+	}
+
+	/*
 
 	def "integTest"() {
 		def project = mockProject(null, null)
@@ -107,4 +151,13 @@ class GradleSemanticReleaseStrategySpec extends Specification {
 		return locator
 	}
 	*/
+
+	private SemVerStrategyState initialState(String previousVersion = null, int commitsSincePreviousVersion = 0) {
+		new SemVerStrategyState(
+				nearestVersion:
+						previousVersion
+								? new NearestVersion(normal: Version.valueOf(previousVersion), distanceFromNormal: commitsSincePreviousVersion)
+								: null
+		)
+	}
 }
