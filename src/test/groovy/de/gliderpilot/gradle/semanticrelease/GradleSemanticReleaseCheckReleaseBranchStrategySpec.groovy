@@ -75,6 +75,18 @@ class GradleSemanticReleaseCheckReleaseBranchStrategySpec extends Specification 
 		branchName << ['develop', 'feature/#123-foo-bar', 'dev-foo-bar']
 	}
 
+	@Unroll
+	def "no GradleException is thrown for branch #branchName if preRelease is set"() {
+		when:
+		strategy.infer(initialState(branchName).copyWith(inferredPreRelease: "develop"))
+
+		then:
+		notThrown(GradleException)
+
+		where:
+		branchName << ['develop', 'feature/#123-foo-bar', 'dev-foo-bar']
+	}
+
 	def initialState(String branchName) {
 		new SemVerStrategyState(currentBranch: new Branch(fullName: branchName))
 	}
