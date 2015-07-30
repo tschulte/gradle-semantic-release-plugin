@@ -18,11 +18,14 @@ package de.gliderpilot.gradle.de.gliderpilot.gradle.semanticrelease
 import nebula.test.IntegrationSpec
 import nebula.test.ProjectSpec
 import spock.lang.Ignore
+import spock.lang.IgnoreIf
+import spock.lang.Requires
 
 /**
  * Created by tobias on 7/2/15.
  */
- @Ignore
+// does not work on travis at the moment
+@IgnoreIf({env['TRAVIS']})
 class GradleSemanticReleasePluginIntegrationSpec extends IntegrationSpec {
 
     def setup() {
