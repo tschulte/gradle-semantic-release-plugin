@@ -26,171 +26,171 @@ import spock.lang.Subject
 
 class GradleSemanticReleaseStrategySpec extends Specification {
 
-	Grgit grgit = Mock()
+    Grgit grgit = Mock()
 
-	GradleSemanticReleaseCommitMessageConventions commitMessageConventions = new GradleSemanticReleaseCommitMessageConventions()
-	TagStrategy tagStrategy = new TagStrategy()
+    GradleSemanticReleaseCommitMessageConventions commitMessageConventions = new GradleSemanticReleaseCommitMessageConventions()
+    TagStrategy tagStrategy = new TagStrategy()
 
-	@Subject
-	GradleSemanticReleaseStrategy strategy = new GradleSemanticReleaseStrategy(grgit,
-			commitMessageConventions,
-			tagStrategy)
+    @Subject
+    GradleSemanticReleaseStrategy strategy = new GradleSemanticReleaseStrategy(grgit,
+            commitMessageConventions,
+            tagStrategy)
 
-	def "the initial version is 1.0.0"() {
-		given:
-		def initialState = initialState()
+    def "the initial version is 1.0.0"() {
+        given:
+        def initialState = initialState()
 
-		when:
-		def inferredState = strategy.infer(initialState)
+        when:
+        def inferredState = strategy.infer(initialState)
 
-		then:
-		inferredState == initialState.copyWith(inferredNormal: '1.0.0')
-		0 * grgit._
-	}
+        then:
+        inferredState == initialState.copyWith(inferredNormal: '1.0.0')
+        0 * grgit._
+    }
 
-	def "the initial version is 1.0.0 when the nearestVersion is less than 1.0.0"() {
-		given:
-		def initialState = initialState("0.1.0")
+    def "the initial version is 1.0.0 when the nearestVersion is less than 1.0.0"() {
+        given:
+        def initialState = initialState("0.1.0")
 
-		when:
-		def inferredState = strategy.infer(initialState)
+        when:
+        def inferredState = strategy.infer(initialState)
 
-		then:
-		inferredState == initialState.copyWith(inferredNormal: '1.0.0')
-		0 * grgit._
-	}
+        then:
+        inferredState == initialState.copyWith(inferredNormal: '1.0.0')
+        0 * grgit._
+    }
 
-	def "the version is not changed if no commits since last version"() {
-		given:
-		def initialState = initialState("1.1.0", 0)
+    def "the version is not changed if no commits since last version"() {
+        given:
+        def initialState = initialState("1.1.0", 0)
 
-		when:
-		def inferredState = strategy.infer(initialState)
+        when:
+        def inferredState = strategy.infer(initialState)
 
-		then:
-		inferredState == initialState
-		0 * grgit._
-	}
+        then:
+        inferredState == initialState
+        0 * grgit._
+    }
 
-	def "requests the log since the last version tag (using the configuration from gradle-git) and HEAD"() {
-		given:
-		def initialState = initialState("1.2.3", 1)
-		def since
-		def until
-		def logConfig = new Object() {
-			def range(a, b) {
-				since = a
-				until = b
-			}
-		}
-		tagStrategy.prefixNameWithV = prefixNameWithV
+    def "requests the log since the last version tag (using the configuration from gradle-git) and HEAD"() {
+        given:
+        def initialState = initialState("1.2.3", 1)
+        def since
+        def until
+        def logConfig = new Object() {
+            def range(a, b) {
+                since = a
+                until = b
+            }
+        }
+        tagStrategy.prefixNameWithV = prefixNameWithV
 
-		when:
-		def inferredState = strategy.infer(initialState)
+        when:
+        def inferredState = strategy.infer(initialState)
 
-		then:
-		1 * grgit.methodMissing("log", {it[0].delegate = logConfig; it[0](); true})
-		since == expectedSince
-		until == 'HEAD'
+        then:
+        1 * grgit.methodMissing("log", { it[0].delegate = logConfig; it[0](); true })
+        since == expectedSince
+        until == 'HEAD'
 
-		where:
-		prefixNameWithV | expectedSince
-		false | '1.2.3'
-		true | 'v1.2.3'
-	}
+        where:
+        prefixNameWithV | expectedSince
+        false           | '1.2.3'
+        true            | 'v1.2.3'
+    }
 
-	def "patch version is incremented if no feature commits are found"() {
-		given:
-		def initialState = initialState("1.2.3", 1)
+    def "patch version is incremented if no feature commits are found"() {
+        given:
+        def initialState = initialState("1.2.3", 1)
 
-		when:
-		def inferredState = strategy.infer(initialState)
+        when:
+        def inferredState = strategy.infer(initialState)
 
-		then:
-		inferredState == initialState.copyWith(inferredNormal: "1.2.4")
-		1 * grgit.methodMissing("log", _) >> [new Commit(shortMessage: 'shortMessage', fullMessage: 'shortMessage\n\ndescription')]
-	}
+        then:
+        inferredState == initialState.copyWith(inferredNormal: "1.2.4")
+        1 * grgit.methodMissing("log", _) >> [new Commit(shortMessage: 'shortMessage', fullMessage: 'shortMessage\n\ndescription')]
+    }
 
-	def "minor version is incremented if feature commits are found"() {
-		given:
-		def initialState = initialState("1.2.3", 1)
+    def "minor version is incremented if feature commits are found"() {
+        given:
+        def initialState = initialState("1.2.3", 1)
 
-		when:
-		def inferredState = strategy.infer(initialState)
+        when:
+        def inferredState = strategy.infer(initialState)
 
-		then:
-		inferredState == initialState.copyWith(inferredNormal: "1.3.0")
-		1 * grgit.methodMissing("log", _) >> [new Commit(shortMessage: 'feat: foo', fullMessage: 'feat: foo\n\ndescription')]
-	}
+        then:
+        inferredState == initialState.copyWith(inferredNormal: "1.3.0")
+        1 * grgit.methodMissing("log", _) >> [new Commit(shortMessage: 'feat: foo', fullMessage: 'feat: foo\n\ndescription')]
+    }
 
-	def "major version is incremented if breaking change commits are found"() {
-		given:
-		def initialState = initialState("1.2.3", 1)
+    def "major version is incremented if breaking change commits are found"() {
+        given:
+        def initialState = initialState("1.2.3", 1)
 
-		when:
-		def inferredState = strategy.infer(initialState)
+        when:
+        def inferredState = strategy.infer(initialState)
 
-		then:
-		inferredState == initialState.copyWith(inferredNormal: "2.0.0")
-		1 * grgit.methodMissing("log", _) >> [new Commit(shortMessage: 'feat: foo', fullMessage: 'feat: foo\n\ndescription\n\nBREAKING CHANGE: foo')]
-	}
+        then:
+        inferredState == initialState.copyWith(inferredNormal: "2.0.0")
+        1 * grgit.methodMissing("log", _) >> [new Commit(shortMessage: 'feat: foo', fullMessage: 'feat: foo\n\ndescription\n\nBREAKING CHANGE: foo')]
+    }
 
-	/*
+    /*
 
-	def "integTest"() {
-		def project = mockProject(null, null)
-		def grgit = mockGrgit(false)
-		def locator = mockLocator(null, null)
-		def semVerStrategy = Strategies.FINAL.copyWith(normalStrategy: strategy)
-		expect:
-		semVerStrategy.doInfer(project, grgit, locator).version == "1.0.0"
-	}
-	def mockProject(Grgit grgit) {
-		Project project = Mock()
+    def "integTest"() {
+        def project = mockProject(null, null)
+        def grgit = mockGrgit(false)
+        def locator = mockLocator(null, null)
+        def semVerStrategy = Strategies.FINAL.copyWith(normalStrategy: strategy)
+        expect:
+        semVerStrategy.doInfer(project, grgit, locator).version == "1.0.0"
+    }
+    def mockProject(Grgit grgit) {
+        Project project = Mock()
 
-		project.hasProperty('release.scope') >> (scope as boolean)
-		project.property('release.scope') >> scope
+        project.hasProperty('release.scope') >> (scope as boolean)
+        project.property('release.scope') >> scope
 
-		project.hasProperty('release.stage') >> (stage as boolean)
-		project.property('release.stage') >> stage
+        project.hasProperty('release.stage') >> (stage as boolean)
+        project.property('release.stage') >> stage
 
-		return project
-	}
+        return project
+    }
 
-	def mockGrgit(boolean repoDirty, String branchName = 'master') {
-		Grgit grgit = GroovyMock()
+    def mockGrgit(boolean repoDirty, String branchName = 'master') {
+        Grgit grgit = GroovyMock()
 
-		Status status = Mock()
-		status.clean >> !repoDirty
-		grgit.status() >> status
+        Status status = Mock()
+        status.clean >> !repoDirty
+        grgit.status() >> status
 
-		grgit.head() >> new Commit(id: '5e9b2a1e98b5670a90a9ed382a35f0d706d5736c')
+        grgit.head() >> new Commit(id: '5e9b2a1e98b5670a90a9ed382a35f0d706d5736c')
 
-		BranchService branch = GroovyMock()
-		branch.current >> new Branch(fullName: "refs/heads/${branchName}")
-		grgit.branch >> branch
+        BranchService branch = GroovyMock()
+        branch.current >> new Branch(fullName: "refs/heads/${branchName}")
+        grgit.branch >> branch
 
-		return grgit
-	}
+        return grgit
+    }
 
-	def mockLocator(String nearestNormal, String nearestAny) {
-		NearestVersionLocator locator = Mock()
-		locator.locate(_) >> new NearestVersion(
-			normal: nearestNormal ? Version.valueOf(nearestNormal) : null,
-			distanceFromNormal: 5,
-			any: nearestAny ? Version.valueOf(nearestAny) : null,
-			distanceFromAny: 2
-		)
-		return locator
-	}
-	*/
+    def mockLocator(String nearestNormal, String nearestAny) {
+        NearestVersionLocator locator = Mock()
+        locator.locate(_) >> new NearestVersion(
+            normal: nearestNormal ? Version.valueOf(nearestNormal) : null,
+            distanceFromNormal: 5,
+            any: nearestAny ? Version.valueOf(nearestAny) : null,
+            distanceFromAny: 2
+        )
+        return locator
+    }
+    */
 
-	private SemVerStrategyState initialState(String previousVersion = null, int commitsSincePreviousVersion = 0) {
-		new SemVerStrategyState(
-				nearestVersion:
-						previousVersion
-								? new NearestVersion(normal: Version.valueOf(previousVersion), distanceFromNormal: commitsSincePreviousVersion)
-								: null
-		)
-	}
+    private SemVerStrategyState initialState(String previousVersion = null, int commitsSincePreviousVersion = 0) {
+        new SemVerStrategyState(
+                nearestVersion:
+                        previousVersion
+                                ? new NearestVersion(normal: Version.valueOf(previousVersion), distanceFromNormal: commitsSincePreviousVersion)
+                                : null
+        )
+    }
 }
