@@ -46,26 +46,41 @@ class GradleSemanticReleasePluginIntegrationSpec extends IntegrationSpec {
 
         execute 'git', 'init'
         execute 'git', 'add', '.'
-        execute 'git', 'commit', '-m', '"initial commit"'
+        execute 'git', 'commit', '-m', 'initial commit'
         execute 'git', 'remote', 'add', 'origin', "$origin"
         execute 'git', 'push', 'origin', 'HEAD', '-u'
     }
 
-    def "initial version is 1.0.0"() {
-        given:
-        execute './gradlew', '-I', '.gradle-test-kit/init.gradle', ':release', '-Prelease.stage=final'
+    def "complete lifecycle"() {
+        expect: 'initial version is 1.0.0'
+        release() == 'v1.0.0'
+
+        and: 'no release, if no changes'
+        release() == 'v1.0.0'
 
         when:
-        def version = execute "git", "describe"
+        commit('some commit message')
 
         then:
-        version == 'v1.0.0'
+        release() == 'v1.0.1'
     }
 
     def execute(File dir = projectDir, String... args) {
+        println "========"
         println "executing ${args.join(' ')}"
+        println "--------"
         String processOut = args.execute(null, dir).inputStream.text.trim()
         println processOut
         return processOut
+    }
+
+    def release() {
+        execute './gradlew', '-I', '.gradle-test-kit/init.gradle', ':release', '-Prelease.stage=final', '--info', '--stacktrace'
+        execute "git", "describe"
+    }
+
+    def commit(message) {
+        execute 'git', 'commit', '--allow-empty', '-m', message
+        execute 'git', 'push'
     }
 }
