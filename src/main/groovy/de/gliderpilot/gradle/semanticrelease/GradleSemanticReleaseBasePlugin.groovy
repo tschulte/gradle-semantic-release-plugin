@@ -26,8 +26,8 @@ class GradleSemanticReleaseBasePlugin implements Plugin<Project> {
 
     void apply(Project project) {
         project.with {
-            GradleSemanticReleasePluginExtension semanticRelease = extensions.create("semanticRelease", GradleSemanticReleasePluginExtension)
             plugins.apply(BaseReleasePlugin)
+            GradleSemanticReleasePluginExtension semanticRelease = extensions.create("semanticRelease", GradleSemanticReleasePluginExtension, project)
             ReleasePluginExtension releaseExtension = project.extensions.findByType(ReleasePluginExtension)
             releaseExtension.with {
                 grgit = semanticRelease.grgit
