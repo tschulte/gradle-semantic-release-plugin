@@ -40,3 +40,7 @@ task release {
     description = "Releases a version of the plugin on Artifactory and Bintray"
     dependsOn artifactoryPublish, bintrayUpload
 }
+
+test {
+    maxHeapSize = '256m'
+}

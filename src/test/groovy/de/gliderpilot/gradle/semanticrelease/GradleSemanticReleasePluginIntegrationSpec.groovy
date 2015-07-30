@@ -63,6 +63,7 @@ class GradleSemanticReleasePluginIntegrationSpec extends IntegrationSpec {
     }
 
     def execute(File dir = projectDir, String... args) {
+        println "executing ${args.join(' ')}"
         String processOut = args.execute(null, dir).inputStream.text.trim()
         println processOut
         return processOut
