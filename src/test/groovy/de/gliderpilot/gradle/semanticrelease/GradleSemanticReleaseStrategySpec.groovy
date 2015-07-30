@@ -16,6 +16,7 @@
 package de.gliderpilot.gradle.semanticrelease
 
 import com.github.zafarkhaja.semver.Version
+import org.ajoberstar.gradle.git.release.base.TagStrategy
 import org.ajoberstar.gradle.git.release.semver.NearestVersion
 import org.ajoberstar.gradle.git.release.semver.SemVerStrategyState
 import org.ajoberstar.grgit.Commit
@@ -27,8 +28,13 @@ class GradleSemanticReleaseStrategySpec extends Specification {
 
 	Grgit grgit = Mock()
 
+	GradleSemanticReleaseCommitMessageConventions commitMessageConventions = new GradleSemanticReleaseCommitMessageConventions()
+	TagStrategy tagStrategy = new TagStrategy()
+
 	@Subject
-	GradleSemanticReleaseStrategy strategy = new GradleSemanticReleaseStrategy(grgit, new GradleSemanticReleaseCommitMessageConventions())
+	GradleSemanticReleaseStrategy strategy = new GradleSemanticReleaseStrategy(grgit,
+			commitMessageConventions,
+			tagStrategy)
 
 	def "the initial version is 1.0.0"() {
 		given:
@@ -64,6 +70,33 @@ class GradleSemanticReleaseStrategySpec extends Specification {
 		then:
 		inferredState == initialState
 		0 * grgit._
+	}
+
+	def "requests the log since the last version tag (using the configuration from gradle-git) and HEAD"() {
+		given:
+		def initialState = initialState("1.2.3", 1)
+		def since
+		def until
+		def logConfig = new Object() {
+			def range(a, b) {
+				since = a
+				until = b
+			}
+		}
+		tagStrategy.prefixNameWithV = prefixNameWithV
+
+		when:
+		def inferredState = strategy.infer(initialState)
+
+		then:
+		1 * grgit.methodMissing("log", {it[0].delegate = logConfig; it[0](); true})
+		since == expectedSince
+		until == 'HEAD'
+
+		where:
+		prefixNameWithV | expectedSince
+		false | '1.2.3'
+		true | 'v1.2.3'
 	}
 
 	def "patch version is incremented if no feature commits are found"() {

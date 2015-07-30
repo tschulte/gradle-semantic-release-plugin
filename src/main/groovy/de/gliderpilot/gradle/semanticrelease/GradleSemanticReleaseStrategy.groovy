@@ -16,6 +16,7 @@
 package de.gliderpilot.gradle.semanticrelease
 
 import com.github.zafarkhaja.semver.Version
+import org.ajoberstar.gradle.git.release.base.TagStrategy
 import org.ajoberstar.gradle.git.release.semver.*
 import org.ajoberstar.grgit.Commit
 import org.ajoberstar.grgit.Grgit
@@ -24,10 +25,14 @@ class GradleSemanticReleaseStrategy implements PartialSemVerStrategy {
 
     final Grgit grgit
     final GradleSemanticReleaseCommitMessageConventions commitMessageConventions
+    final TagStrategy tagStrategy
 
-    GradleSemanticReleaseStrategy(Grgit grgit, GradleSemanticReleaseCommitMessageConventions commitMessageConventions) {
+    GradleSemanticReleaseStrategy(Grgit grgit,
+                                  GradleSemanticReleaseCommitMessageConventions commitMessageConventions,
+                                  TagStrategy tagStrategy) {
         this.grgit = grgit
         this.commitMessageConventions = commitMessageConventions
+        this.tagStrategy = tagStrategy
     }
 
     @Override
@@ -44,7 +49,7 @@ class GradleSemanticReleaseStrategy implements PartialSemVerStrategy {
 
 
         List<Commit> log = grgit.log {
-            range previousVersion.toString(), state.currentHead
+            range((tagStrategy.prefixNameWithV ? 'v' : '') + previousVersion.toString(), 'HEAD')
         }
 
         if (log.any(commitMessageConventions.&breaks))
