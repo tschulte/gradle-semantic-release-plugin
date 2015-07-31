@@ -51,8 +51,6 @@ class GradleSemanticReleasePluginIntegrationSpec extends IntegrationSpec {
             build/
         '''.stripIndent()
 
-        file('README.md')
-
         runTasksSuccessfully(':wrapper')
 
         commit('initial project layout')
@@ -67,11 +65,35 @@ class GradleSemanticReleasePluginIntegrationSpec extends IntegrationSpec {
         release() == 'v1.0.0'
 
         when: 'unpushed but committed changes'
-        file('README.md') << '.'
         commit('some commit message')
 
         then: 'release is performed'
         release() == 'v1.0.1'
+
+        when: 'feature commit'
+        commit('feat: feature')
+        push()
+
+        then: 'new minor release'
+        release() == 'v1.1.0'
+
+        when: 'feature commit but dirty workspace'
+        commit('feat: feature')
+        file('README.md') << '.'
+
+        then: 'no release'
+        release().startsWith('v1.1.0')
+
+
+        when: 'breaking change'
+        commit '''\
+            feat: Feature
+
+            BREAKING CHANGE: everything changed
+        '''.stripIndent()
+
+        then: 'major release'
+        release() == 'v2.0.0'
     }
 
     def execute(File dir = projectDir, String... args) {
