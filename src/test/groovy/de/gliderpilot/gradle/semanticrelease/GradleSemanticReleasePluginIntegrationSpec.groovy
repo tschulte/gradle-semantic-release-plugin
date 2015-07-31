@@ -29,11 +29,20 @@ import spock.lang.Requires
 class GradleSemanticReleasePluginIntegrationSpec extends IntegrationSpec {
 
     def setup() {
+        // create remote repository
         File origin = new File(projectDir, "../${projectDir.name}.git")
         origin.mkdir()
         execute origin, 'git', 'init', '--bare'
+
+        // create workspace
+        execute 'git', 'init'
+        execute 'git', 'remote', 'add', 'origin', "$origin"
+        commit 'initial commit'
+        execute 'git', 'push', 'origin', 'HEAD', '-u'
+
         buildFile << '''
             apply plugin: 'de.gliderpilot.semantic-release'
+            println version
         '''
         file('.gitignore') << '''\
             .gradle-test-kit/
@@ -42,13 +51,12 @@ class GradleSemanticReleasePluginIntegrationSpec extends IntegrationSpec {
             build/
         '''.stripIndent()
 
+        file('README.md')
+
         runTasksSuccessfully(':wrapper')
 
-        execute 'git', 'init'
-        execute 'git', 'add', '.'
-        execute 'git', 'commit', '-m', 'initial commit'
-        execute 'git', 'remote', 'add', 'origin', "$origin"
-        execute 'git', 'push', 'origin', 'HEAD', '-u'
+        commit('initial project layout')
+        push()
     }
 
     def "complete lifecycle"() {
@@ -58,10 +66,11 @@ class GradleSemanticReleasePluginIntegrationSpec extends IntegrationSpec {
         and: 'no release, if no changes'
         release() == 'v1.0.0'
 
-        when:
+        when: 'unpushed but committed changes'
+        file('README.md') << '.'
         commit('some commit message')
 
-        then:
+        then: 'release is performed'
         release() == 'v1.0.1'
     }
 
@@ -69,8 +78,10 @@ class GradleSemanticReleasePluginIntegrationSpec extends IntegrationSpec {
         println "========"
         println "executing ${args.join(' ')}"
         println "--------"
-        String processOut = args.execute(null, dir).inputStream.text.trim()
+        def process = args.execute(null, dir)
+        String processOut = process.inputStream.text.trim()
         println processOut
+        println process.errorStream.text
         return processOut
     }
 
@@ -80,7 +91,11 @@ class GradleSemanticReleasePluginIntegrationSpec extends IntegrationSpec {
     }
 
     def commit(message) {
+        execute 'git', 'add', '.'
         execute 'git', 'commit', '--allow-empty', '-m', message
+    }
+
+    def push() {
         execute 'git', 'push'
     }
 }

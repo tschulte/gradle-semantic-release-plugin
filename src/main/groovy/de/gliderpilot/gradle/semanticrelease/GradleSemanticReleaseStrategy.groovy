@@ -20,6 +20,8 @@ import org.ajoberstar.gradle.git.release.base.TagStrategy
 import org.ajoberstar.gradle.git.release.semver.*
 import org.ajoberstar.grgit.Commit
 import org.ajoberstar.grgit.Grgit
+import org.ajoberstar.grgit.Tag
+import org.ajoberstar.grgit.util.JGitUtil
 
 class GradleSemanticReleaseStrategy implements PartialSemVerStrategy {
 
@@ -47,9 +49,11 @@ class GradleSemanticReleaseStrategy implements PartialSemVerStrategy {
             return state
         }
 
-
-        List<Commit> log = grgit.log {
-            range((tagStrategy.prefixNameWithV ? 'v' : '') + previousVersion.toString(), 'HEAD')
+        List<Commit> log = grgit.log() {
+            String previousVersionString = (tagStrategy.prefixNameWithV ? 'v' : '') + previousVersion.toString()
+            // range previousVersionString, 'HEAD' does not work: https://github.com/ajoberstar/grgit/issues/71
+            Tag previousVersionTag = JGitUtil.resolveTag(grgit.repository, previousVersionString)
+            range previousVersionTag.commit, 'HEAD'
         }
 
         if (log.any(commitMessageConventions.&breaks))
