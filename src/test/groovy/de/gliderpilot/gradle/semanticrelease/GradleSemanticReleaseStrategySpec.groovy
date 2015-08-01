@@ -73,7 +73,6 @@ class GradleSemanticReleaseStrategySpec extends Specification {
         0 * grgit._
     }
 
-    @Ignore("due to the workaround for https://github.com/ajoberstar/grgit/issues/71 this test does not work anymore")
     def "requests the log since the last version tag (using the configuration from gradle-git) and HEAD"() {
         given:
         def initialState = initialState("1.2.3", 1)
@@ -97,8 +96,8 @@ class GradleSemanticReleaseStrategySpec extends Specification {
 
         where:
         prefixNameWithV | expectedSince
-        false           | '1.2.3'
-        true            | 'v1.2.3'
+        false           | '1.2.3^{commit}'
+        true            | 'v1.2.3^{commit}'
     }
 
     def "patch version is incremented if no feature commits are found"() {
