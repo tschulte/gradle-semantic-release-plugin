@@ -25,7 +25,7 @@ import spock.lang.Requires
  * Created by tobias on 7/2/15.
  */
 // does not work on travis at the moment
-@IgnoreIf({env['TRAVIS']})
+//@IgnoreIf({env['TRAVIS']})
 class GradleSemanticReleasePluginIntegrationSpec extends IntegrationSpec {
 
     def setup() {
