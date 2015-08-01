@@ -41,6 +41,12 @@ task release {
     dependsOn artifactoryPublish, bintrayUpload
 }
 
+task integTest {
+    dependsOn test
+}
+
 test {
+    if (gradle.startParameter.taskNames.contains('integTest'))
+        systemProperty 'integTest', 'true'
     maxHeapSize = '256m'
 }

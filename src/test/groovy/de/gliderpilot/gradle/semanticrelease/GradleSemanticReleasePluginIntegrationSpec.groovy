@@ -16,16 +16,14 @@
 package de.gliderpilot.gradle.semanticrelease
 
 import nebula.test.IntegrationSpec
-import nebula.test.ProjectSpec
-import spock.lang.Ignore
-import spock.lang.IgnoreIf
 import spock.lang.Requires
 
 /**
  * Created by tobias on 7/2/15.
  */
-// does not work on travis at the moment
-//@IgnoreIf({env['TRAVIS']})
+// always run on travis
+// also run on ./gradlew integTest
+@Requires({ env['TRAVIS'] || properties['integTest'] })
 class GradleSemanticReleasePluginIntegrationSpec extends IntegrationSpec {
 
     def setup() {
@@ -36,6 +34,10 @@ class GradleSemanticReleasePluginIntegrationSpec extends IntegrationSpec {
 
         // create workspace
         execute 'git', 'init'
+        execute 'git', 'config', '--local', 'user.name', "Me"
+        execute 'git', 'config', '--local', 'user.email', "me@example.com"
+
+
         execute 'git', 'remote', 'add', 'origin', "$origin"
         commit 'initial commit'
         execute 'git', 'push', 'origin', 'HEAD', '-u'
