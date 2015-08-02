@@ -1,3 +1,4 @@
+apply plugin: 'de.gliderpilot.semantic-release'
 apply plugin: 'idea'
 apply plugin: 'com.github.ben-manes.versions'
 
@@ -23,22 +24,18 @@ buildscript {
     }
 }
 
+apply from: 'compile-dependencies.gradle'
+
 dependencies {
-    compile localGroovy()
-    compile gradleApi()
-    compile 'org.ajoberstar:gradle-git:1.2.0'
-    compile 'com.jcabi:jcabi-github:0.23'
     testCompile 'com.netflix.nebula:nebula-test:2.2.2', {
 		exclude module: 'groovy-all'
 	}
 }
 
 group='de.gliderpilot.gradle.semantic-release'
-version='1.0.0'
 
-task release {
-    description = "Releases a version of the plugin on Artifactory and Bintray"
-    dependsOn artifactoryPublish, bintrayUpload
+tasks.release {
+    dependsOn build
 }
 
 task integTest {
