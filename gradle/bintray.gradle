@@ -14,6 +14,7 @@ bintray {
         licenses = ['Apache-2.0']
         labels = ['gradle', 'plugin', 'semver', 'release', 'semantic-release']
         websiteUrl = 'https://github.com/tschulte/gradle-semantic-release-plugin'
+        issueTrackerUrl = 'https://github.com/tschulte/gradle-semantic-release-plugin/issues'
         vcsUrl = 'https://github.com/tschulte/gradle-semantic-release-plugin'
         publicDownloadNumbers = true
         version {
