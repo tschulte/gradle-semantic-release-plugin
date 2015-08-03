@@ -1,9 +1,9 @@
 sudo: false
 language: java
-script: ./gradlew clean build -is
+script: ./gradlew clean build cobertura
 jdk: oraclejdk7
 env: TERM=dumb
-after_success: ./gradlew cobertura coveralls
+after_success: ./gradlew coveralls
 addons:
   apt:
     packages:
