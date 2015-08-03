@@ -65,7 +65,7 @@ class GradleSemanticReleaseCommitMessageConventions {
     def subject = { Commit commit ->
         def pattern = /(?:.*?(?:\(.+\))?:)?(.*)/
         def matcher = commit.shortMessage =~ pattern
-        matcher ? matcher.group(1).trim() : null
+        matcher[0][1].trim()
     }
 
 }
