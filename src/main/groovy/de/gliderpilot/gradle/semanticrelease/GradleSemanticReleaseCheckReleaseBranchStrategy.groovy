@@ -26,8 +26,12 @@ import org.gradle.api.GradleException
 @PackageScope
 class GradleSemanticReleaseCheckReleaseBranchStrategy implements PartialSemVerStrategy {
 
-    Set<String> includes = [/^master$/, /^(?:release[-\/])?\d+(?:\.\d+)?\.x$/] as Set
+    Set<String> includes = [] as Set
     Set<String> excludes = [] as Set
+
+    GradleSemanticReleaseCheckReleaseBranchStrategy() {
+        include(/^master$/, /^(?:release[-\/])?\d+(?:\.\d+)?\.x$/)
+    }
 
     void include(String... patterns) {
         includes.addAll(patterns)
