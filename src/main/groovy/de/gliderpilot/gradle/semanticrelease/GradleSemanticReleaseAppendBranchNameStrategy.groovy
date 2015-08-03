@@ -27,11 +27,13 @@ import java.util.regex.Pattern
 @PackageScope
 class GradleSemanticReleaseAppendBranchNameStrategy implements PartialSemVerStrategy {
 
-    def replacePatterns = [
-            (~/^feature[-\/](.*)$/): '$1',
-            (~/^master$/): '',
-            (~/^(?:release[-\/])?\d+(?:\.\d+)?\.x$/): ''
-    ]
+    def replacePatterns = [:]
+
+    GradleSemanticReleaseAppendBranchNameStrategy() {
+        replace(~/^feature[-\/](.*)$/, '$1')
+        replace(~/^master$/, '')
+        replace(~/^(?:release[-\/])?\d+(?:\.\d+)?\.x$/, '')
+    }
 
     void replace(pattern, replacement) {
         replacePatterns[pattern] = replacement
