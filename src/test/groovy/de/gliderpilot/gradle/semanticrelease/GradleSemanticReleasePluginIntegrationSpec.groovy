@@ -96,6 +96,14 @@ class GradleSemanticReleasePluginIntegrationSpec extends IntegrationSpec {
 
         then: 'major release'
         release() == 'v2.0.0'
+
+        when: 'empty commit message'
+        commit('')
+        push()
+
+        then: 'new bugfix release'
+        release() == 'v2.0.1'
+
     }
 
     def execute(File dir = projectDir, String... args) {
@@ -116,7 +124,7 @@ class GradleSemanticReleasePluginIntegrationSpec extends IntegrationSpec {
 
     def commit(message) {
         execute 'git', 'add', '.'
-        execute 'git', 'commit', '--allow-empty', '-m', message
+        execute 'git', 'commit', '--allow-empty', '--allow-empty-message', '-m', message
     }
 
     def push() {

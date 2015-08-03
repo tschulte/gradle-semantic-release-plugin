@@ -87,6 +87,24 @@ class GradleSemanticReleaseCheckReleaseBranchStrategySpec extends Specification 
 		branchName << ['develop', 'feature/#123-foo-bar', 'dev-foo-bar']
 	}
 
+	def "can work with a blacklist instead of a whitelist"() {
+		given:
+		strategy.includes.clear()
+		strategy.exclude('develop/.*')
+
+		when:
+		strategy.infer(initialState('master'))
+
+		then:
+		noExceptionThrown()
+
+		when:
+		strategy.infer(initialState('develop/foo'))
+
+		then:
+		thrown(GradleException)
+	}
+
 	def initialState(String branchName) {
 		new SemVerStrategyState(currentBranch: new Branch(fullName: branchName))
 	}

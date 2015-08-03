@@ -27,7 +27,21 @@ class GradleSemanticReleaseCommitMessageConventionsSpec extends Specification {
     @Subject
     GradleSemanticReleaseCommitMessageConventions conventions = new GradleSemanticReleaseCommitMessageConventions()
 
-    def "finds references tickets one on each line"() {
+    def "does not throw an exception if no ticket is referenced"() {
+        given:
+        Commit commit = new Commit(fullMessage: commitMessage)
+
+        expect:
+        conventions.closes(commit) == [] as SortedSet
+
+        where:
+        commitMessage | _
+        ''            | _
+        'foo'         | _
+        '\n'          | _
+    }
+
+    def "finds referenced tickets one on each line"() {
         given:
         Commit commit = new Commit(fullMessage: '''\
             Closes #123
@@ -38,7 +52,7 @@ class GradleSemanticReleaseCommitMessageConventionsSpec extends Specification {
         conventions.closes(commit) == ['123', '456'] as SortedSet
     }
 
-    def "finds references tickets all on one line"() {
+    def "finds referenced tickets all on one line"() {
         given:
         Commit commit = new Commit(fullMessage: '''\
             Closes #123, #456
@@ -46,6 +60,15 @@ class GradleSemanticReleaseCommitMessageConventionsSpec extends Specification {
 
         expect:
         conventions.closes(commit) == ['123', '456'] as SortedSet
+    }
+
+    def "finds referenced tickets on last line"() {
+        given:
+        Commit commit = new Commit(fullMessage: '''\
+            Closes #123'''.stripIndent())
+
+        expect:
+        conventions.closes(commit) == ['123'] as SortedSet
     }
 
     def "finds breaking change on same line"() {
@@ -82,10 +105,10 @@ class GradleSemanticReleaseCommitMessageConventionsSpec extends Specification {
         conventions.type(commit) == type
 
         where:
-        shortMessage | type
-        "did this and that" | null
+        shortMessage             | type
+        "did this and that"      | null
         "feat(core): blah blupp" | "feat"
-        "feat: blah blupp" | "feat"
+        "feat: blah blupp"       | "feat"
     }
 
     def "finds component from shortMessage"() {
@@ -96,10 +119,10 @@ class GradleSemanticReleaseCommitMessageConventionsSpec extends Specification {
         conventions.component(commit) == component
 
         where:
-        shortMessage | component
-        "did this and that" | null
+        shortMessage             | component
+        "did this and that"      | null
         "feat(core): blah blupp" | "core"
-        "feat: blah blupp" | null
+        "feat: blah blupp"       | null
     }
 
     def "subject does not contain type and component"() {
@@ -110,10 +133,10 @@ class GradleSemanticReleaseCommitMessageConventionsSpec extends Specification {
         conventions.subject(commit) == subject
 
         where:
-        shortMessage | subject
-        "did this and that" | "did this and that"
+        shortMessage             | subject
+        "did this and that"      | "did this and that"
         "feat(core): blah blupp" | "blah blupp"
-        "feat: blah blupp" | "blah blupp"
+        "feat: blah blupp"       | "blah blupp"
     }
 
 }
