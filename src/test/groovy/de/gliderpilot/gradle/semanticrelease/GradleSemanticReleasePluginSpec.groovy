@@ -48,4 +48,49 @@ class GradleSemanticReleasePluginSpec extends ProjectSpec {
         pluginName << [PLUGIN, BASE_PLUGIN]
     }
 
+    def "can configure the commitMessageConventionStrategy"() {
+        when:
+        project.with {
+            apply plugin: PLUGIN
+            semanticRelease {
+                commitMessages {
+                    breakingChangeKeywords = ['breaks']
+                }
+            }
+        }
+
+        then:
+        project.semanticRelease.commitMessageConventions.breakingChangeKeywords == ['breaks']
+    }
+
+    def "can configure the release branches"() {
+        when:
+        project.with {
+            apply plugin: PLUGIN
+            semanticRelease {
+                releaseBranches {
+                    exclude 'foo'
+                }
+            }
+        }
+
+        then:
+        project.semanticRelease.onReleaseBranch.excludes == ['foo'] as Set
+    }
+
+    def "can configure the appendBranchNames strategy"() {
+        when:
+        project.with {
+            apply plugin: PLUGIN
+            semanticRelease {
+                appendBranchNames {
+                    replace 'foo', 'bar'
+                }
+            }
+        }
+
+        then:
+        project.semanticRelease.appendBranchName.replacePatterns.foo == 'bar'
+    }
+
 }
