@@ -1,5 +1,8 @@
 sudo: false
 language: java
+cache:
+  directories:
+  - $HOME/.gradle
 script: ./gradlew clean build cobertura
 jdk: oraclejdk7
 env: TERM=dumb
