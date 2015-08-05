@@ -24,79 +24,79 @@ import spock.lang.Unroll
 
 class GradleSemanticReleaseCheckReleaseBranchStrategySpec extends Specification {
 
-	@Subject
-	GradleSemanticReleaseCheckReleaseBranchStrategy strategy = new GradleSemanticReleaseCheckReleaseBranchStrategy()
+    @Subject
+    GradleSemanticReleaseCheckReleaseBranchStrategy strategy = new GradleSemanticReleaseCheckReleaseBranchStrategy()
 
-	@Unroll
-	def "the initial state is not changed for branch #branchName"() {
-		given:
-		def initialState = initialState(branchName)
-		when:
-		def newState = strategy.infer(initialState)
+    @Unroll
+    def "the initial state is not changed for branch #branchName"() {
+        given:
+        def initialState = initialState(branchName)
+        when:
+        def newState = strategy.infer(initialState)
 
-		then:
-		noExceptionThrown()
-		newState == initialState
+        then:
+        noExceptionThrown()
+        newState == initialState
 
-		where:
-		branchName << ['master', 'release/1.2.x', '1.2.x', 'release-1.2.x', '1.x', 'release/1.x', 'release-1.x']
-	}
+        where:
+        branchName << ['master', 'release/1.2.x', '1.2.x', 'release-1.2.x', '1.x', 'release/1.x', 'release-1.x']
+    }
 
-	@Unroll
-	def "a GradleException is thrown for branch #branchName"() {
-		when:
-		strategy.infer(initialState(branchName))
+    @Unroll
+    def "a GradleException is thrown for branch #branchName"() {
+        when:
+        strategy.infer(initialState(branchName))
 
-		then:
-		thrown(GradleException)
+        then:
+        thrown(GradleException)
 
-		where:
-		branchName << ['develop', 'feature/#123-foo-bar', 'dev-foo-bar']
-	}
+        where:
+        branchName << ['develop', 'feature/#123-foo-bar', 'dev-foo-bar']
+    }
 
-	@Unroll
-	def "no GradleException is thrown for branch #branchName if buildMetadata is set"() {
-		when:
-		strategy.infer(initialState(branchName).copyWith(inferredBuildMetadata: "SNAPSHOT"))
+    @Unroll
+    def "no GradleException is thrown for branch #branchName if buildMetadata is set"() {
+        when:
+        strategy.infer(initialState(branchName).copyWith(inferredBuildMetadata: "SNAPSHOT"))
 
-		then:
-		notThrown(GradleException)
+        then:
+        notThrown(GradleException)
 
-		where:
-		branchName << ['develop', 'feature/#123-foo-bar', 'dev-foo-bar']
-	}
+        where:
+        branchName << ['develop', 'feature/#123-foo-bar', 'dev-foo-bar']
+    }
 
-	@Unroll
-	def "no GradleException is thrown for branch #branchName if preRelease is set"() {
-		when:
-		strategy.infer(initialState(branchName).copyWith(inferredPreRelease: "develop"))
+    @Unroll
+    def "no GradleException is thrown for branch #branchName if preRelease is set"() {
+        when:
+        strategy.infer(initialState(branchName).copyWith(inferredPreRelease: "develop"))
 
-		then:
-		notThrown(GradleException)
+        then:
+        notThrown(GradleException)
 
-		where:
-		branchName << ['develop', 'feature/#123-foo-bar', 'dev-foo-bar']
-	}
+        where:
+        branchName << ['develop', 'feature/#123-foo-bar', 'dev-foo-bar']
+    }
 
-	def "can work with a blacklist instead of a whitelist"() {
-		given:
-		strategy.includes.clear()
-		strategy.exclude('develop/.*')
+    def "can work with a blacklist instead of a whitelist"() {
+        given:
+        strategy.includes.clear()
+        strategy.exclude('develop/.*')
 
-		when:
-		strategy.infer(initialState('master'))
+        when:
+        strategy.infer(initialState('master'))
 
-		then:
-		noExceptionThrown()
+        then:
+        noExceptionThrown()
 
-		when:
-		strategy.infer(initialState('develop/foo'))
+        when:
+        strategy.infer(initialState('develop/foo'))
 
-		then:
-		thrown(GradleException)
-	}
+        then:
+        thrown(GradleException)
+    }
 
-	def initialState(String branchName) {
-		new SemVerStrategyState(currentBranch: new Branch(fullName: branchName))
-	}
+    def initialState(String branchName) {
+        new SemVerStrategyState(currentBranch: new Branch(fullName: branchName))
+    }
 }
