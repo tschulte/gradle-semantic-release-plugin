@@ -17,7 +17,6 @@ package de.gliderpilot.gradle.semanticrelease
 
 import org.ajoberstar.gradle.git.release.semver.SemVerStrategyState
 import org.ajoberstar.grgit.Branch
-import org.gradle.api.GradleException
 import spock.lang.Specification
 import spock.lang.Subject
 import spock.lang.Unroll

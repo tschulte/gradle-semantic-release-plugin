@@ -17,7 +17,6 @@ package de.gliderpilot.gradle.semanticrelease
 
 import org.ajoberstar.gradle.git.release.base.ReleasePluginExtension
 import org.ajoberstar.gradle.git.release.opinion.Strategies
-import org.ajoberstar.gradle.git.release.semver.StrategyUtil
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 

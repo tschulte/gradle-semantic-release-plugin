@@ -18,7 +18,6 @@ package de.gliderpilot.gradle.semanticrelease
 import org.ajoberstar.gradle.git.release.semver.PartialSemVerStrategy
 import org.ajoberstar.gradle.git.release.semver.SemVerStrategy
 import org.ajoberstar.gradle.git.release.semver.StrategyUtil
-import org.ajoberstar.grgit.Commit
 import org.ajoberstar.grgit.Grgit
 import org.gradle.api.Project
 import org.gradle.util.ConfigureUtil

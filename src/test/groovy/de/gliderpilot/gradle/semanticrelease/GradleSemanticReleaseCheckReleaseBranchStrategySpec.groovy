@@ -15,18 +15,9 @@
  */
 package de.gliderpilot.gradle.semanticrelease
 
-import com.github.zafarkhaja.semver.Version
-import org.ajoberstar.gradle.git.release.opinion.Strategies
-import org.ajoberstar.gradle.git.release.semver.NearestVersion
-import org.ajoberstar.gradle.git.release.semver.NearestVersionLocator
 import org.ajoberstar.gradle.git.release.semver.SemVerStrategyState
 import org.ajoberstar.grgit.Branch
-import org.ajoberstar.grgit.Commit
-import org.ajoberstar.grgit.Grgit
-import org.ajoberstar.grgit.Status
-import org.ajoberstar.grgit.service.BranchService
 import org.gradle.api.GradleException
-import org.gradle.api.Project
 import spock.lang.Specification
 import spock.lang.Subject
 import spock.lang.Unroll

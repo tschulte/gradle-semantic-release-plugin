@@ -19,8 +19,6 @@ import groovy.transform.PackageScope
 import org.ajoberstar.gradle.git.release.semver.PartialSemVerStrategy
 import org.ajoberstar.gradle.git.release.semver.SemVerStrategyState
 
-import java.util.regex.Pattern
-
 /**
  * Created by tobias on 7/21/15.
  */
