@@ -60,14 +60,20 @@ class GradleSemanticReleasePluginIntegrationSpec extends IntegrationSpec {
     }
 
     def "complete lifecycle"() {
-        expect: 'initial version is 1.0.0'
+        expect: 'no initial release without feature commit'
+        release() == ''
+
+        when: 'initial version is 1.0.0 after feature commit'
+        commit("feat: foo")
+
+        then:
         release() == 'v1.0.0'
 
         and: 'no release, if no changes'
         release() == 'v1.0.0'
 
-        when: 'unpushed but committed changes'
-        commit('some commit message')
+        when: 'unpushed but committed fix'
+        commit('fix: some commit message')
 
         then: 'release is performed'
         release() == 'v1.0.1'
@@ -86,7 +92,6 @@ class GradleSemanticReleasePluginIntegrationSpec extends IntegrationSpec {
         then: 'no release'
         release().startsWith('v1.1.0')
 
-
         when: 'breaking change'
         commit '''\
             feat: Feature
@@ -101,8 +106,8 @@ class GradleSemanticReleasePluginIntegrationSpec extends IntegrationSpec {
         commit('')
         push()
 
-        then: 'new bugfix release'
-        release() == 'v2.0.1'
+        then: 'no new version'
+        release().startsWith('v2.0.0')
 
     }
 

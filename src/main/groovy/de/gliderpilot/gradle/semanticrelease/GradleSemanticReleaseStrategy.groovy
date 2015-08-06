@@ -36,27 +36,34 @@ class GradleSemanticReleaseStrategy implements PartialSemVerStrategy {
     }
 
     @Override
-    SemVerStrategyState infer(SemVerStrategyState state) {
-        NearestVersion nearestVersion = state.nearestVersion
-        Version previousVersion = nearestVersion?.normal
-        if (!previousVersion || !previousVersion.majorVersion)
-            return state.copyWith(inferredNormal: '1.0.0')
+    SemVerStrategyState infer(SemVerStrategyState initialState) {
+        NearestVersion nearestVersion = initialState.nearestVersion
+        Version previousVersion = nearestVersion.normal
 
-        if (!nearestVersion.distanceFromNormal) {
-            // nothing has changed
-            return state
+        if (previousVersion.majorVersion && !nearestVersion.distanceFromNormal) {
+            // nothing has changed since last version
+            return initialState
         }
 
         List<Commit> log = grgit.log() {
-            String previousVersionString = (tagStrategy.prefixNameWithV ? 'v' : '') + previousVersion.toString()
-            // range previousVersionString, 'HEAD' does not work: https://github.com/ajoberstar/grgit/issues/71
-            range "${previousVersionString}^{commit}".toString(), 'HEAD'
+            if (previousVersion.majorVersion) {
+                String previousVersionString = (tagStrategy.prefixNameWithV ? 'v' : '') + previousVersion.toString()
+                // range previousVersionString, 'HEAD' does not work: https://github.com/ajoberstar/grgit/issues/71
+                range "${previousVersionString}^{commit}".toString(), 'HEAD'
+            }
         }
 
-        if (log.any(commitMessageConventions.&breaks))
-            return StrategyUtil.incrementNormalFromScope(state, ChangeScope.MAJOR)
+        SemVerStrategyState state = initialState
+
+        if (log.any { commitMessageConventions.type(it) == 'fix' })
+            state = StrategyUtil.incrementNormalFromScope(initialState, ChangeScope.PATCH)
         if (log.any { commitMessageConventions.type(it) == 'feat' })
-            return StrategyUtil.incrementNormalFromScope(state, ChangeScope.MINOR)
-        return StrategyUtil.incrementNormalFromScope(state, ChangeScope.PATCH)
+            state = StrategyUtil.incrementNormalFromScope(initialState, ChangeScope.MINOR)
+        if (log.any(commitMessageConventions.&breaks))
+            state = StrategyUtil.incrementNormalFromScope(initialState, ChangeScope.MAJOR)
+        if (state != initialState && !previousVersion.majorVersion)
+            state = initialState.copyWith(inferredNormal: '1.0.0')
+
+        return state
     }
 }

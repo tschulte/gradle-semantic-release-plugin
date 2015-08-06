@@ -36,7 +36,19 @@ class GradleSemanticReleaseStrategySpec extends Specification {
             commitMessageConventions,
             tagStrategy)
 
-    def "the initial version is 1.0.0"() {
+    def "no initial version if no feature commit"() {
+        given:
+        def initialState = initialState()
+
+        when:
+        def inferredState = strategy.infer(initialState)
+
+        then:
+        inferredState == initialState
+        1 * grgit.methodMissing("log", _) >> [commit('shortMessage')]
+    }
+
+    def "the initial version is 1.0.0 if there is a feature commit"() {
         given:
         def initialState = initialState()
 
@@ -45,10 +57,22 @@ class GradleSemanticReleaseStrategySpec extends Specification {
 
         then:
         inferredState == initialState.copyWith(inferredNormal: '1.0.0')
-        0 * grgit._
+        1 * grgit.methodMissing("log", _) >> [commit('feat: desrciption')]
     }
 
-    def "the initial version is 1.0.0 when the nearestVersion is less than 1.0.0"() {
+    def "no version when the nearestVersion is less than 1.0.0 and no feature commit"() {
+        given:
+        def initialState = initialState("0.1.0")
+
+        when:
+        def inferredState = strategy.infer(initialState)
+
+        then:
+        inferredState == initialState
+        1 * grgit.methodMissing("log", _) >> [commit('shortMessage')]
+    }
+
+    def "the initial version is 1.0.0 when the nearestVersion is less than 1.0.0 and there is a feature commit"() {
         given:
         def initialState = initialState("0.1.0")
 
@@ -57,7 +81,7 @@ class GradleSemanticReleaseStrategySpec extends Specification {
 
         then:
         inferredState == initialState.copyWith(inferredNormal: '1.0.0')
-        0 * grgit._
+        1 * grgit.methodMissing("log", _) >> [commit('feat: desrciption')]
     }
 
     def "the version is not changed if no commits since last version"() {
@@ -99,6 +123,19 @@ class GradleSemanticReleaseStrategySpec extends Specification {
         true            | 'v1.2.3^{commit}'
     }
 
+    def "version is not incremented if no feature nor fix commits are found"() {
+        given:
+        def initialState = initialState("1.2.3", 1)
+
+        when:
+        def inferredState = strategy.infer(initialState)
+
+        then:
+        inferredState == initialState
+        1 * grgit.methodMissing("log", _) >> [commit('foo')]
+    }
+
+
     def "patch version is incremented if no feature commits are found"() {
         given:
         def initialState = initialState("1.2.3", 1)
@@ -108,7 +145,7 @@ class GradleSemanticReleaseStrategySpec extends Specification {
 
         then:
         inferredState == initialState.copyWith(inferredNormal: "1.2.4")
-        1 * grgit.methodMissing("log", _) >> [new Commit(shortMessage: 'shortMessage', fullMessage: 'shortMessage\n\ndescription')]
+        1 * grgit.methodMissing("log", _) >> [commit('fix: foo')]
     }
 
     def "minor version is incremented if feature commits are found"() {
@@ -120,7 +157,7 @@ class GradleSemanticReleaseStrategySpec extends Specification {
 
         then:
         inferredState == initialState.copyWith(inferredNormal: "1.3.0")
-        1 * grgit.methodMissing("log", _) >> [new Commit(shortMessage: 'feat: foo', fullMessage: 'feat: foo\n\ndescription')]
+        1 * grgit.methodMissing("log", _) >> [commit('feat: foo')]
     }
 
     def "major version is incremented if breaking change commits are found"() {
@@ -132,7 +169,7 @@ class GradleSemanticReleaseStrategySpec extends Specification {
 
         then:
         inferredState == initialState.copyWith(inferredNormal: "2.0.0")
-        1 * grgit.methodMissing("log", _) >> [new Commit(shortMessage: 'feat: foo', fullMessage: 'feat: foo\n\ndescription\n\nBREAKING CHANGE: foo')]
+        1 * grgit.methodMissing("log", _) >> [commit('feat: foo\n\ndescription\n\nBREAKING CHANGE: foo')]
     }
 
     /*
@@ -185,12 +222,16 @@ class GradleSemanticReleaseStrategySpec extends Specification {
     }
     */
 
-    private SemVerStrategyState initialState(String previousVersion = null, int commitsSincePreviousVersion = 0) {
+    private SemVerStrategyState initialState(String previousVersion = "0.0.0", int commitsSincePreviousVersion = 0) {
         new SemVerStrategyState(
                 nearestVersion:
                         previousVersion
                                 ? new NearestVersion(normal: Version.valueOf(previousVersion), distanceFromNormal: commitsSincePreviousVersion)
                                 : null
         )
+    }
+
+    private Commit commit(String message) {
+        new Commit(shortMessage: message.readLines().first(), fullMessage: message)
     }
 }
