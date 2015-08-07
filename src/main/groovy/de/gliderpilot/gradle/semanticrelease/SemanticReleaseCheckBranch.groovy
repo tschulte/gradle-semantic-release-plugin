@@ -24,12 +24,12 @@ import org.gradle.api.GradleException
  * Created by tobias on 7/21/15.
  */
 @PackageScope
-class GradleSemanticReleaseCheckReleaseBranchStrategy implements PartialSemVerStrategy {
+class SemanticReleaseCheckBranch implements PartialSemVerStrategy {
 
     Set<String> includes = [] as Set
     Set<String> excludes = [] as Set
 
-    GradleSemanticReleaseCheckReleaseBranchStrategy() {
+    SemanticReleaseCheckBranch() {
         include(/^master$/, /^(?:release[-\/])?\d+(?:\.\d+)?\.x$/)
     }
 

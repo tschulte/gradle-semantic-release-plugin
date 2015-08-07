@@ -20,7 +20,7 @@ import nebula.test.ProjectSpec
 /**
  * Created by tobias on 7/2/15.
  */
-class GradleSemanticReleasePluginSpec extends ProjectSpec {
+class SemanticReleasePluginSpec extends ProjectSpec {
 
     private static final String PLUGIN = 'de.gliderpilot.semantic-release'
     private static final String BASE_PLUGIN = 'de.gliderpilot.semantic-release-base'

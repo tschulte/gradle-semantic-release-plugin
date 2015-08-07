@@ -15,20 +15,22 @@
  */
 package de.gliderpilot.gradle.semanticrelease
 
-import org.ajoberstar.gradle.git.release.base.BaseReleasePlugin
 import org.ajoberstar.gradle.git.release.base.ReleasePluginExtension
+import org.ajoberstar.gradle.git.release.opinion.Strategies
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 
-class GradleSemanticReleaseBasePlugin implements Plugin<Project> {
+class SemanticReleasePlugin implements Plugin<Project> {
 
     void apply(Project project) {
         project.with {
-            plugins.apply(BaseReleasePlugin)
-            GradleSemanticReleasePluginExtension semanticRelease = extensions.create("semanticRelease", GradleSemanticReleasePluginExtension, project)
+            plugins.apply SemanticReleaseBasePlugin
             ReleasePluginExtension releaseExtension = project.extensions.findByType(ReleasePluginExtension)
+            SemanticReleasePluginExtension semanticReleaseExtension = project.extensions.findByType(SemanticReleasePluginExtension)
             releaseExtension.with {
-                grgit = semanticRelease.grgit
+                versionStrategy semanticReleaseExtension.toSemanticReleaseStrategy(Strategies.FINAL)
+                versionStrategy semanticReleaseExtension.toSemanticReleaseStrategy(Strategies.SNAPSHOT)
+                defaultVersionStrategy semanticReleaseExtension.toSemanticReleaseStrategy(Strategies.SNAPSHOT)
             }
         }
     }

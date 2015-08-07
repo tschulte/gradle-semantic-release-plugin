@@ -22,10 +22,10 @@ import spock.lang.Subject
 /**
  * Created by tobias on 7/26/15.
  */
-class GradleSemanticReleaseCommitMessageConventionsSpec extends Specification {
+class SemanticReleaseCommitMessageConventionsSpec extends Specification {
 
     @Subject
-    GradleSemanticReleaseCommitMessageConventions conventions = new GradleSemanticReleaseCommitMessageConventions()
+    SemanticReleaseCommitMessageConventions conventions = new SemanticReleaseCommitMessageConventions()
 
     def "does not throw an exception if no ticket is referenced"() {
         given:

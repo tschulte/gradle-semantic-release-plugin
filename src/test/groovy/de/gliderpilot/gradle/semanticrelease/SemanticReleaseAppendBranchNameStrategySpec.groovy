@@ -21,10 +21,10 @@ import spock.lang.Specification
 import spock.lang.Subject
 import spock.lang.Unroll
 
-class GradleSemanticReleaseAppendBranchNameStrategySpec extends Specification {
+class SemanticReleaseAppendBranchNameStrategySpec extends Specification {
 
     @Subject
-    GradleSemanticReleaseAppendBranchNameStrategy strategy = new GradleSemanticReleaseAppendBranchNameStrategy()
+    SemanticReleaseAppendBranchNameStrategy strategy = new SemanticReleaseAppendBranchNameStrategy()
 
     @Unroll
     def "an initial branchname #branchName leads to inferredPreRelease #inferredPreRelease"() {

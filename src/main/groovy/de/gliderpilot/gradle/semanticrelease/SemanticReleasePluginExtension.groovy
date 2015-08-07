@@ -27,21 +27,21 @@ import javax.inject.Inject
 /**
  * Created by tobias on 7/21/15.
  */
-class GradleSemanticReleasePluginExtension {
+class SemanticReleasePluginExtension {
 
     final Grgit grgit
-    final GradleSemanticReleaseCommitMessageConventions commitMessageConventions
+    final SemanticReleaseCommitMessageConventions commitMessageConventions
     final PartialSemVerStrategy semanticStrategy
     final PartialSemVerStrategy onReleaseBranch
     final PartialSemVerStrategy appendBranchName
 
     @Inject
-    GradleSemanticReleasePluginExtension(Project project) {
+    SemanticReleasePluginExtension(Project project) {
         grgit = Grgit.open()
-        commitMessageConventions = new GradleSemanticReleaseCommitMessageConventions()
-        semanticStrategy = new GradleSemanticReleaseStrategy(grgit, commitMessageConventions, project.release.tagStrategy)
-        onReleaseBranch = new GradleSemanticReleaseCheckReleaseBranchStrategy()
-        appendBranchName = new GradleSemanticReleaseAppendBranchNameStrategy()
+        commitMessageConventions = new SemanticReleaseCommitMessageConventions()
+        semanticStrategy = new SemanticReleaseStrategy(grgit, commitMessageConventions, project.release.tagStrategy)
+        onReleaseBranch = new SemanticReleaseCheckBranch()
+        appendBranchName = new SemanticReleaseAppendBranchNameStrategy()
     }
 
     def commitMessages(Closure closure) {

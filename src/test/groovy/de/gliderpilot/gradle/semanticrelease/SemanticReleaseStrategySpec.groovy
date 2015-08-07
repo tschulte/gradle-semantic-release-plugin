@@ -24,15 +24,15 @@ import org.ajoberstar.grgit.Grgit
 import spock.lang.Specification
 import spock.lang.Subject
 
-class GradleSemanticReleaseStrategySpec extends Specification {
+class SemanticReleaseStrategySpec extends Specification {
 
     Grgit grgit = Mock()
 
-    GradleSemanticReleaseCommitMessageConventions commitMessageConventions = new GradleSemanticReleaseCommitMessageConventions()
+    SemanticReleaseCommitMessageConventions commitMessageConventions = new SemanticReleaseCommitMessageConventions()
     TagStrategy tagStrategy = new TagStrategy()
 
     @Subject
-    GradleSemanticReleaseStrategy strategy = new GradleSemanticReleaseStrategy(grgit,
+    SemanticReleaseStrategy strategy = new SemanticReleaseStrategy(grgit,
             commitMessageConventions,
             tagStrategy)
 

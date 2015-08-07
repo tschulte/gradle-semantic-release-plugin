@@ -21,14 +21,14 @@ import org.ajoberstar.gradle.git.release.semver.*
 import org.ajoberstar.grgit.Commit
 import org.ajoberstar.grgit.Grgit
 
-class GradleSemanticReleaseStrategy implements PartialSemVerStrategy {
+class SemanticReleaseStrategy implements PartialSemVerStrategy {
 
     final Grgit grgit
-    final GradleSemanticReleaseCommitMessageConventions commitMessageConventions
+    final SemanticReleaseCommitMessageConventions commitMessageConventions
     final TagStrategy tagStrategy
 
-    GradleSemanticReleaseStrategy(Grgit grgit,
-                                  GradleSemanticReleaseCommitMessageConventions commitMessageConventions,
+    SemanticReleaseStrategy(Grgit grgit,
+                                  SemanticReleaseCommitMessageConventions commitMessageConventions,
                                   TagStrategy tagStrategy) {
         this.grgit = grgit
         this.commitMessageConventions = commitMessageConventions

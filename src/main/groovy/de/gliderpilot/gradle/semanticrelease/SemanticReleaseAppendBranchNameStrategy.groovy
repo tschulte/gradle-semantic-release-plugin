@@ -23,11 +23,11 @@ import org.ajoberstar.gradle.git.release.semver.SemVerStrategyState
  * Created by tobias on 7/21/15.
  */
 @PackageScope
-class GradleSemanticReleaseAppendBranchNameStrategy implements PartialSemVerStrategy {
+class SemanticReleaseAppendBranchNameStrategy implements PartialSemVerStrategy {
 
     def replacePatterns = [:]
 
-    GradleSemanticReleaseAppendBranchNameStrategy() {
+    SemanticReleaseAppendBranchNameStrategy() {
         replace(~/^feature[-\/](.*)$/, '$1')
         replace(~/^master$/, '')
         replace(~/^(?:release[-\/])?\d+(?:\.\d+)?\.x$/, '')

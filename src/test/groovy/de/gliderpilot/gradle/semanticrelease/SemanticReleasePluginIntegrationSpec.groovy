@@ -25,7 +25,7 @@ import spock.lang.Unroll
 // always run on travis
 // also run on ./gradlew integTest
 @Requires({ env['TRAVIS'] || properties['integTest'] })
-class GradleSemanticReleasePluginIntegrationSpec extends IntegrationSpec {
+class SemanticReleasePluginIntegrationSpec extends IntegrationSpec {
 
     def setup() {
         // create remote repository

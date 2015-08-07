@@ -22,10 +22,10 @@ import spock.lang.Specification
 import spock.lang.Subject
 import spock.lang.Unroll
 
-class GradleSemanticReleaseCheckReleaseBranchStrategySpec extends Specification {
+class SemanticReleaseCheckBranchSpec extends Specification {
 
     @Subject
-    GradleSemanticReleaseCheckReleaseBranchStrategy strategy = new GradleSemanticReleaseCheckReleaseBranchStrategy()
+    SemanticReleaseCheckBranch strategy = new SemanticReleaseCheckBranch()
 
     @Unroll
     def "the initial state is not changed for branch #branchName"() {

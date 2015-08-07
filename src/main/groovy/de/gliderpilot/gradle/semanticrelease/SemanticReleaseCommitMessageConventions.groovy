@@ -20,7 +20,7 @@ import org.ajoberstar.grgit.Commit
 /**
  * Created by tobias on 7/26/15.
  */
-class GradleSemanticReleaseCommitMessageConventions {
+class SemanticReleaseCommitMessageConventions {
 
     List<String> closesKeywords = ['Closes', 'Fixes']
 
