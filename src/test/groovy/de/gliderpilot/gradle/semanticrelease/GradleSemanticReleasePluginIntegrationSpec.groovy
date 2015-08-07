@@ -17,6 +17,7 @@ package de.gliderpilot.gradle.semanticrelease
 
 import nebula.test.IntegrationSpec
 import spock.lang.Requires
+import spock.lang.Unroll
 
 /**
  * Created by tobias on 7/2/15.
@@ -57,6 +58,26 @@ class GradleSemanticReleasePluginIntegrationSpec extends IntegrationSpec {
 
         commit('initial project layout')
         push()
+    }
+
+    @Unroll
+    def "initial version is 1.0.0 after #type commit"() {
+        when: "a commit with type $type is made"
+        commit("$type: foo")
+
+        then:
+        release() == 'v1.0.0'
+
+        where:
+        type << ['feat', 'fix']
+    }
+
+    def "initial version is 1.0.0 even after breaking change"() {
+        when: "a breaking change commit is made without prior version"
+        commit("feat: foo\n\nBREAKING CHANGE: bar")
+
+        then:
+        release() == 'v1.0.0'
     }
 
     def "complete lifecycle"() {
