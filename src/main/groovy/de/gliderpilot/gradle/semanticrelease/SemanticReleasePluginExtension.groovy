@@ -39,7 +39,7 @@ class SemanticReleasePluginExtension {
     SemanticReleasePluginExtension(Project project) {
         grgit = Grgit.open()
         commitMessageConventions = new SemanticReleaseCommitMessageConventions()
-        semanticStrategy = new SemanticReleaseStrategy(grgit, commitMessageConventions, project.release.tagStrategy)
+        semanticStrategy = new SemanticReleaseNormalStrategy(grgit, commitMessageConventions, project.release.tagStrategy)
         onReleaseBranch = new SemanticReleaseCheckBranch()
         appendBranchName = new SemanticReleaseAppendBranchNameStrategy()
     }

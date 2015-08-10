@@ -16,25 +16,28 @@
 package de.gliderpilot.gradle.semanticrelease
 
 import com.github.zafarkhaja.semver.Version
+import org.ajoberstar.gradle.git.release.base.ReleaseVersion
 import org.ajoberstar.gradle.git.release.base.TagStrategy
+import org.ajoberstar.gradle.git.release.base.VersionStrategy
 import org.ajoberstar.gradle.git.release.semver.*
 import org.ajoberstar.grgit.Commit
 import org.ajoberstar.grgit.Grgit
+import org.gradle.api.Project
 
-class SemanticReleaseStrategy implements PartialSemVerStrategy {
+class SemanticReleaseNormalStrategy implements VersionStrategy {
 
     final Grgit grgit
     final SemanticReleaseCommitMessageConventions commitMessageConventions
     final TagStrategy tagStrategy
 
-    SemanticReleaseStrategy(Grgit grgit,
+    SemanticReleaseNormalStrategy(Grgit grgit,
                                   SemanticReleaseCommitMessageConventions commitMessageConventions,
                                   TagStrategy tagStrategy) {
         this.grgit = grgit
         this.commitMessageConventions = commitMessageConventions
         this.tagStrategy = tagStrategy
     }
-
+    
     @Override
     SemVerStrategyState infer(SemVerStrategyState initialState) {
         NearestVersion nearestVersion = initialState.nearestVersion

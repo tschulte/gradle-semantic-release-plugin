@@ -24,7 +24,7 @@ import org.ajoberstar.grgit.Grgit
 import spock.lang.Specification
 import spock.lang.Subject
 
-class SemanticReleaseStrategySpec extends Specification {
+class SemanticReleaseNormalStrategySpec extends Specification {
 
     Grgit grgit = Mock()
 
@@ -32,7 +32,7 @@ class SemanticReleaseStrategySpec extends Specification {
     TagStrategy tagStrategy = new TagStrategy()
 
     @Subject
-    SemanticReleaseStrategy strategy = new SemanticReleaseStrategy(grgit,
+    SemanticReleaseNormalStrategy strategy = new SemanticReleaseNormalStrategy(grgit,
             commitMessageConventions,
             tagStrategy)
 
