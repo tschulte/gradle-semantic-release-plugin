@@ -24,7 +24,7 @@ import org.gradle.api.GradleException
  * Created by tobias on 7/21/15.
  */
 @PackageScope
-class SemanticReleaseCheckBranch implements PartialSemVerStrategy {
+class SemanticReleaseCheckBranch {
 
     Set<String> includes = [] as Set
     Set<String> excludes = [] as Set
@@ -41,21 +41,14 @@ class SemanticReleaseCheckBranch implements PartialSemVerStrategy {
         excludes.addAll(patterns)
     }
 
-    @Override
-    SemVerStrategyState infer(SemVerStrategyState state) {
-        if (state.inferredPreRelease || state.inferredBuildMetadata)
-            return state
+    boolean isReleaseBranch(String branchName) {
+        if (includes.any { branchName ==~ it })
+            return true
 
-        String branchName = state.currentBranch.name
+        if (excludes.any { branchName ==~ it })
+            return false
 
-        if (!(includes.isEmpty() || includes.any { branchName ==~ it })) {
-            throw new GradleException("${branchName} does not match one of the included patterns: ${includes}")
-        }
-
-        if (excludes.any { branchName ==~ it }) {
-            throw new GradleException("${branchName} matched an excluded pattern: ${excludes}")
-        }
-        return state
+        return includes.isEmpty()
     }
 
 }

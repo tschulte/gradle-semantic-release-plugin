@@ -28,54 +28,24 @@ class SemanticReleaseCheckBranchSpec extends Specification {
     SemanticReleaseCheckBranch strategy = new SemanticReleaseCheckBranch()
 
     @Unroll
-    def "the initial state is not changed for branch #branchName"() {
-        given:
-        def initialState = initialState(branchName)
-        when:
-        def newState = strategy.infer(initialState)
-
-        then:
-        noExceptionThrown()
-        newState == initialState
+    def "#branchName #description"() {
+        expect:
+        strategy.isReleaseBranch(branchName) == isReleaseBranch
 
         where:
-        branchName << ['master', 'release/1.2.x', '1.2.x', 'release-1.2.x', '1.x', 'release/1.x', 'release-1.x']
-    }
+        branchName | isReleaseBranch
+        'master'   | true
+        'release/1.2.x' | true
+        '1.2.x' | true
+        'release-1.2.x' |true
+        '1.x' |true
+        'release/1.x' | true
+        'release-1.x'| true
+        'develop' | false
+        'feature/#123-foo-bar' | false
+        'dev-foo-bar' | false
 
-    @Unroll
-    def "a GradleException is thrown for branch #branchName"() {
-        when:
-        strategy.infer(initialState(branchName))
-
-        then:
-        thrown(GradleException)
-
-        where:
-        branchName << ['develop', 'feature/#123-foo-bar', 'dev-foo-bar']
-    }
-
-    @Unroll
-    def "no GradleException is thrown for branch #branchName if buildMetadata is set"() {
-        when:
-        strategy.infer(initialState(branchName).copyWith(inferredBuildMetadata: "SNAPSHOT"))
-
-        then:
-        notThrown(GradleException)
-
-        where:
-        branchName << ['develop', 'feature/#123-foo-bar', 'dev-foo-bar']
-    }
-
-    @Unroll
-    def "no GradleException is thrown for branch #branchName if preRelease is set"() {
-        when:
-        strategy.infer(initialState(branchName).copyWith(inferredPreRelease: "develop"))
-
-        then:
-        notThrown(GradleException)
-
-        where:
-        branchName << ['develop', 'feature/#123-foo-bar', 'dev-foo-bar']
+        description = isReleaseBranch ? 'is a release branch' : 'is no release branch'
     }
 
     def "can work with a blacklist instead of a whitelist"() {
@@ -83,20 +53,11 @@ class SemanticReleaseCheckBranchSpec extends Specification {
         strategy.includes.clear()
         strategy.exclude('develop/.*')
 
-        when:
-        strategy.infer(initialState('master'))
+        expect:
+        strategy.isReleaseBranch('master')
 
-        then:
-        noExceptionThrown()
-
-        when:
-        strategy.infer(initialState('develop/foo'))
-
-        then:
-        thrown(GradleException)
+        and:
+        !strategy.isReleaseBranch('develop/foo')
     }
 
-    def initialState(String branchName) {
-        new SemVerStrategyState(currentBranch: new Branch(fullName: branchName))
-    }
 }
