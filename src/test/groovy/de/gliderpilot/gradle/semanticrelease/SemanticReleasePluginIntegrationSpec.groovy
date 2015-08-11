@@ -138,8 +138,11 @@ class SemanticReleasePluginIntegrationSpec extends IntegrationSpec {
         println "--------"
         def process = args.execute(null, dir)
         String processOut = process.inputStream.text.trim()
+        String processErr = process.errorStream.text.trim()
         println processOut
-        println process.errorStream.text
+        println processErr
+        if (process.waitFor() != 0)
+            throw new RuntimeException("failed to execute ${args.join(' ')}")
         return processOut
     }
 
