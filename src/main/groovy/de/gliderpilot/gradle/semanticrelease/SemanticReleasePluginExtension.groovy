@@ -52,7 +52,7 @@ class SemanticReleasePluginExtension {
         ConfigureUtil.configure(closure, onReleaseBranch)
     }
 
-    def appendBranchNames(Closure closure) {
+    def branchNames(Closure closure) {
         ConfigureUtil.configure(closure, appendBranchName)
     }
 

@@ -78,12 +78,12 @@ class SemanticReleasePluginSpec extends ProjectSpec {
         project.semanticRelease.onReleaseBranch.excludes == ['foo'] as Set
     }
 
-    def "can configure the appendBranchNames strategy"() {
+    def "can configure the branchNames strategy"() {
         when:
         project.with {
             apply plugin: PLUGIN
             semanticRelease {
-                appendBranchNames {
+                branchNames {
                     replace 'foo', 'bar'
                 }
             }
