@@ -16,7 +16,8 @@
 package de.gliderpilot.gradle.semanticrelease
 
 import org.ajoberstar.gradle.git.release.base.ReleasePluginExtension
-import org.ajoberstar.gradle.git.release.opinion.Strategies
+import org.ajoberstar.gradle.git.release.semver.PartialSemVerStrategy
+import org.ajoberstar.gradle.git.release.semver.StrategyUtil
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 
@@ -28,9 +29,21 @@ class SemanticReleasePlugin implements Plugin<Project> {
             ReleasePluginExtension releaseExtension = project.extensions.findByType(ReleasePluginExtension)
             SemanticReleasePluginExtension semanticReleaseExtension = project.extensions.findByType(SemanticReleasePluginExtension)
             releaseExtension.with {
-                versionStrategy semanticReleaseExtension.toSemanticReleaseStrategy(Strategies.FINAL)
-                versionStrategy semanticReleaseExtension.toSemanticReleaseStrategy(Strategies.SNAPSHOT)
-                defaultVersionStrategy semanticReleaseExtension.toSemanticReleaseStrategy(Strategies.SNAPSHOT)
+                SemanticReleaseStrategy releaseStrategy = semanticReleaseExtension.releaseStrategy
+                versionStrategy releaseStrategy
+                versionStrategy releaseStrategy.copyWith(
+                        selector: { semanticReleaseExtension.onReleaseBranch.isReleaseBranch(it.currentBranch.name) },
+                        preReleaseStrategy: { it.copyWith(inferredPreRelease: "SNAPSHOT") },
+                        createTag: false
+                )
+                defaultVersionStrategy = releaseStrategy.copyWith(
+                        selector: { true },
+                        preReleaseStrategy: StrategyUtil.all(
+                                semanticReleaseExtension.appendBranchName,
+                                { it.copyWith(inferredPreRelease: "${it.inferredPreRelease}-SNAPSHOT") } as PartialSemVerStrategy
+                        ),
+                        createTag: false
+                )
             }
         }
     }

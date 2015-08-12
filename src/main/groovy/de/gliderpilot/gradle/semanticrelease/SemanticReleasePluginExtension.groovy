@@ -16,8 +16,6 @@
 package de.gliderpilot.gradle.semanticrelease
 
 import org.ajoberstar.gradle.git.release.semver.PartialSemVerStrategy
-import org.ajoberstar.gradle.git.release.semver.SemVerStrategy
-import org.ajoberstar.gradle.git.release.semver.StrategyUtil
 import org.ajoberstar.grgit.Grgit
 import org.gradle.api.Project
 import org.gradle.util.ConfigureUtil
@@ -29,19 +27,25 @@ import javax.inject.Inject
  */
 class SemanticReleasePluginExtension {
 
+    final Project project
     final Grgit grgit
     final SemanticReleaseCommitMessageConventions commitMessageConventions
-    final PartialSemVerStrategy semanticStrategy
-    final PartialSemVerStrategy onReleaseBranch
+    final SemanticReleaseCheckBranch onReleaseBranch
     final PartialSemVerStrategy appendBranchName
+    final SemanticReleaseStrategy releaseStrategy
 
     @Inject
     SemanticReleasePluginExtension(Project project) {
+        this.project = project
         grgit = Grgit.open()
         commitMessageConventions = new SemanticReleaseCommitMessageConventions()
-        semanticStrategy = new SemanticReleaseNormalStrategy(grgit, commitMessageConventions, project.release.tagStrategy)
         onReleaseBranch = new SemanticReleaseCheckBranch()
         appendBranchName = new SemanticReleaseAppendBranchNameStrategy()
+        SemanticReleaseNormalStrategy semanticStrategy = new SemanticReleaseNormalStrategy(grgit, commitMessageConventions, project.release.tagStrategy)
+        releaseStrategy = new SemanticReleaseStrategy(normalStrategy: semanticStrategy,
+                createTag: true,
+                selector: { !it.repoDirty && onReleaseBranch.isReleaseBranch(it.currentBranch.name) && isRelease() }
+        )
     }
 
     def commitMessages(Closure closure) {
@@ -56,12 +60,8 @@ class SemanticReleasePluginExtension {
         ConfigureUtil.configure(closure, appendBranchName)
     }
 
-    SemVerStrategy toSemanticReleaseStrategy(SemVerStrategy strategy) {
-        strategy.copyWith(
-                normalStrategy: semanticStrategy,
-                preReleaseStrategy: StrategyUtil.all(appendBranchName, strategy.preReleaseStrategy),
-                buildMetadataStrategy: StrategyUtil.all(strategy.buildMetadataStrategy, onReleaseBranch)
-        )
+    boolean isRelease() {
+        project.gradle.startParameter.taskNames.find { it == 'release' }
     }
 
 }
