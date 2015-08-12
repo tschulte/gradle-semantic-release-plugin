@@ -47,12 +47,6 @@ final class SemanticReleaseStrategy implements VersionStrategy {
     SemanticReleaseNormalStrategy normalStrategy
 
     /**
-     * The strategy used to infer the stageFromProp to use. Using this, the default Strategies can be used. There is no enforcement that
-     * this strategy only modify that part of the state.
-     */
-    PartialSemVerStrategy stageStrategy = { SemVerStrategyState state -> state }
-
-    /**
      * The strategy used to infer the pre-release component of the version. There is no enforcement that
      * this strategy only modify that part of the state.
      */
