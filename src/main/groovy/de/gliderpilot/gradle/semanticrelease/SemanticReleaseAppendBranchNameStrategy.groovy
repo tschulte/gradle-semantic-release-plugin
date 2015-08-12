@@ -29,8 +29,6 @@ class SemanticReleaseAppendBranchNameStrategy implements PartialSemVerStrategy {
 
     SemanticReleaseAppendBranchNameStrategy() {
         replace(~/^feature[-\/](.*)$/, '$1')
-        replace(~/^master$/, '')
-        replace(~/^(?:release[-\/])?\d+(?:\.\d+)?\.x$/, '')
     }
 
     void replace(pattern, replacement) {
@@ -54,7 +52,7 @@ class SemanticReleaseAppendBranchNameStrategy implements PartialSemVerStrategy {
     }
 
     private String removeDisallowedChars(String branchName) {
-        branchName.replaceAll(~/[^0-9A-Za-z-]/, '')
+        branchName.replaceAll(~/[^0-9A-Za-z-]/, '-').replaceFirst(~/^-/, '').replaceFirst(~/-$/, '')
     }
 
 }

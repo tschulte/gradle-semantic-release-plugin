@@ -37,18 +37,11 @@ class SemanticReleaseAppendBranchNameStrategySpec extends Specification {
         newState.inferredPreRelease == inferredPreRelease
 
         where:
-        branchName                 | inferredPreRelease
-        'master'                   | null
-        'release/1.2.x'            | null
-        '1.2.x'                    | null
-        'release-1.2.x'            | null
-        '1.x'                      | null
-        'release/1.x'              | null
-        'release-1.x'              | null
-        'develop'                  | 'develop'
-        'feature'                  | 'feature'
-        'feature/foo'              | 'foo'
-        'feature/#123-foo-bar_baz' | '123-foo-barbaz'
+        branchName                  | inferredPreRelease
+        'develop'                   | 'develop'
+        'feature'                   | 'feature'
+        'feature/foo'               | 'foo'
+        'feature/#123-foo-bar_baz#' | '123-foo-bar-baz'
     }
 
 
