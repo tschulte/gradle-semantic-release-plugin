@@ -15,9 +15,6 @@
  */
 package de.gliderpilot.gradle.semanticrelease
 
-import org.ajoberstar.gradle.git.release.semver.SemVerStrategyState
-import org.ajoberstar.grgit.Branch
-import org.gradle.api.GradleException
 import spock.lang.Specification
 import spock.lang.Subject
 import spock.lang.Unroll
@@ -33,17 +30,17 @@ class SemanticReleaseCheckBranchSpec extends Specification {
         strategy.isReleaseBranch(branchName) == isReleaseBranch
 
         where:
-        branchName | isReleaseBranch
-        'master'   | true
-        'release/1.2.x' | true
-        '1.2.x' | true
-        'release-1.2.x' |true
-        '1.x' |true
-        'release/1.x' | true
-        'release-1.x'| true
-        'develop' | false
+        branchName             | isReleaseBranch
+        'master'               | true
+        'release/1.2.x'        | true
+        '1.2.x'                | true
+        'release-1.2.x'        | true
+        '1.x'                  | true
+        'release/1.x'          | true
+        'release-1.x'          | true
+        'develop'              | false
         'feature/#123-foo-bar' | false
-        'dev-foo-bar' | false
+        'dev-foo-bar'          | false
 
         description = isReleaseBranch ? 'is a release branch' : 'is no release branch'
     }

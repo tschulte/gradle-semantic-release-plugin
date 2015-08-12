@@ -3,7 +3,6 @@ package de.gliderpilot.gradle.semanticrelease
 import com.github.zafarkhaja.semver.Version
 import org.ajoberstar.gradle.git.release.base.ReleaseVersion
 import org.ajoberstar.gradle.git.release.semver.NearestVersion
-import org.ajoberstar.gradle.git.release.semver.PartialSemVerStrategy
 import org.ajoberstar.gradle.git.release.semver.SemVerStrategyState
 import spock.lang.Specification
 import spock.lang.Subject

@@ -27,7 +27,6 @@ import org.ajoberstar.gradle.git.release.semver.SemVerStrategyState
 import org.ajoberstar.gradle.git.release.semver.StrategyUtil
 import org.ajoberstar.grgit.Grgit
 import org.gradle.api.Project
-import org.simpleframework.http.Part
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
@@ -93,7 +92,9 @@ final class SemanticReleaseStrategy implements VersionStrategy {
 
         Version version = StrategyUtil.all(
                 StrategyUtil.one(normalStrategy,
-                        { it.nearestVersion.normal.majorVersion ? it : it.copyWith(inferredNormal: '1.0.0') } as PartialSemVerStrategy,
+                        {
+                            it.nearestVersion.normal.majorVersion ? it : it.copyWith(inferredNormal: '1.0.0')
+                        } as PartialSemVerStrategy,
                         Strategies.Normal.useScope(ChangeScope.PATCH)),
                 preReleaseStrategy,
                 buildMetadataStrategy).infer(initialState).toVersion()
