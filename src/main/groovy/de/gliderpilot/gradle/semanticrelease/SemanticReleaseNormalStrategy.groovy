@@ -16,19 +16,17 @@
 package de.gliderpilot.gradle.semanticrelease
 
 import com.github.zafarkhaja.semver.Version
-import org.ajoberstar.gradle.git.release.base.ReleaseVersion
+import groovy.transform.Memoized
 import org.ajoberstar.gradle.git.release.base.TagStrategy
-import org.ajoberstar.gradle.git.release.base.VersionStrategy
 import org.ajoberstar.gradle.git.release.semver.*
 import org.ajoberstar.grgit.Commit
 import org.ajoberstar.grgit.Grgit
-import org.gradle.api.Project
 
-class SemanticReleaseNormalStrategy implements VersionStrategy {
+class SemanticReleaseNormalStrategy implements PartialSemVerStrategy {
 
-    final Grgit grgit
-    final SemanticReleaseCommitMessageConventions commitMessageConventions
-    final TagStrategy tagStrategy
+    private final Grgit grgit
+    private final SemanticReleaseCommitMessageConventions commitMessageConventions
+    private final TagStrategy tagStrategy
 
     SemanticReleaseNormalStrategy(Grgit grgit,
                                   SemanticReleaseCommitMessageConventions commitMessageConventions,
@@ -37,9 +35,25 @@ class SemanticReleaseNormalStrategy implements VersionStrategy {
         this.commitMessageConventions = commitMessageConventions
         this.tagStrategy = tagStrategy
     }
-    
+
     @Override
     SemVerStrategyState infer(SemVerStrategyState initialState) {
+        doInfer(initialState)
+    }
+
+    /**
+     * @return true if there where fixes, features or breaking changes, false, if there where no commits or if these commits
+     */
+    boolean doRelease(SemVerStrategyState initialState) {
+        doInfer(initialState) != initialState
+    }
+
+    /*
+     * Memoized does not work together with @Override
+     */
+
+    @Memoized
+    private SemVerStrategyState doInfer(SemVerStrategyState initialState) {
         NearestVersion nearestVersion = initialState.nearestVersion
         Version previousVersion = nearestVersion.normal
 
