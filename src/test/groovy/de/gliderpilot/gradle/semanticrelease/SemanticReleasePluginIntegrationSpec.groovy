@@ -147,7 +147,7 @@ class SemanticReleasePluginIntegrationSpec extends IntegrationSpec {
     }
 
     def release() {
-        execute './gradlew', '-I', '.gradle-test-kit/init.gradle', ':release', '-Prelease.stage=final', '--info', '--stacktrace'
+        execute './gradlew', '-I', '.gradle-test-kit/init.gradle', 'release', '--info', '--stacktrace'
         execute "git", "describe"
     }
 
