@@ -37,11 +37,12 @@ class SemanticReleaseAppendBranchNameStrategySpec extends Specification {
         newState.inferredPreRelease == inferredPreRelease
 
         where:
-        branchName                  | inferredPreRelease
-        'develop'                   | 'develop'
-        'feature'                   | 'feature'
-        'feature/foo'               | 'foo'
-        'feature/#123-foo-bar_baz#' | '123-foo-bar-baz'
+        branchName                     | inferredPreRelease
+        'develop'                      | 'develop'
+        'feature'                      | 'feature'
+        'feature/foo'                  | 'foo'
+        'feature/#123-foo-bar_baz#'    | '-123-foo-bar-baz-'
+        'feature/$#123-foo-bar_baz###' | '--123-foo-bar-baz---'
     }
 
 

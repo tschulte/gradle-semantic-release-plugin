@@ -38,9 +38,6 @@ class SemanticReleaseAppendBranchNameStrategy implements PartialSemVerStrategy {
     @Override
     SemVerStrategyState infer(SemVerStrategyState state) {
         def branchName = removeDisallowedChars(shortenBranch(state.currentBranch.name))
-        if (!branchName)
-            return state
-
         def inferred = state.inferredPreRelease ? "${state.inferredPreRelease}.${branchName}" : "${branchName}"
         return state.copyWith(inferredPreRelease: inferred)
     }
@@ -52,7 +49,7 @@ class SemanticReleaseAppendBranchNameStrategy implements PartialSemVerStrategy {
     }
 
     private String removeDisallowedChars(String branchName) {
-        branchName.replaceAll(~/[^0-9A-Za-z-]/, '-').replaceFirst(~/^-/, '').replaceFirst(~/-$/, '')
+        branchName.replaceAll(~/[^0-9A-Za-z-]/, '-')
     }
 
 }
