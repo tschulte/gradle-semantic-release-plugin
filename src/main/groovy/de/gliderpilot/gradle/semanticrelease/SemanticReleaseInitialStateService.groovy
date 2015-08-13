@@ -18,12 +18,7 @@ class SemanticReleaseInitialStateService {
 
     @Memoized
     SemVerStrategyState initialState(Project project, Grgit grgit) {
-        return createInitialState(project, grgit, new NearestVersionLocator())
-    }
-
-    // for unit tests
-    @PackageScope
-    static SemVerStrategyState createInitialState(Project project, Grgit grgit, NearestVersionLocator locator) {
+        NearestVersionLocator locator = new NearestVersionLocator()
         NearestVersion nearestVersion = locator.locate(grgit)
         SemVerStrategyState initialState = new SemVerStrategyState(
                 scopeFromProp: null,
