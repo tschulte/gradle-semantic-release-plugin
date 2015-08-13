@@ -43,8 +43,10 @@ class SemanticReleaseNormalStrategySpec extends Specification {
 
         when:
         def inferredState = strategy.infer(initialState)
+        def doRelease = strategy.doRelease(initialState)
 
         then:
+        !doRelease
         inferredState == initialState
         1 * grgit.methodMissing("log", _) >> [commit('shortMessage')]
     }
@@ -55,8 +57,10 @@ class SemanticReleaseNormalStrategySpec extends Specification {
 
         when:
         def inferredState = strategy.infer(initialState)
+        def doRelease = strategy.doRelease(initialState)
 
         then:
+        doRelease
         inferredState == initialState.copyWith(inferredNormal: '1.0.0')
         1 * grgit.methodMissing("log", _) >> [commit('feat: desrciption')]
     }
@@ -67,8 +71,10 @@ class SemanticReleaseNormalStrategySpec extends Specification {
 
         when:
         def inferredState = strategy.infer(initialState)
+        def doRelease = strategy.doRelease(initialState)
 
         then:
+        !doRelease
         inferredState == initialState
         1 * grgit.methodMissing("log", _) >> [commit('shortMessage')]
     }
@@ -79,8 +85,10 @@ class SemanticReleaseNormalStrategySpec extends Specification {
 
         when:
         def inferredState = strategy.infer(initialState)
+        def doRelease = strategy.doRelease(initialState)
 
         then:
+        doRelease
         inferredState == initialState.copyWith(inferredNormal: '1.0.0')
         1 * grgit.methodMissing("log", _) >> [commit('feat: desrciption')]
     }
@@ -91,8 +99,10 @@ class SemanticReleaseNormalStrategySpec extends Specification {
 
         when:
         def inferredState = strategy.infer(initialState)
+        def doRelease = strategy.doRelease(initialState)
 
         then:
+        !doRelease
         inferredState == initialState
         0 * grgit._
     }
@@ -132,8 +142,10 @@ class SemanticReleaseNormalStrategySpec extends Specification {
 
         when:
         def inferredState = strategy.infer(initialState)
+        def doRelease = strategy.doRelease(initialState)
 
         then:
+        !doRelease
         inferredState == initialState
         1 * grgit.methodMissing("log", _) >> [commit('foo')]
     }
@@ -145,8 +157,10 @@ class SemanticReleaseNormalStrategySpec extends Specification {
 
         when:
         def inferredState = strategy.infer(initialState)
+        def doRelease = strategy.doRelease(initialState)
 
         then:
+        doRelease
         inferredState == initialState.copyWith(inferredNormal: "1.2.4")
         1 * grgit.methodMissing("log", _) >> [commit('fix: foo')]
     }
@@ -157,8 +171,10 @@ class SemanticReleaseNormalStrategySpec extends Specification {
 
         when:
         def inferredState = strategy.infer(initialState)
+        def doRelease = strategy.doRelease(initialState)
 
         then:
+        doRelease
         inferredState == initialState.copyWith(inferredNormal: "1.3.0")
         1 * grgit.methodMissing("log", _) >> [commit('feat: foo')]
     }
@@ -169,61 +185,13 @@ class SemanticReleaseNormalStrategySpec extends Specification {
 
         when:
         def inferredState = strategy.infer(initialState)
+        def doRelease = strategy.doRelease(initialState)
 
         then:
+        doRelease
         inferredState == initialState.copyWith(inferredNormal: "2.0.0")
         1 * grgit.methodMissing("log", _) >> [commit('feat: foo\n\ndescription\n\nBREAKING CHANGE: foo')]
     }
-
-    /*
-
-    def "integTest"() {
-        def project = mockProject(null, null)
-        def grgit = mockGrgit(false)
-        def locator = mockLocator(null, null)
-        def semVerStrategy = Strategies.FINAL.copyWith(normalStrategy: strategy)
-        expect:
-        semVerStrategy.doInfer(project, grgit, locator).version == "1.0.0"
-    }
-    def mockProject(Grgit grgit) {
-        Project project = Mock()
-
-        project.hasProperty('release.scope') >> (scope as boolean)
-        project.property('release.scope') >> scope
-
-        project.hasProperty('release.stage') >> (stage as boolean)
-        project.property('release.stage') >> stage
-
-        return project
-    }
-
-    def mockGrgit(boolean repoDirty, String branchName = 'master') {
-        Grgit grgit = GroovyMock()
-
-        Status status = Mock()
-        status.clean >> !repoDirty
-        grgit.status() >> status
-
-        grgit.head() >> new Commit(id: '5e9b2a1e98b5670a90a9ed382a35f0d706d5736c')
-
-        BranchService branch = GroovyMock()
-        branch.current >> new Branch(fullName: "refs/heads/${branchName}")
-        grgit.branch >> branch
-
-        return grgit
-    }
-
-    def mockLocator(String nearestNormal, String nearestAny) {
-        NearestVersionLocator locator = Mock()
-        locator.locate(_) >> new NearestVersion(
-            normal: nearestNormal ? Version.valueOf(nearestNormal) : null,
-            distanceFromNormal: 5,
-            any: nearestAny ? Version.valueOf(nearestAny) : null,
-            distanceFromAny: 2
-        )
-        return locator
-    }
-    */
 
     private SemVerStrategyState initialState(String previousVersion = "0.0.0", int commitsSincePreviousVersion = 0) {
         new SemVerStrategyState(
