@@ -63,9 +63,11 @@ final class SemanticReleaseStrategy implements VersionStrategy {
      */
     boolean createTag = false
 
+    String type
+
     @Override
     String getName() {
-        'semantic-release'
+        type ? "semantic-release-$type" : "semantic-release"
     }
 
     @Override

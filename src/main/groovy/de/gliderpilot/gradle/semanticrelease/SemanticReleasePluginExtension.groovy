@@ -42,9 +42,15 @@ class SemanticReleasePluginExtension {
         onReleaseBranch = new SemanticReleaseCheckBranch()
         appendBranchName = new SemanticReleaseAppendBranchNameStrategy()
         SemanticReleaseNormalStrategy semanticStrategy = new SemanticReleaseNormalStrategy(grgit, commitMessageConventions, project.release.tagStrategy)
-        releaseStrategy = new SemanticReleaseStrategy(normalStrategy: semanticStrategy,
+        releaseStrategy = new SemanticReleaseStrategy(
+                normalStrategy: semanticStrategy,
                 createTag: true,
-                selector: { !it.repoDirty && onReleaseBranch.isReleaseBranch(it.currentBranch.name) && isRelease() }
+                selector: {
+                    !it.repoDirty &&
+                            onReleaseBranch.isReleaseBranch(it.currentBranch.name) &&
+                            semanticStrategy.doRelease(it) &&
+                            isRelease()
+                }
         )
     }
 

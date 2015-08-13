@@ -148,7 +148,12 @@ class SemanticReleasePluginIntegrationSpec extends IntegrationSpec {
 
     def release() {
         execute './gradlew', '-I', '.gradle-test-kit/init.gradle', 'release', '--info', '--stacktrace'
-        execute "git", "describe"
+        try {
+            execute "git", "describe"
+        } catch(any) {
+            // ignore
+            return ""
+        }
     }
 
     def commit(message) {

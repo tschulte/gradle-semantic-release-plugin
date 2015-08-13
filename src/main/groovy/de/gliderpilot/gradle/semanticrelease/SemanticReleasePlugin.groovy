@@ -32,11 +32,13 @@ class SemanticReleasePlugin implements Plugin<Project> {
                 SemanticReleaseStrategy releaseStrategy = semanticReleaseExtension.releaseStrategy
                 versionStrategy releaseStrategy
                 versionStrategy releaseStrategy.copyWith(
+                        type: "SNAPSHOT",
                         selector: { semanticReleaseExtension.onReleaseBranch.isReleaseBranch(it.currentBranch.name) },
                         preReleaseStrategy: { it.copyWith(inferredPreRelease: "SNAPSHOT") },
                         createTag: false
                 )
                 defaultVersionStrategy = releaseStrategy.copyWith(
+                        type: "dev-SNAPSHOT",
                         selector: { true },
                         preReleaseStrategy: StrategyUtil.all(
                                 semanticReleaseExtension.appendBranchName,

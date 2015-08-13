@@ -25,8 +25,7 @@ class SemanticReleaseInitialStateService {
     @PackageScope
     static SemVerStrategyState createInitialState(Project project, Grgit grgit, NearestVersionLocator locator) {
         NearestVersion nearestVersion = locator.locate(grgit)
-        logger.debug('Located nearest version: {}', nearestVersion)
-        return new SemVerStrategyState(
+        SemVerStrategyState initialState = new SemVerStrategyState(
                 scopeFromProp: null,
                 stageFromProp: null,
                 currentHead: grgit.head(),
@@ -34,6 +33,8 @@ class SemanticReleaseInitialStateService {
                 repoDirty: !grgit.status().clean,
                 nearestVersion: nearestVersion
         )
+        logger.info('Initial State: {}', initialState)
+        return initialState
     }
 
 
