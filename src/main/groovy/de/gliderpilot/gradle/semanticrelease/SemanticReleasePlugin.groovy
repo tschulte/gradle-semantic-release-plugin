@@ -39,7 +39,6 @@ class SemanticReleasePlugin implements Plugin<Project> {
                 )
                 defaultVersionStrategy = releaseStrategy.copyWith(
                         type: "dev-SNAPSHOT",
-                        selector: { true },
                         preReleaseStrategy: StrategyUtil.all(
                                 semanticReleaseExtension.appendBranchName,
                                 { it.copyWith(inferredPreRelease: "${it.inferredPreRelease}-SNAPSHOT") } as PartialSemVerStrategy
