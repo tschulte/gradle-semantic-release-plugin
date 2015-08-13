@@ -23,6 +23,7 @@ import org.ajoberstar.grgit.Commit
 import org.ajoberstar.grgit.Grgit
 import spock.lang.Specification
 import spock.lang.Subject
+import spock.lang.Unroll
 
 class SemanticReleaseNormalStrategySpec extends Specification {
 
@@ -96,16 +97,16 @@ class SemanticReleaseNormalStrategySpec extends Specification {
         0 * grgit._
     }
 
-    def "requests the log since the last version tag (using the configuration from gradle-git) and HEAD"() {
+    @Unroll
+    def "requests the log since #expectedSince (using the configuration from gradle-git) and HEAD"() {
         given:
-        def initialState = initialState("1.2.3", 1)
-        def since
-        def until
+        def initialState = initialState(initialVersion, 1)
+        def since = []
+        def until = []
         def logConfig = new Object() {
-            def range(a, b) {
-                since = a
-                until = b
-            }
+            def getIncludes() { until }
+
+            def getExcludes() { since }
         }
         tagStrategy.prefixNameWithV = prefixNameWithV
 
@@ -115,12 +116,14 @@ class SemanticReleaseNormalStrategySpec extends Specification {
         then:
         1 * grgit.methodMissing("log", { it[0].delegate = logConfig; it[0](); true })
         since == expectedSince
-        until == 'HEAD'
+        until == ['HEAD']
 
         where:
-        prefixNameWithV | expectedSince
-        false           | '1.2.3^{commit}'
-        true            | 'v1.2.3^{commit}'
+        prefixNameWithV | initialVersion | expectedSince
+        false           | "1.2.3"        | ['1.2.3^{commit}']
+        true            | "1.2.3"        | ['v1.2.3^{commit}']
+        false           | "0.0.0"        | []
+        true            | "0.0.0"        | []
     }
 
     def "version is not incremented if no feature nor fix commits are found"() {

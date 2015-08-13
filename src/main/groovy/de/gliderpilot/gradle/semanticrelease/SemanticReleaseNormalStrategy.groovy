@@ -62,11 +62,12 @@ class SemanticReleaseNormalStrategy implements PartialSemVerStrategy {
             return initialState
         }
 
-        List<Commit> log = grgit.log() {
+        List<Commit> log = grgit.log {
+            includes << 'HEAD'
             if (previousVersion.majorVersion) {
                 String previousVersionString = (tagStrategy.prefixNameWithV ? 'v' : '') + previousVersion.toString()
                 // range previousVersionString, 'HEAD' does not work: https://github.com/ajoberstar/grgit/issues/71
-                range "${previousVersionString}^{commit}".toString(), 'HEAD'
+                excludes << "${previousVersionString}^{commit}".toString()
             }
         }
 
