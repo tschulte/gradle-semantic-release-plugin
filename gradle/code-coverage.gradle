@@ -9,8 +9,11 @@ cobertura {
     } else {
         coverageSourceDirs = sourceSets.main.java.srcDirs
     }
+}
+
+test.doLast {
     def integrationTestsRoot = new File(project.buildDir, "test/de.gliderpilot.gradle.semanticrelease.SemanticReleasePluginIntegrationSpec")
-    coverageMergeDatafiles = integrationTestsRoot
+    project.cobertura.coverageMergeDatafiles = integrationTestsRoot
             .listFiles({ it.isDirectory() } as FileFilter)
             .collect { new File(it, "cobertura.ser") }
             .findAll { it.exists() }
@@ -21,7 +24,7 @@ jacocoTestReport {
     description = 'Generate Jacoco coverage reports after running tests.'
     additionalSourceDirs = project.files(sourceSets.main.allSource.srcDirs)
     sourceDirectories = project.files(sourceSets.main.allSource.srcDirs)
-    classDirectories =  project.files(sourceSets.main.allSource.srcDirs)
+    classDirectories = project.files(sourceSets.main.allSource.srcDirs)
     reports {
         xml.enabled = true
         csv.enabled = false
