@@ -1,4 +1,4 @@
-apply plugin: 'cobertura'
+apply plugin: 'net.saliman.cobertura'
 apply plugin: 'jacoco'
 apply plugin: 'com.github.kt3k.coveralls'
 
@@ -9,6 +9,11 @@ cobertura {
     } else {
         coverageSourceDirs = sourceSets.main.java.srcDirs
     }
+    def integrationTestsRoot = new File(project.buildDir, "test/de.gliderpilot.gradle.semanticrelease.SemanticReleasePluginIntegrationSpec")
+    coverageMergeDatafiles = integrationTestsRoot
+            .listFiles({ it.isDirectory() } as FileFilter)
+            .collect { new File(it, "cobertura.ser") }
+            .findAll { it.exists() }
 }
 
 jacocoTestReport {
