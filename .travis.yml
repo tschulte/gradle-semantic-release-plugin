@@ -12,9 +12,7 @@ cache:
 before_install:
   - git config user.email "tobias.schulte@gliderpilot.de"
   - git config user.name "Travis-CI"
-  - git config credential.helper "store --file=.git/credentials"
   - git config url.https://.insteadOf git://
-  - echo "https://${GH_TOKEN}:@github.com" > .git/credentials
   - git checkout -qf $TRAVIS_BRANCH
-install: ./gradlew release cobertura --info --stacktrace
+install: ./gradlew release cobertura -Dorg.ajoberstar.grgit.auth.username=${GH_TOKEN} -Dorg.ajoberstar.grgit.auth.password --info --stacktrace
 after_success: ./gradlew coveralls
