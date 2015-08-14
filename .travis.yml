@@ -1,14 +1,14 @@
 sudo: false
-language: java
-cache:
-  directories:
-  - $HOME/.gradle
-before_script: git checkout $TRAVIS_BRANCH
-script: ./gradlew clean release cobertura --info --stacktrace
-jdk: oraclejdk7
-env: TERM=dumb
-after_success: ./gradlew coveralls
 addons:
   apt:
     packages:
     - git
+language: java
+jdk: oraclejdk7
+env: TERM=dumb
+cache:
+  directories:
+  - $HOME/.gradle
+before_install: git checkout -qf $TRAVIS_BRANCH
+install: ./gradlew release cobertura --info --stacktrace
+after_success: ./gradlew coveralls
