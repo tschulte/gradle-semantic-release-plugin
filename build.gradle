@@ -34,16 +34,17 @@ dependencies {
 
 group='de.gliderpilot.gradle.semantic-release'
 
-tasks.release {
-    dependsOn build
-}
-
 task integTest {
     dependsOn test
 }
 
+tasks.release {
+    dependsOn build
+    finalizedBy bintrayUpload, artifactoryPublish
+}
+
 test {
-    if (gradle.startParameter.taskNames.contains('integTest'))
+    if (gradle.startParameter.taskNames.find { ['integTest', 'release'].contains(it) })
         systemProperty 'integTest', 'true'
     maxHeapSize = '256m'
 }
