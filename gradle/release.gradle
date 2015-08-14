@@ -1,0 +1,29 @@
+import org.ajoberstar.gradle.git.release.semver.StrategyUtil
+import org.ajoberstar.gradle.git.release.opinion.Strategies
+import org.ajoberstar.gradle.git.release.semver.PartialSemVerStrategy
+
+apply plugin: 'de.gliderpilot.semantic-release'
+
+release {
+    versionStrategy project.semanticRelease.releaseStrategy.copyWith(
+            type: "rc",
+            selector: {
+                !it.repoDirty &&
+                        it.currentBranch.name ==~ /^rc\/\d+\.\d+\.\d+$/ &&
+                        project.semanticRelease.semanticStrategy.doRelease(it) &&
+                        project.semanticRelease.isRelease()
+
+            },
+            preReleaseStrategy: StrategyUtil.all(
+                    { it.copyWith(inferredPreRelease: "rc") } as PartialSemVerStrategy,
+                    Strategies.PreRelease.COUNT_INCREMENTED
+            ),
+            createTag: true
+    )
+}
+
+semanticRelease {
+    branchNames {
+        replace ~/^rc\/\d+\.\d+\.\d+$/, 'rc'
+    }
+}

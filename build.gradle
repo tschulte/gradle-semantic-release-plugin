@@ -1,4 +1,4 @@
-apply plugin: 'de.gliderpilot.semantic-release'
+apply from: 'gradle/release.gradle'
 apply plugin: 'idea'
 apply plugin: 'com.github.ben-manes.versions'
 
