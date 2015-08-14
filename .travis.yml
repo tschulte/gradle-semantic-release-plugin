@@ -3,7 +3,7 @@ language: java
 cache:
   directories:
   - $HOME/.gradle
-script: ./gradlew clean build cobertura --info --stacktrace
+script: ./gradlew clean release cobertura --info --stacktrace
 jdk: oraclejdk7
 env: TERM=dumb
 after_success: ./gradlew coveralls
