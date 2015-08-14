@@ -32,6 +32,7 @@ class SemanticReleasePluginExtension {
     final SemanticReleaseCommitMessageConventions commitMessageConventions
     final SemanticReleaseCheckBranch onReleaseBranch
     final PartialSemVerStrategy appendBranchName
+    final SemanticReleaseNormalStrategy semanticStrategy
     final SemanticReleaseStrategy releaseStrategy
 
     @Inject
@@ -41,7 +42,7 @@ class SemanticReleasePluginExtension {
         commitMessageConventions = new SemanticReleaseCommitMessageConventions()
         onReleaseBranch = new SemanticReleaseCheckBranch()
         appendBranchName = new SemanticReleaseAppendBranchNameStrategy()
-        SemanticReleaseNormalStrategy semanticStrategy = new SemanticReleaseNormalStrategy(grgit, commitMessageConventions, project.release.tagStrategy)
+        semanticStrategy = new SemanticReleaseNormalStrategy(grgit, commitMessageConventions, project.release.tagStrategy)
         releaseStrategy = new SemanticReleaseStrategy(
                 normalStrategy: semanticStrategy,
                 createTag: true,
