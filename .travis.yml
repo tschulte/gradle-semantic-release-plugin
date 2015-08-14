@@ -14,5 +14,6 @@ before_install:
   - git config user.name "Travis-CI"
   - git config url.https://.insteadOf git://
   - git checkout -qf $TRAVIS_BRANCH
-install: ./gradlew release cobertura -Dorg.ajoberstar.grgit.auth.username=${GH_TOKEN} -Dorg.ajoberstar.grgit.auth.password --info --stacktrace
+install:
+  - ./gradlew release cobertura -Dorg.ajoberstar.grgit.auth.username=${GH_TOKEN} -Dorg.ajoberstar.grgit.auth.password --info --stacktrace
 after_success: ./gradlew coveralls
