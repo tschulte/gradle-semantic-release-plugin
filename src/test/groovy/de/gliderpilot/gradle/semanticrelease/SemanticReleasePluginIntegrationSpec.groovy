@@ -41,7 +41,7 @@ class SemanticReleasePluginIntegrationSpec extends IntegrationSpec {
 
         execute 'git', 'remote', 'add', 'origin', "$origin"
         commit 'initial commit'
-        execute 'git', 'push', 'origin', 'HEAD', '-u'
+        push()
 
         buildFile << '''
             apply plugin: 'de.gliderpilot.semantic-release'
@@ -129,7 +129,41 @@ class SemanticReleasePluginIntegrationSpec extends IntegrationSpec {
 
         then: 'no new version'
         release().startsWith('v2.0.0')
+    }
 
+    def "supports git flow (travis can execute ./gradlew release on all branches)"() {
+        given: "branch develop"
+        createBranch "develop"
+
+        and: "new feature on feature branch foo"
+        createBranch "feature/foo"
+
+        when: "feature commit on this feature branch"
+        commit("feat: foo")
+        push()
+
+        then: "no release"
+        release() == ''
+
+        when: "merging the feature branch into develop"
+        checkout "develop"
+        execute "git", "merge", "feature/foo"
+
+        then: "no release either"
+        release() == ''
+
+        when: "releasing on release branch"
+        createBranch "release/1.0.x"
+
+        then: "release 1.0.0"
+        release() == 'v1.0.0'
+
+        when: "merge into master"
+        checkout "master"
+        execute "git", "merge", "release/1.0.x"
+
+        then: "no new release"
+        release() == 'v1.0.0'
     }
 
     def execute(File dir = projectDir, String... args) {
@@ -162,6 +196,15 @@ class SemanticReleasePluginIntegrationSpec extends IntegrationSpec {
     }
 
     def push() {
-        execute 'git', 'push'
+        execute 'git', 'push', 'origin', 'HEAD', '-u'
+    }
+
+    def createBranch(String branch) {
+        execute "git", "checkout", "-b", branch
+        push()
+    }
+
+    def checkout(String branch) {
+        execute "git", "checkout", branch
     }
 }
