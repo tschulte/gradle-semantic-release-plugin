@@ -57,7 +57,7 @@ class SemanticReleaseNormalStrategy implements PartialSemVerStrategy {
         NearestVersion nearestVersion = initialState.nearestVersion
         Version previousVersion = nearestVersion.normal
 
-        if (previousVersion.majorVersion && !nearestVersion.distanceFromNormal) {
+        if (!nearestVersion.distanceFromNormal) {
             // nothing has changed since last version
             return initialState
         }

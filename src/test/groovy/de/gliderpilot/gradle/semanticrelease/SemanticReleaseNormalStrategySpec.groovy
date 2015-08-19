@@ -193,7 +193,7 @@ class SemanticReleaseNormalStrategySpec extends Specification {
         1 * grgit.methodMissing("log", _) >> [commit('feat: foo\n\ndescription\n\nBREAKING CHANGE: foo')]
     }
 
-    private SemVerStrategyState initialState(String previousVersion = "0.0.0", int commitsSincePreviousVersion = 0) {
+    private SemVerStrategyState initialState(String previousVersion = "0.0.0", int commitsSincePreviousVersion = 1) {
         new SemVerStrategyState(
                 nearestVersion:
                         previousVersion
