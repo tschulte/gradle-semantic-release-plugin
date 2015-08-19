@@ -62,7 +62,8 @@ class SemanticReleasePluginIntegrationSpec extends IntegrationSpec {
 
     @Unroll
     def "initial version is 1.0.0 after #type commit"() {
-        when: "a commit with type $type is made"
+        when:
+        "a commit with type $type is made"
         commit("$type: foo")
 
         then:
@@ -111,7 +112,7 @@ class SemanticReleasePluginIntegrationSpec extends IntegrationSpec {
         file('README.md') << '.'
 
         then: 'no release'
-        release().startsWith('v1.1.0')
+        release() == 'v1.1.0'
 
         when: 'breaking change'
         commit '''\
@@ -128,7 +129,7 @@ class SemanticReleasePluginIntegrationSpec extends IntegrationSpec {
         push()
 
         then: 'no new version'
-        release().startsWith('v2.0.0')
+        release() == 'v2.0.0'
     }
 
     def "supports git flow (travis can execute ./gradlew release on all branches)"() {
@@ -182,9 +183,13 @@ class SemanticReleasePluginIntegrationSpec extends IntegrationSpec {
 
     def release() {
         execute './gradlew', '-I', '.gradle-test-kit/init.gradle', 'release', '--info', '--stacktrace'
+        lastVersion()
+    }
+
+    def lastVersion() {
         try {
-            execute "git", "describe"
-        } catch(any) {
+            execute "git", "describe", "--abbrev=0"
+        } catch (any) {
             // ignore
             return ""
         }
