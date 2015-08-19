@@ -15,6 +15,7 @@
  */
 package de.gliderpilot.gradle.semanticrelease
 
+import org.ajoberstar.gradle.git.release.semver.ChangeScope
 import org.ajoberstar.grgit.Commit
 
 /**
@@ -68,4 +69,14 @@ class SemanticReleaseCommitMessageConventions {
         matcher[0][1].trim()
     }
 
+    def changeScope = { Commit commit ->
+        breaks(commit) ? ChangeScope.MAJOR
+                : type(commit) == 'feat' ? ChangeScope.MINOR
+                : type(commit) == 'fix' ? ChangeScope.PATCH
+                : null
+    }
+
+    ChangeScope changeScope(List<Commit> commits) {
+        return commits.collect(changeScope).sort().find { it }
+    }
 }

@@ -73,14 +73,12 @@ class SemanticReleaseNormalStrategy implements PartialSemVerStrategy {
 
         SemVerStrategyState state = initialState
 
-        if (log.any { commitMessageConventions.type(it) == 'fix' })
-            state = StrategyUtil.incrementNormalFromScope(initialState, ChangeScope.PATCH)
-        if (log.any { commitMessageConventions.type(it) == 'feat' })
-            state = StrategyUtil.incrementNormalFromScope(initialState, ChangeScope.MINOR)
-        if (log.any(commitMessageConventions.&breaks))
-            state = StrategyUtil.incrementNormalFromScope(initialState, ChangeScope.MAJOR)
-        if (state != initialState && !previousVersion.majorVersion)
-            state = initialState.copyWith(inferredNormal: '1.0.0')
+        ChangeScope scope = commitMessageConventions.changeScope(log)
+        if (scope) {
+            state = StrategyUtil.incrementNormalFromScope(initialState, scope)
+            if (!previousVersion.majorVersion)
+                state = initialState.copyWith(inferredNormal: '1.0.0')
+        }
 
         return state
     }
