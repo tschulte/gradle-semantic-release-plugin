@@ -42,7 +42,7 @@ class SemanticReleaseNormalStrategy implements PartialSemVerStrategy {
     }
 
     /**
-     * @return true if there where fixes, features or breaking changes, false, if there where no commits or if these commits
+     * @return true if there where fixes, features or breaking changes, false otherwise
      */
     boolean doRelease(SemVerStrategyState initialState) {
         doInfer(initialState) != initialState
