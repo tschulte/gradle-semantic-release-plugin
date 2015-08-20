@@ -52,6 +52,7 @@ class SemanticReleasePluginIntegrationSpec extends IntegrationSpec {
             .gradle/
             gradle/
             build/
+            cobertura.ser
         '''.stripIndent()
 
         runTasksSuccessfully(':wrapper')
