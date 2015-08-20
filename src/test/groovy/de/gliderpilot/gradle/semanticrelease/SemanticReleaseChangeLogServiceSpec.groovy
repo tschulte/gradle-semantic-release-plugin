@@ -22,17 +22,17 @@ import spock.lang.Subject
 /**
  * Created by tobias on 7/26/15.
  */
-class SemanticReleaseCommitMessageConventionsSpec extends Specification {
+class SemanticReleaseChangeLogServiceSpec extends Specification {
 
     @Subject
-    SemanticReleaseCommitMessageConventions conventions = new SemanticReleaseCommitMessageConventions()
+    SemanticReleaseChangeLogService changeLogService = new SemanticReleaseChangeLogService()
 
     def "does not throw an exception if no ticket is referenced"() {
         given:
         Commit commit = new Commit(fullMessage: commitMessage)
 
         expect:
-        conventions.closes(commit) == [] as SortedSet
+        changeLogService.closes(commit) == [] as SortedSet
 
         where:
         commitMessage | _
@@ -49,7 +49,7 @@ class SemanticReleaseCommitMessageConventionsSpec extends Specification {
         '''.stripIndent())
 
         expect:
-        conventions.closes(commit) == ['123', '456'] as SortedSet
+        changeLogService.closes(commit) == ['123', '456'] as SortedSet
     }
 
     def "finds referenced tickets all on one line"() {
@@ -59,7 +59,7 @@ class SemanticReleaseCommitMessageConventionsSpec extends Specification {
         '''.stripIndent())
 
         expect:
-        conventions.closes(commit) == ['123', '456'] as SortedSet
+        changeLogService.closes(commit) == ['123', '456'] as SortedSet
     }
 
     def "finds referenced tickets on last line"() {
@@ -68,7 +68,7 @@ class SemanticReleaseCommitMessageConventionsSpec extends Specification {
             Closes #123'''.stripIndent())
 
         expect:
-        conventions.closes(commit) == ['123'] as SortedSet
+        changeLogService.closes(commit) == ['123'] as SortedSet
     }
 
     def "finds breaking change on same line"() {
@@ -80,7 +80,7 @@ class SemanticReleaseCommitMessageConventionsSpec extends Specification {
         '''.stripIndent())
 
         expect:
-        conventions.breaks(commit) == 'foo bar baz'
+        changeLogService.breaks(commit) == 'foo bar baz'
     }
 
     def "finds breaking change on next lines"() {
@@ -94,7 +94,7 @@ class SemanticReleaseCommitMessageConventionsSpec extends Specification {
         '''.stripIndent())
 
         expect:
-        conventions.breaks(commit) == 'foo bar baz'
+        changeLogService.breaks(commit) == 'foo bar baz'
     }
 
     def "finds type from shortMessage"() {
@@ -102,7 +102,7 @@ class SemanticReleaseCommitMessageConventionsSpec extends Specification {
         Commit commit = new Commit(shortMessage: shortMessage)
 
         expect:
-        conventions.type(commit) == type
+        changeLogService.type(commit) == type
 
         where:
         shortMessage             | type
@@ -116,7 +116,7 @@ class SemanticReleaseCommitMessageConventionsSpec extends Specification {
         Commit commit = new Commit(shortMessage: shortMessage)
 
         expect:
-        conventions.component(commit) == component
+        changeLogService.component(commit) == component
 
         where:
         shortMessage             | component
@@ -130,7 +130,7 @@ class SemanticReleaseCommitMessageConventionsSpec extends Specification {
         Commit commit = new Commit(shortMessage: shortMessage)
 
         expect:
-        conventions.subject(commit) == subject
+        changeLogService.subject(commit) == subject
 
         where:
         shortMessage             | subject

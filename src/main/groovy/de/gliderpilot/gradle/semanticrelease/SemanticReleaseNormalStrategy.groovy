@@ -25,14 +25,14 @@ import org.ajoberstar.grgit.Grgit
 class SemanticReleaseNormalStrategy implements PartialSemVerStrategy {
 
     private final Grgit grgit
-    private final SemanticReleaseCommitMessageConventions commitMessageConventions
+    private final SemanticReleaseChangeLogService changeLogService
     private final TagStrategy tagStrategy
 
     SemanticReleaseNormalStrategy(Grgit grgit,
-                                  SemanticReleaseCommitMessageConventions commitMessageConventions,
+                                  SemanticReleaseChangeLogService changeLogService,
                                   TagStrategy tagStrategy) {
         this.grgit = grgit
-        this.commitMessageConventions = commitMessageConventions
+        this.changeLogService = changeLogService
         this.tagStrategy = tagStrategy
     }
 
@@ -71,7 +71,7 @@ class SemanticReleaseNormalStrategy implements PartialSemVerStrategy {
             }
         }
 
-        ChangeScope scope = commitMessageConventions.changeScope(log)
+        ChangeScope scope = changeLogService.changeScope(log)
         if (scope) {
             if (previousVersion.majorVersion)
                 return StrategyUtil.incrementNormalFromScope(initialState, scope)

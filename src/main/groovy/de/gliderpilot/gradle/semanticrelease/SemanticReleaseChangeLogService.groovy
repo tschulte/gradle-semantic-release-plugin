@@ -21,7 +21,7 @@ import org.ajoberstar.grgit.Commit
 /**
  * Created by tobias on 7/26/15.
  */
-class SemanticReleaseCommitMessageConventions {
+class SemanticReleaseChangeLogService {
 
     List<String> closesKeywords = ['Closes', 'Fixes']
 
@@ -76,7 +76,25 @@ class SemanticReleaseCommitMessageConventions {
                 : null
     }
 
+    /**
+     * Parse the commits since the last release and return the change scope to use for
+     * the next version. Return null, if no release is necessary, either because there
+     * where no changes at all, or because there where no relevant changes.
+     *
+     * @param commits the commits since the last release
+     *
+     * @return the change scope or null
+     */
     ChangeScope changeScope(List<Commit> commits) {
         return commits.collect(changeScope).sort().find { it }
+    }
+
+    /**
+     * Create a Writable that can be used to retrieve the change log.
+     *
+     * @param commits the commits since the last release
+     */
+    Writable changeLog(List<Commit> commits) {
+        return null
     }
 }

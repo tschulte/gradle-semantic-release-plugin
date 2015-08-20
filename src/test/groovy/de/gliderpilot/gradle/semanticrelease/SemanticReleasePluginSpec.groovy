@@ -48,19 +48,19 @@ class SemanticReleasePluginSpec extends ProjectSpec {
         pluginName << [PLUGIN, BASE_PLUGIN]
     }
 
-    def "can configure the commitMessageConventionStrategy"() {
+    def "can configure the changeLogService"() {
         when:
         project.with {
             apply plugin: PLUGIN
             semanticRelease {
-                commitMessages {
+                changeLog {
                     breakingChangeKeywords = ['breaks']
                 }
             }
         }
 
         then:
-        project.semanticRelease.commitMessageConventions.breakingChangeKeywords == ['breaks']
+        project.semanticRelease.changeLogService.breakingChangeKeywords == ['breaks']
     }
 
     def "can configure the release branches"() {

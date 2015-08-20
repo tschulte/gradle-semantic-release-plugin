@@ -29,7 +29,7 @@ class SemanticReleasePluginExtension {
 
     final Project project
     final Grgit grgit
-    final SemanticReleaseCommitMessageConventions commitMessageConventions
+    final SemanticReleaseChangeLogService changeLogService
     final SemanticReleaseCheckBranch onReleaseBranch
     final PartialSemVerStrategy appendBranchName
     final SemanticReleaseNormalStrategy semanticStrategy
@@ -39,10 +39,10 @@ class SemanticReleasePluginExtension {
     SemanticReleasePluginExtension(Project project) {
         this.project = project
         grgit = Grgit.open()
-        commitMessageConventions = new SemanticReleaseCommitMessageConventions()
+        changeLogService = new SemanticReleaseChangeLogService()
         onReleaseBranch = new SemanticReleaseCheckBranch()
         appendBranchName = new SemanticReleaseAppendBranchNameStrategy()
-        semanticStrategy = new SemanticReleaseNormalStrategy(grgit, commitMessageConventions, project.release.tagStrategy)
+        semanticStrategy = new SemanticReleaseNormalStrategy(grgit, changeLogService, project.release.tagStrategy)
         releaseStrategy = new SemanticReleaseStrategy(
                 normalStrategy: semanticStrategy,
                 createTag: true,
@@ -55,8 +55,8 @@ class SemanticReleasePluginExtension {
         )
     }
 
-    def commitMessages(Closure closure) {
-        ConfigureUtil.configure(closure, commitMessageConventions)
+    def changeLog(Closure closure) {
+        ConfigureUtil.configure(closure, changeLogService)
     }
 
     def releaseBranches(Closure closure) {
