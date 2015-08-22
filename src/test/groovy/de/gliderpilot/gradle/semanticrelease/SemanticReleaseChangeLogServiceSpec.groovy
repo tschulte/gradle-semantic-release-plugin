@@ -18,6 +18,7 @@ package de.gliderpilot.gradle.semanticrelease
 import org.ajoberstar.grgit.Commit
 import spock.lang.Specification
 import spock.lang.Subject
+import spock.lang.Unroll
 
 import static org.ajoberstar.gradle.git.release.semver.ChangeScope.*
 
@@ -141,7 +142,8 @@ class SemanticReleaseChangeLogServiceSpec extends Specification {
         "feat: blah blupp"       | "blah blupp"
     }
 
-    def "infers correct ChangeScope"() {
+    @Unroll
+    def "infers correct ChangeScope #changeScope for commits #commits"() {
         expect:
         changeLogService.changeScope(commits.collect(asCommit)) == changeScope
 
@@ -149,10 +151,21 @@ class SemanticReleaseChangeLogServiceSpec extends Specification {
         changeScope | commits
         PATCH       | ['fix: foo', 'foo bar']
         MINOR       | ['fix: foo', 'feat: baz', 'foo bar']
-        MAJOR       | ['fix: foo', 'feat:baz\n\nBREAKING CHANGE: This and that', 'foo bar']
+        MAJOR       | ['fix: foo', 'feat: baz\n\nBREAKING CHANGE: This and that', 'foo bar']
         null        | ['foo bar', 'baz']
     }
 
-    def asCommit = { new Commit(fullMessage: it, shortMessage: it.readLines().first()) }
+    @Unroll
+    def "changeLog data for commits #commits"() {
+        expect:
+        changeLogService.changeLogData(commits.collect(asCommit)) == changeLogData
+
+        where:
+        commits                                                                | changeLogData
+        ['fix: foo', 'feat: baz\n\nBREAKING CHANGE: This and that', 'foo bar'] | [fix: [asCommit('fix: foo')], feat: [asCommit('feat: baz\n\nBREAKING CHANGE: This and that')], (null): [asCommit('foo bar')], breakingChanges: [asCommit('feat: baz\n\nBREAKING CHANGE: This and that')]]
+
+    }
+
+    static asCommit = { new Commit(fullMessage: it, shortMessage: it.readLines().first()) }
 
 }

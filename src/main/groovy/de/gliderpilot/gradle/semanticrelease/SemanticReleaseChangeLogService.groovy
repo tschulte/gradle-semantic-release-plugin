@@ -92,12 +92,21 @@ class SemanticReleaseChangeLogService {
         return commits.collect(changeScopeOfCommit).min()
     }
 
+    def changeLogData = { List<Commit> commits ->
+        def breakingChanges = commits.findAll(breaks)
+        def data = commits.groupBy(type)
+        if (breakingChanges)
+            data.breakingChanges = breakingChanges
+        data
+    }
+
     /**
      * Create a Writable that can be used to retrieve the change log.
      *
      * @param commits the commits since the last release
      */
     Closure<Writable> changeLog = { List<Commit> commits ->
+
         return null
     }
 }
