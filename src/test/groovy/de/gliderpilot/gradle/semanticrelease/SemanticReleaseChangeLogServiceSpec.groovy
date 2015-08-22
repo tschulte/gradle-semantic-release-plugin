@@ -19,6 +19,8 @@ import org.ajoberstar.grgit.Commit
 import spock.lang.Specification
 import spock.lang.Subject
 
+import static org.ajoberstar.gradle.git.release.semver.ChangeScope.*
+
 /**
  * Created by tobias on 7/26/15.
  */
@@ -138,5 +140,19 @@ class SemanticReleaseChangeLogServiceSpec extends Specification {
         "feat(core): blah blupp" | "blah blupp"
         "feat: blah blupp"       | "blah blupp"
     }
+
+    def "infers correct ChangeScope"() {
+        expect:
+        changeLogService.changeScope(commits.collect(asCommit)) == changeScope
+
+        where:
+        changeScope | commits
+        PATCH       | ['fix: foo', 'foo bar']
+        MINOR       | ['fix: foo', 'feat: baz', 'foo bar']
+        MAJOR       | ['fix: foo', 'feat:baz\n\nBREAKING CHANGE: This and that', 'foo bar']
+        null        | ['foo bar', 'baz']
+    }
+
+    def asCommit = { new Commit(fullMessage: it, shortMessage: it.readLines().first()) }
 
 }

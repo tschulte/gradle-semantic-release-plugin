@@ -69,7 +69,10 @@ class SemanticReleaseChangeLogService {
         matcher[0][1].trim()
     }
 
-    def changeScope = { Commit commit ->
+    /**
+     * Closure to parse a commit and return the ChangeScope for that commit
+     */
+    Closure<ChangeScope> changeScopeOfCommit = { Commit commit ->
         breaks(commit) ? ChangeScope.MAJOR
                 : type(commit) == 'feat' ? ChangeScope.MINOR
                 : type(commit) == 'fix' ? ChangeScope.PATCH
@@ -85,8 +88,8 @@ class SemanticReleaseChangeLogService {
      *
      * @return the change scope or null
      */
-    ChangeScope changeScope(List<Commit> commits) {
-        return commits.collect(changeScope).sort().find { it }
+    Closure<ChangeScope> changeScope = { List<Commit> commits ->
+        return commits.collect(changeScopeOfCommit).min()
     }
 
     /**
@@ -94,7 +97,7 @@ class SemanticReleaseChangeLogService {
      *
      * @param commits the commits since the last release
      */
-    Writable changeLog(List<Commit> commits) {
+    Closure<Writable> changeLog = { List<Commit> commits ->
         return null
     }
 }
