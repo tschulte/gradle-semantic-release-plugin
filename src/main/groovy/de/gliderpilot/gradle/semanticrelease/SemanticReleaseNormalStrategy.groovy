@@ -17,7 +17,6 @@ package de.gliderpilot.gradle.semanticrelease
 
 import com.github.zafarkhaja.semver.Version
 import groovy.transform.Memoized
-import org.ajoberstar.gradle.git.release.base.TagStrategy
 import org.ajoberstar.gradle.git.release.semver.*
 import org.ajoberstar.grgit.Commit
 import org.ajoberstar.grgit.Grgit
@@ -26,14 +25,11 @@ class SemanticReleaseNormalStrategy implements PartialSemVerStrategy {
 
     private final Grgit grgit
     private final SemanticReleaseChangeLogService changeLogService
-    private final TagStrategy tagStrategy
 
     SemanticReleaseNormalStrategy(Grgit grgit,
-                                  SemanticReleaseChangeLogService changeLogService,
-                                  TagStrategy tagStrategy) {
+                                  SemanticReleaseChangeLogService changeLogService) {
         this.grgit = grgit
         this.changeLogService = changeLogService
-        this.tagStrategy = tagStrategy
     }
 
     @Override
@@ -62,14 +58,7 @@ class SemanticReleaseNormalStrategy implements PartialSemVerStrategy {
             return initialState
         }
 
-        List<Commit> log = grgit.log {
-            includes << 'HEAD'
-            if (previousVersion.majorVersion) {
-                String previousVersionString = (tagStrategy.prefixNameWithV ? 'v' : '') + previousVersion.toString()
-                // range previousVersionString, 'HEAD' does not work: https://github.com/ajoberstar/grgit/issues/71
-                excludes << "${previousVersionString}^{commit}".toString()
-            }
-        }
+        List<Commit> log = changeLogService.commits(grgit, previousVersion)
 
         ChangeScope scope = changeLogService.changeScope(log)
         if (scope) {

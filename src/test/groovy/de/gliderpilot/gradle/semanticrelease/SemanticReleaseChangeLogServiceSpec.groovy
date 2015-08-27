@@ -16,6 +16,7 @@
 package de.gliderpilot.gradle.semanticrelease
 
 import org.ajoberstar.grgit.Commit
+import org.ajoberstar.grgit.Grgit
 import spock.lang.Specification
 import spock.lang.Subject
 import spock.lang.Unroll
@@ -155,17 +156,34 @@ class SemanticReleaseChangeLogServiceSpec extends Specification {
         null        | ['foo bar', 'baz']
     }
 
-    @Unroll
-    def "changeLog data for commits #commits"() {
-        expect:
-        changeLogService.changeLogData(commits.collect(asCommit)) == changeLogData
+    def "changeLog is generated"() {
+        given:
+        Grgit grgit = Grgit.open()
 
-        where:
-        commits                                                                | changeLogData
-        ['fix: foo', 'feat: baz\n\nBREAKING CHANGE: This and that', 'foo bar'] | [fix: [asCommit('fix: foo')], feat: [asCommit('feat: baz\n\nBREAKING CHANGE: This and that')], (null): [asCommit('foo bar')], breakingChanges: [asCommit('feat: baz\n\nBREAKING CHANGE: This and that')]]
+        when:
+        def commits = ['fix: foo', 'feat: baz\n\nBREAKING CHANGE: This and that', 'foo bar']
+        def expected = """\
+            <a name="2.0.0"></a>
+            # [2.0.0](https://github.com/tschulte/gradle-semantic-release-plugin/compare/v1.0.0...v2.0.0) (${new java.sql.Date(System.currentTimeMillis())})
+
+            ### Bug Fixes
+
+            * foo ([1234567](https://github.com/tschulte/gradle-semantic-release-plugin/commit/1234567))
+
+            ### Features
+
+            * baz ([1234567](https://github.com/tschulte/gradle-semantic-release-plugin/commit/1234567))
+
+            ### BREAKING CHANGES
+
+            * This and that
+        """.stripIndent()
+
+        then:
+        changeLogService.changeLog(grgit, 'v1.0.0', 'v2.0.0', '2.0.0', commits.collect(asCommit)).toString() == expected
 
     }
 
-    static asCommit = { new Commit(fullMessage: it, shortMessage: it.readLines().first()) }
+    static asCommit = { new Commit(fullMessage: it, shortMessage: it.readLines().first(), id: '123456789abc') }
 
 }

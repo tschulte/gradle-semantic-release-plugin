@@ -15,6 +15,7 @@
  */
 package de.gliderpilot.gradle.semanticrelease
 
+import com.github.zafarkhaja.semver.Version
 import org.ajoberstar.gradle.git.release.base.BaseReleasePlugin
 import org.ajoberstar.gradle.git.release.base.ReleasePluginExtension
 import org.gradle.api.Plugin
@@ -29,6 +30,19 @@ class SemanticReleaseBasePlugin implements Plugin<Project> {
             ReleasePluginExtension releaseExtension = project.extensions.findByType(ReleasePluginExtension)
             releaseExtension.with {
                 grgit = semanticRelease.grgit
+                tagStrategy {
+                    generateMessage = { version ->
+                        String previousVersion = Version.valueOf(version.previousVersion).majorVersion ? version.previousVersion : null
+                        String previousTag = (previousVersion && releaseExtension.tagStrategy.prefixNameWithV) ? "v$previousVersion" : previousVersion
+                        String currentTag = releaseExtension.tagStrategy.prefixNameWithV ? "v$version.version" : version.version
+                        semanticRelease.changeLogService.changeLog(
+                                grgit,
+                                previousTag,
+                                currentTag,
+                                version.version,
+                                semanticRelease.changeLogService.commits(grgit, Version.valueOf(version.previousVersion))).toString()
+                    }
+                }
             }
         }
     }

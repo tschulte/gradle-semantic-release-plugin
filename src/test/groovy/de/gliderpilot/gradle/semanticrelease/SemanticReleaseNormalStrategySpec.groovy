@@ -29,13 +29,12 @@ class SemanticReleaseNormalStrategySpec extends Specification {
 
     Grgit grgit = Mock()
 
-    SemanticReleaseChangeLogService changeLogService = new SemanticReleaseChangeLogService()
     TagStrategy tagStrategy = new TagStrategy()
+    SemanticReleaseChangeLogService changeLogService = new SemanticReleaseChangeLogService(tagStrategy)
 
     @Subject
     SemanticReleaseNormalStrategy strategy = new SemanticReleaseNormalStrategy(grgit,
-            changeLogService,
-            tagStrategy)
+            changeLogService)
 
     def "no initial version if no feature commit"() {
         given:

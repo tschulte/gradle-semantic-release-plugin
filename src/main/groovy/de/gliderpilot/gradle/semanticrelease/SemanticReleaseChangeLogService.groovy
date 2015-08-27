@@ -15,13 +15,27 @@
  */
 package de.gliderpilot.gradle.semanticrelease
 
+import com.github.zafarkhaja.semver.Version
+import groovy.text.SimpleTemplateEngine
+import groovy.text.Template
+import groovy.transform.Memoized
+import org.ajoberstar.gradle.git.release.base.TagStrategy
 import org.ajoberstar.gradle.git.release.semver.ChangeScope
 import org.ajoberstar.grgit.Commit
+import org.ajoberstar.grgit.Grgit
+
+import java.util.regex.Matcher
 
 /**
  * Created by tobias on 7/26/15.
  */
 class SemanticReleaseChangeLogService {
+
+    private final TagStrategy tagStrategy
+
+    SemanticReleaseChangeLogService(TagStrategy tagStrategy) {
+        this.tagStrategy = tagStrategy
+    }
 
     List<String> closesKeywords = ['Closes', 'Fixes']
 
@@ -69,6 +83,17 @@ class SemanticReleaseChangeLogService {
         matcher[0][1].trim()
     }
 
+    def commitish = { Grgit grgit, Commit commit ->
+        String url = repositoryUrl(grgit, "commit/${commit.abbreviatedId}")
+        url ? "[${commit.abbreviatedId}]($url)" : "${commit.abbreviatedId}"
+    }
+
+    def byTypeGroupByComponent = { List<Commit> commits, String typeFilter ->
+        commits.findAll {
+            type(it) == typeFilter
+        }.groupBy(component).sort { a, b -> a.key <=> b.key }
+    }
+
     /**
      * Closure to parse a commit and return the ChangeScope for that commit
      */
@@ -92,21 +117,51 @@ class SemanticReleaseChangeLogService {
         return commits.collect(changeScopeOfCommit).min()
     }
 
-    def changeLogData = { List<Commit> commits ->
-        def breakingChanges = commits.findAll(breaks)
-        def data = commits.groupBy(type)
-        if (breakingChanges)
-            data.breakingChanges = breakingChanges
-        data
-    }
-
     /**
      * Create a Writable that can be used to retrieve the change log.
      *
      * @param commits the commits since the last release
      */
-    Closure<Writable> changeLog = { List<Commit> commits ->
+    Closure<Writable> changeLog = { Grgit grgit, String previousTag, String currentTag, String version, List<Commit> commits ->
+        Template template = new SimpleTemplateEngine().createTemplate(getClass().getResource('/CHANGELOG.md'))
+        template.make([
+                grgit     : grgit,
+                title     : null,
+                versionUrl: versionUrl(grgit, previousTag, currentTag),
+                service   : this,
+                version   : version,
+                fix       : byTypeGroupByComponent(commits, 'fix'),
+                feat      : byTypeGroupByComponent(commits, 'feat'),
+                perf      : byTypeGroupByComponent(commits, 'perf'),
+                revert    : byTypeGroupByComponent(commits, 'revert'),
+                breaks    : commits.collect(breaks).findAll { it },
+                date      : new java.sql.Date(System.currentTimeMillis()).toString()
+        ])
+    }
 
-        return null
+    Closure<String> repositoryUrl = { Grgit grgit, String suffix ->
+        String repositoryUrl = grgit.remote.list().find { it.name == 'origin' }.url
+        Matcher matcher = repositoryUrl =~ /.*github.com[\/:](.+?)\/(.+?)(?:\.git)/
+        if (!matcher)
+            return null
+        return "https://github.com/${matcher.group(1)}/${matcher.group(2)}/$suffix"
+    }
+
+    Closure<String> versionUrl = { Grgit grgit, String previousTag, String currentTag ->
+        if (!(previousTag && currentTag))
+            return null
+        repositoryUrl(grgit, "compare/${previousTag}...${currentTag}")
+    }
+
+    @Memoized
+    List<Commit> commits(Grgit grgit, Version previousVersion) {
+        grgit.log {
+            includes << 'HEAD'
+            if (previousVersion.majorVersion) {
+                String previousVersionString = (tagStrategy.prefixNameWithV ? 'v' : '') + previousVersion.toString()
+                // range previousVersionString, 'HEAD' does not work: https://github.com/ajoberstar/grgit/issues/71
+                excludes << "${previousVersionString}^{commit}".toString()
+            }
+        }
     }
 }

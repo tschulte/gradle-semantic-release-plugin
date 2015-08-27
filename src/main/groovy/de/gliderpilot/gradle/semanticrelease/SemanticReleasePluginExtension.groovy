@@ -39,10 +39,10 @@ class SemanticReleasePluginExtension {
     SemanticReleasePluginExtension(Project project) {
         this.project = project
         grgit = Grgit.open()
-        changeLogService = new SemanticReleaseChangeLogService()
+        changeLogService = new SemanticReleaseChangeLogService(project.release.tagStrategy)
         onReleaseBranch = new SemanticReleaseCheckBranch()
         appendBranchName = new SemanticReleaseAppendBranchNameStrategy()
-        semanticStrategy = new SemanticReleaseNormalStrategy(grgit, changeLogService, project.release.tagStrategy)
+        semanticStrategy = new SemanticReleaseNormalStrategy(grgit, changeLogService)
         releaseStrategy = new SemanticReleaseStrategy(
                 normalStrategy: semanticStrategy,
                 createTag: true,
