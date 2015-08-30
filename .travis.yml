@@ -3,17 +3,20 @@ addons:
   apt:
     packages:
     - git
-language: java
+language: groovy
 jdk: oraclejdk7
 env: TERM=dumb
 cache:
   directories:
   - $HOME/.gradle
-before_install:
+# skip default install
+install:
+before_script:
   - git config user.email "tobias.schulte@gliderpilot.de"
   - git config user.name "Travis-CI"
   - git config url.https://.insteadOf git://
   - git checkout -qf $TRAVIS_BRANCH
-install:
+script:
   - ./gradlew release cobertura -Dorg.ajoberstar.grgit.auth.username=${GH_TOKEN} -Dorg.ajoberstar.grgit.auth.password --info --stacktrace
-after_success: ./gradlew coveralls
+after_success:
+  - ./gradlew coveralls
