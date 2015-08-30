@@ -16,6 +16,10 @@
 package de.gliderpilot.gradle.semanticrelease
 
 import com.github.zafarkhaja.semver.Version
+import com.jcabi.github.Coordinates
+import com.jcabi.github.Github
+import com.jcabi.github.Release
+import com.jcabi.github.RtGithub
 import groovy.text.SimpleTemplateEngine
 import groovy.text.Template
 import groovy.transform.Memoized
@@ -23,6 +27,7 @@ import org.ajoberstar.gradle.git.release.base.TagStrategy
 import org.ajoberstar.gradle.git.release.semver.ChangeScope
 import org.ajoberstar.grgit.Commit
 import org.ajoberstar.grgit.Grgit
+import org.gradle.api.Project
 
 import java.util.regex.Matcher
 
@@ -32,6 +37,12 @@ import java.util.regex.Matcher
 class SemanticReleaseChangeLogService {
 
     private final TagStrategy tagStrategy
+
+    Github github
+
+    void setGhToken(String token) {
+        github = new RtGithub(token)
+    }
 
     SemanticReleaseChangeLogService(TagStrategy tagStrategy) {
         this.tagStrategy = tagStrategy
@@ -139,12 +150,20 @@ class SemanticReleaseChangeLogService {
         ])
     }
 
-    Closure<String> repositoryUrl = { Grgit grgit, String suffix ->
+    @Memoized
+    String mnemo(Grgit grgit) {
         String repositoryUrl = grgit.remote.list().find { it.name == 'origin' }.url
-        Matcher matcher = repositoryUrl =~ /.*github.com[\/:](.+?)\/(.+?)(?:\.git)/
+        Matcher matcher = repositoryUrl =~ /.*github.com[\/:]((?:.+?)\/(?:.+?))(?:\.git)/
         if (!matcher)
             return null
-        return "https://github.com/${matcher.group(1)}/${matcher.group(2)}/$suffix"
+        return matcher.group(1)
+    }
+
+    Closure<String> repositoryUrl = { Grgit grgit, String suffix ->
+        String mnemo = mnemo(grgit)
+        if (!mnemo)
+            return null
+        return "https://github.com/${mnemo}/$suffix"
     }
 
     Closure<String> versionUrl = { Grgit grgit, String previousTag, String currentTag ->
@@ -163,5 +182,15 @@ class SemanticReleaseChangeLogService {
                 excludes << "${previousVersionString}^{commit}".toString()
             }
         }
+    }
+
+    void createGitHubVersion(Grgit grgit, String tag, String changeLog) {
+        String mnemo = mnemo(grgit)
+        if (!mnemo)
+            return
+        if (!github)
+            return
+        Release release = github.repos().get(new Coordinates.Simple(mnemo)).releases().create(tag)
+        new Release.Smart(release).body(changeLog)
     }
 }

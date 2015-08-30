@@ -15,11 +15,19 @@
  */
 package de.gliderpilot.gradle.semanticrelease
 
+import com.jcabi.github.Coordinates
+import com.jcabi.github.Release
+import com.jcabi.github.mock.MkGithub
 import org.ajoberstar.grgit.Commit
 import org.ajoberstar.grgit.Grgit
+import org.gradle.nativebinaries.Repositories
 import spock.lang.Specification
 import spock.lang.Subject
 import spock.lang.Unroll
+
+import javax.json.Json
+import javax.json.JsonObject
+import javax.json.JsonObjectBuilder
 
 import static org.ajoberstar.gradle.git.release.semver.ChangeScope.*
 
@@ -181,7 +189,19 @@ class SemanticReleaseChangeLogServiceSpec extends Specification {
 
         then:
         changeLogService.changeLog(grgit, 'v1.0.0', 'v2.0.0', '2.0.0', commits.collect(asCommit)).toString() == expected
+    }
 
+    def "change log is uploaded to GitHub"() {
+        given:
+        Grgit grgit = Grgit.open()
+        changeLogService.github = new MkGithub("tschulte")
+        changeLogService.github.repos().create(Json.createObjectBuilder().add("name", "gradle-semantic-release-plugin").build())
+
+        when:
+        changeLogService.createGitHubVersion(grgit, 'v1.0.0', 'changelog-text')
+
+        then:
+        changeLogService.github.repos().get(new Coordinates.Simple("tschulte/gradle-semantic-release-plugin")).releases().iterate().find { new Release.Smart(it).tag() == 'v1.0.0' }
     }
 
     static asCommit = { new Commit(fullMessage: it, shortMessage: it.readLines().first(), id: '123456789abc') }

@@ -44,6 +44,12 @@ class SemanticReleaseBasePlugin implements Plugin<Project> {
                     }
                 }
             }
+            tasks.release.doLast {
+                if (project.version.inferredVersion.createTag) {
+                    String tag = releaseExtension.tagStrategy.prefixNameWithV ? "v$project.version" : "$project.version"
+                    semanticRelease.changeLogService.createGitHubVersion(grgit, tag, project.release.tagStrategy.generateMessage(project.version.inferredVersion))
+                }
+            }
         }
     }
 }
