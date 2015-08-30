@@ -9,13 +9,14 @@ env: TERM=dumb
 cache:
   directories:
   - $HOME/.gradle
-# skip default install
-install:
-before_script:
+before_install:
   - git config user.email "tobias.schulte@gliderpilot.de"
   - git config user.name "Travis-CI"
   - git config url.https://.insteadOf git://
   - git checkout -qf $TRAVIS_BRANCH
+# skip default gradlew assemble
+install:
+  - echo "skip default gradlew assemble"
 script:
   - ./gradlew release cobertura -Dorg.ajoberstar.grgit.auth.username=${GH_TOKEN} -Dorg.ajoberstar.grgit.auth.password --info --stacktrace
 after_success:
