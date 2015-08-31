@@ -17,6 +17,7 @@ package de.gliderpilot.gradle.semanticrelease
 
 import com.jcabi.github.Coordinates
 import com.jcabi.github.Release
+import com.jcabi.github.RtGithub
 import com.jcabi.github.mock.MkGithub
 import org.ajoberstar.grgit.Commit
 import org.ajoberstar.grgit.Grgit
@@ -51,6 +52,14 @@ class SemanticReleaseChangeLogServiceSpec extends Specification {
         ''            | _
         'foo'         | _
         '\n'          | _
+    }
+
+    def "creates github service upon setting ghToken"() {
+        when:
+        changeLogService.ghToken = '12345'
+
+        then:
+        changeLogService.github instanceof RtGithub
     }
 
     def "finds referenced tickets one on each line"() {
@@ -169,14 +178,23 @@ class SemanticReleaseChangeLogServiceSpec extends Specification {
         Grgit grgit = Grgit.open()
 
         when:
-        def commits = ['fix: foo', 'feat: baz\n\nBREAKING CHANGE: This and that', 'foo bar']
+        def commits = [
+                'fix(component1): foo',
+                'fix(component1): bar',
+                'fix(component2): baz',
+                'fix: no component',
+                'feat: baz\n\nBREAKING CHANGE: This and that', 'foo bar']
         def expected = """\
             <a name="2.0.0"></a>
             # [2.0.0](https://github.com/tschulte/gradle-semantic-release-plugin/compare/v1.0.0...v2.0.0) (${new java.sql.Date(System.currentTimeMillis())})
 
             ### Bug Fixes
 
-            * foo ([1234567](https://github.com/tschulte/gradle-semantic-release-plugin/commit/1234567))
+            * no component ([1234567](https://github.com/tschulte/gradle-semantic-release-plugin/commit/1234567))
+            * **component1:**
+                * foo ([1234567](https://github.com/tschulte/gradle-semantic-release-plugin/commit/1234567))
+                * bar ([1234567](https://github.com/tschulte/gradle-semantic-release-plugin/commit/1234567))
+            * **component2:** baz ([1234567](https://github.com/tschulte/gradle-semantic-release-plugin/commit/1234567))
 
             ### Features
 
@@ -202,6 +220,17 @@ class SemanticReleaseChangeLogServiceSpec extends Specification {
 
         then:
         changeLogService.github.repos().get(new Coordinates.Simple("tschulte/gradle-semantic-release-plugin")).releases().iterate().find { new Release.Smart(it).tag() == 'v1.0.0' }
+    }
+
+    def "change log is not uploaded to GitHub when no gh token is set"() {
+        given:
+        Grgit grgit = Grgit.open()
+
+        when:
+        changeLogService.createGitHubVersion(grgit, 'v1.0.0', 'changelog-text')
+
+        then:
+        noExceptionThrown()
     }
 
     static asCommit = { new Commit(fullMessage: it, shortMessage: it.readLines().first(), id: '123456789abc') }
