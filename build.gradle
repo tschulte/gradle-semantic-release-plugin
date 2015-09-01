@@ -61,5 +61,5 @@ tasks.release {
 test {
     if (gradle.startParameter.taskNames.find { ['integTest', 'release'].contains(it) })
         systemProperty 'integTest', 'true'
-    maxHeapSize = '256m'
+    maxHeapSize = '512m'
 }
