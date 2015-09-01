@@ -132,6 +132,14 @@ final class SemanticReleaseStrategy implements VersionStrategy {
             }
             // the ENFORCE-Strategies did change the state, but we must not directly return it, and instead merge the
             // changes into the oldState
+            if (oldState.inferredNormal) {
+                // the semantic release normal strategy did already change the version, only accept the inferred version
+                // of the ENFORCE-Strategies, if the Major or Minor version differs
+                Version oldVersion = Version.valueOf(oldState.inferredNormal)
+                Version newVersion = Version.valueOf(checkedState.inferredNormal)
+                if (oldVersion.majorVersion == newVersion.majorVersion && oldVersion.minorVersion == newVersion.minorVersion)
+                    return oldState
+            }
             return oldState.copyWith(inferredNormal: checkedState.inferredNormal)
         } as PartialSemVerStrategy
     }

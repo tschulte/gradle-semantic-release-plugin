@@ -84,7 +84,7 @@ class SemanticReleaseStrategySpec extends Specification {
     }
 
     @Unroll
-    def "inferred #inferredNormal on branch #branch leads to version #expectedVersion"() {
+    def "inferred #inferredNormal on branch #branch with previous version #previousVersion leads to version #expectedVersion"() {
         given:
         initialState = initialState(previousVersion, branch)
 
