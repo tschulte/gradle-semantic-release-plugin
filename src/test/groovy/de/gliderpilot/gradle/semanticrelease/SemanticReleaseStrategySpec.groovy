@@ -19,8 +19,10 @@ import com.github.zafarkhaja.semver.Version
 import org.ajoberstar.gradle.git.release.base.ReleaseVersion
 import org.ajoberstar.gradle.git.release.semver.NearestVersion
 import org.ajoberstar.gradle.git.release.semver.SemVerStrategyState
+import org.ajoberstar.grgit.Branch
 import spock.lang.Specification
 import spock.lang.Subject
+import spock.lang.Unroll
 
 /**
  * Created by tobias on 8/11/15.
@@ -71,6 +73,7 @@ class SemanticReleaseStrategySpec extends Specification {
     def "increments the PATCH when the normalStrategy does not change the state"() {
         given:
         initialState = initialState('1.1.1')
+
         when:
         def releaseVersion = strategy.infer(null, null)
 
@@ -80,7 +83,49 @@ class SemanticReleaseStrategySpec extends Specification {
         releaseVersion == new ReleaseVersion('1.1.2', '1.1.1', false)
     }
 
-    def initialState(String version) {
-        new SemVerStrategyState(nearestVersion: new NearestVersion(normal: Version.valueOf(version)))
+    @Unroll
+    def "inferred #inferredNormal on branch #branch leads to version #expectedVersion"() {
+        given:
+        initialState = initialState(previousVersion, branch)
+
+        when:
+        def releaseVersion = null
+        try {
+            releaseVersion = strategy.infer(null, null)
+        } catch (e) {
+            releaseVersion = e
+        }
+
+        then:
+        1 * normalStrategy.infer(initialState) >> {
+            initialState.nearestVersion.normal.toString() == inferredNormal ? initialState : initialState.copyWith(inferredNormal: inferredNormal)
+        }
+        expectedVersion ? releaseVersion == new ReleaseVersion(expectedVersion, previousVersion, false) : releaseVersion instanceof Exception
+
+        where:
+        branch          | previousVersion | inferredNormal | expectedVersion
+        'release/1.x'   | '0.0.0'         | '0.0.0'        | '1.0.0'
+        'release/1.x'   | '0.0.0'         | '1.0.0'        | '1.0.0'
+        'release/1.x'   | '1.0.0'         | '1.0.0'        | '1.0.1'
+        'release/1.x'   | '1.0.0'         | '1.0.1'        | '1.0.1'
+        'release/1.x'   | '1.0.0'         | '1.1.0'        | '1.1.0'
+        'release/1.x'   | '1.0.0'         | '2.0.0'        | null
+        'release/1.x'   | '1.1.0'         | '1.1.0'        | '1.1.1'
+        'release/1.x'   | '2.0.0'         | '2.0.0'        | null
+
+        'release/1.0.x' | '0.0.0'         | '0.0.0'        | '1.0.0'
+        'release/1.0.x' | '0.0.0'         | '1.0.0'        | '1.0.0'
+        'release/1.0.x' | '1.0.0'         | '1.0.0'        | '1.0.1'
+        'release/1.0.x' | '1.0.0'         | '1.0.1'        | '1.0.1'
+        'release/1.0.x' | '1.0.0'         | '1.1.0'        | null
+        'release/1.0.x' | '1.0.0'         | '2.0.0'        | null
+        'release/1.0.x' | '1.1.0'         | '1.1.0'        | null
+        'release/1.0.x' | '2.0.0'         | '2.0.0'        | null
+    }
+
+    def initialState(String version, String branch = 'master') {
+        new SemVerStrategyState(
+                nearestVersion: new NearestVersion(normal: Version.valueOf(version)), currentBranch: new Branch(fullName: branch)
+        )
     }
 }

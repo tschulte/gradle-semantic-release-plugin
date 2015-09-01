@@ -168,6 +168,90 @@ class SemanticReleasePluginIntegrationSpec extends IntegrationSpec {
         release() == 'v1.0.0'
     }
 
+    def "supports release/MAJOR_X"() {
+        given: "branch release/1.x"
+        createBranch "release/1.x"
+        push()
+
+        when: "feature commit on this branch"
+        commit("feat: foo")
+
+        then: "release 1.0.0"
+        release() == 'v1.0.0'
+
+        when: "feature commit on this branch"
+        commit("feat: foo")
+
+        then: "release 1.1.0"
+        release() == 'v1.1.0'
+
+        when: "fix commit on this branch"
+        commit("fix: foo")
+
+        then: "release 1.1.1"
+        release() == 'v1.1.1'
+
+        when: "branch release/2.x"
+        createBranch "release/2.x"
+
+        then: "no release (no change)"
+        release() == 'v1.1.1'
+
+        when: "fix commit on this branch"
+        commit("fix: foo")
+
+        then: "release 2.0.0 (major bumb although only fix)"
+        release() == 'v2.0.0'
+
+        when: "breaking commit on this branch"
+        commit("feat: foo\n\nBREAKING CHANGE: this breaks everything")
+
+        and: "release is called"
+        release()
+
+        then: "no release, because branch disallows this"
+        thrown(RuntimeException)
+    }
+
+    def "supports release/MAJOR_MINOR_X"() {
+        given: "branch release/1.0.x"
+        createBranch "release/1.0.x"
+        push()
+
+        when: "feature commit on this branch"
+        commit("feat: foo")
+
+        then: "release 1.0.0"
+        release() == 'v1.0.0'
+
+        when: "fix commit on this branch"
+        commit("fix: foo")
+
+        then: "release 1.0.1"
+        release() == 'v1.0.1'
+
+        when: "branch release/2.0.x"
+        createBranch "release/2.0.x"
+
+        then: "no release"
+        release() == 'v1.0.1'
+
+        when: "fix commit on this branch"
+        commit("fix: foo")
+
+        then: "release 2.0.0 (major bumb although only fix)"
+        release() == 'v2.0.0'
+
+        when: "feature commit on this branch"
+        commit("feat: foo")
+
+        and: "release is called"
+        release()
+
+        then: "no release, because branch disallows this"
+        thrown(RuntimeException)
+    }
+
     def execute(File dir = projectDir, String... args) {
         println "========"
         println "executing ${args.join(' ')}"

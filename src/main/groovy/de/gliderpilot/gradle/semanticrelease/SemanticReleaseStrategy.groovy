@@ -21,10 +21,7 @@ import groovy.transform.PackageScope
 import org.ajoberstar.gradle.git.release.base.ReleaseVersion
 import org.ajoberstar.gradle.git.release.base.VersionStrategy
 import org.ajoberstar.gradle.git.release.opinion.Strategies
-import org.ajoberstar.gradle.git.release.semver.ChangeScope
-import org.ajoberstar.gradle.git.release.semver.PartialSemVerStrategy
-import org.ajoberstar.gradle.git.release.semver.SemVerStrategyState
-import org.ajoberstar.gradle.git.release.semver.StrategyUtil
+import org.ajoberstar.gradle.git.release.semver.*
 import org.ajoberstar.grgit.Grgit
 import org.gradle.api.Project
 import org.slf4j.Logger
@@ -92,12 +89,47 @@ final class SemanticReleaseStrategy implements VersionStrategy {
                             it.nearestVersion.normal.majorVersion ? it : it.copyWith(inferredNormal: '1.0.0')
                         } as PartialSemVerStrategy,
                         Strategies.Normal.useScope(ChangeScope.PATCH)),
+                enforceReleaseBranchPattern(),
                 preReleaseStrategy,
                 buildMetadataStrategy).infer(initialState).toVersion()
 
         logger.warn('Inferred version: {}', version)
 
         return new ReleaseVersion(version.toString(), initialState.nearestVersion.normal.toString(), createTag)
+    }
+
+    /**
+     * If the branch is of pattern /^(?:release[-\/])?\d+(?:\.\d+)?\.x$/, enforce that the version matches that pattern.
+     * <p>
+     * This means, if the semantic release normal strategy already increased the version to be out of range, throw an
+     * exception. If the semantic release normal strategy did not already increased the version, increase it. So even if
+     * there was no BREAKING CHANGE, the major version might be increased.
+     *
+     * @see Strategies.Normal.ENFORCE_BRANCH_MAJOR_MINOR_X
+     * @see Strategies.Normal.ENFORCE_GITFLOW_BRANCH_MAJOR_MINOR_X
+     * @see Strategies.Normal.ENFORCE_BRANCH_MAJOR_X
+     * @see Strategies.Normal.ENFORCE_GITFLOW_BRANCH_MAJOR_X
+     */
+    private PartialSemVerStrategy enforceReleaseBranchPattern() {
+        return { SemVerStrategyState oldState ->
+            // We use the provided ENFORCE-Strategies of gradle-git. But these do only work with the nearestVersion.normal,
+            // and we might already have changed the inferredNormal in the semantic release normal strategy.
+            // Therefore we must create a tmpState first
+            SemVerStrategyState tmpState = oldState.inferredNormal ?
+                    oldState.copyWith(nearestVersion: new NearestVersion(normal: Version.valueOf(oldState.inferredNormal))) :
+                    oldState
+            SemVerStrategyState checkedState = StrategyUtil.all(Strategies.Normal.ENFORCE_BRANCH_MAJOR_MINOR_X,
+                    Strategies.Normal.ENFORCE_GITFLOW_BRANCH_MAJOR_MINOR_X,
+                    Strategies.Normal.ENFORCE_BRANCH_MAJOR_X,
+                    Strategies.Normal.ENFORCE_GITFLOW_BRANCH_MAJOR_X).infer(tmpState)
+            if (checkedState == tmpState) {
+                // the ENFORCE-Strategies did not change anything, return the old state
+                return oldState
+            }
+            // the ENFORCE-Strategies did change the state, but we must not directly return it, and instead merge the
+            // changes into the oldState
+            return oldState.copyWith(inferredNormal: checkedState.inferredNormal)
+        } as PartialSemVerStrategy
     }
 
 }
