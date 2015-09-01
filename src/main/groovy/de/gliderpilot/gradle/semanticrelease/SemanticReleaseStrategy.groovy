@@ -85,9 +85,7 @@ final class SemanticReleaseStrategy implements VersionStrategy {
 
         Version version = StrategyUtil.all(
                 StrategyUtil.one(normalStrategy,
-                        {
-                            it.nearestVersion.normal.majorVersion ? it : it.copyWith(inferredNormal: '1.0.0')
-                        } as PartialSemVerStrategy,
+                        enforceMajorIsGreaterThanZero(),
                         Strategies.Normal.useScope(ChangeScope.PATCH)),
                 enforceReleaseBranchPattern(),
                 preReleaseStrategy,
@@ -96,6 +94,12 @@ final class SemanticReleaseStrategy implements VersionStrategy {
         logger.warn('Inferred version: {}', version)
 
         return new ReleaseVersion(version.toString(), initialState.nearestVersion.normal.toString(), createTag)
+    }
+
+    private PartialSemVerStrategy enforceMajorIsGreaterThanZero() {
+        return {
+            it.nearestVersion.normal.majorVersion ? it : it.copyWith(inferredNormal: '1.0.0')
+        } as PartialSemVerStrategy
     }
 
     /**
