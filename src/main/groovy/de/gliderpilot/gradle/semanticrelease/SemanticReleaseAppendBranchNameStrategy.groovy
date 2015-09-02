@@ -22,7 +22,6 @@ import org.ajoberstar.gradle.git.release.semver.SemVerStrategyState
 /**
  * Created by tobias on 7/21/15.
  */
-@PackageScope
 class SemanticReleaseAppendBranchNameStrategy implements PartialSemVerStrategy {
 
     def replacePatterns = [:]

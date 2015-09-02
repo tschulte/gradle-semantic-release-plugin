@@ -20,7 +20,6 @@ import groovy.transform.PackageScope
 /**
  * Created by tobias on 7/21/15.
  */
-@PackageScope
 class SemanticReleaseCheckBranch {
 
     Set<String> includes = [] as Set
@@ -38,6 +37,7 @@ class SemanticReleaseCheckBranch {
         excludes.addAll(patterns)
     }
 
+    @PackageScope
     boolean isReleaseBranch(String branchName) {
         if (includes.any { branchName ==~ it })
             return true

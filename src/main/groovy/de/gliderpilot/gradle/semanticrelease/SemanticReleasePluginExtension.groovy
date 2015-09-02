@@ -29,7 +29,7 @@ class SemanticReleasePluginExtension {
     final Project project
     final SemanticReleaseChangeLogService changeLogService
     final SemanticReleaseCheckBranch onReleaseBranch
-    final PartialSemVerStrategy appendBranchName
+    final SemanticReleaseAppendBranchNameStrategy appendBranchName
     final SemanticReleaseNormalStrategy semanticStrategy
     final SemanticReleaseStrategy releaseStrategy
 
