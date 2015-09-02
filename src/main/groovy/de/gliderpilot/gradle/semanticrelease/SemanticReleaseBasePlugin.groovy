@@ -25,11 +25,11 @@ class SemanticReleaseBasePlugin implements Plugin<Project> {
 
     void apply(Project project) {
         project.with {
-            plugins.apply(BaseReleasePlugin)
+            plugins.apply('org.ajoberstar.grgit')
+            plugins.apply('org.ajoberstar.release-base')
             SemanticReleasePluginExtension semanticRelease = extensions.create("semanticRelease", SemanticReleasePluginExtension, project)
             ReleasePluginExtension releaseExtension = project.extensions.findByType(ReleasePluginExtension)
             releaseExtension.with {
-                grgit = semanticRelease.grgit
                 tagStrategy {
                     generateMessage = { version ->
                         String previousVersion = Version.valueOf(version.previousVersion).majorVersion ? version.previousVersion : null

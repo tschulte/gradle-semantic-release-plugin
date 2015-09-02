@@ -16,7 +16,6 @@
 package de.gliderpilot.gradle.semanticrelease
 
 import org.ajoberstar.gradle.git.release.semver.PartialSemVerStrategy
-import org.ajoberstar.grgit.Grgit
 import org.gradle.api.Project
 import org.gradle.util.ConfigureUtil
 
@@ -28,7 +27,6 @@ import javax.inject.Inject
 class SemanticReleasePluginExtension {
 
     final Project project
-    final Grgit grgit
     final SemanticReleaseChangeLogService changeLogService
     final SemanticReleaseCheckBranch onReleaseBranch
     final PartialSemVerStrategy appendBranchName
@@ -38,11 +36,10 @@ class SemanticReleasePluginExtension {
     @Inject
     SemanticReleasePluginExtension(Project project) {
         this.project = project
-        grgit = Grgit.open()
         changeLogService = new SemanticReleaseChangeLogService(project.release.tagStrategy)
         onReleaseBranch = new SemanticReleaseCheckBranch()
         appendBranchName = new SemanticReleaseAppendBranchNameStrategy()
-        semanticStrategy = new SemanticReleaseNormalStrategy(grgit, changeLogService)
+        semanticStrategy = new SemanticReleaseNormalStrategy(project.grgit, changeLogService)
         releaseStrategy = new SemanticReleaseStrategy(
                 normalStrategy: semanticStrategy,
                 createTag: true,
