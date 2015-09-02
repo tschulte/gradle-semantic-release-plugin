@@ -62,4 +62,5 @@ test {
     if (gradle.startParameter.taskNames.find { ['integTest', 'release'].contains(it) })
         systemProperty 'integTest', 'true'
     maxHeapSize = '512m'
+    jvmArgs '-XX:MaxPermSize=256m'
 }
