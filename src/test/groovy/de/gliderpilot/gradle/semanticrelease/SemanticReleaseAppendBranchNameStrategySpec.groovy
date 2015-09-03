@@ -23,13 +23,16 @@ import spock.lang.Unroll
 
 class SemanticReleaseAppendBranchNameStrategySpec extends Specification {
 
+    SemanticReleaseCheckBranch onReleaseBranch = new SemanticReleaseCheckBranch()
+
     @Subject
-    SemanticReleaseAppendBranchNameStrategy strategy = new SemanticReleaseAppendBranchNameStrategy()
+    SemanticReleaseAppendBranchNameStrategy strategy = new SemanticReleaseAppendBranchNameStrategy(onReleaseBranch)
 
     @Unroll
     def "an initial branchname #branchName leads to inferredPreRelease #inferredPreRelease"() {
         given:
         def initialState = initialState(branchName)
+
         when:
         def newState = strategy.infer(initialState)
 
@@ -43,12 +46,13 @@ class SemanticReleaseAppendBranchNameStrategySpec extends Specification {
         'feature/foo'                  | 'foo'
         'feature/#123-foo-bar_baz#'    | '-123-foo-bar-baz-'
         'feature/$#123-foo-bar_baz###' | '--123-foo-bar-baz---'
+        'master'                       | null
     }
-
 
     def "the branch name is appended to an existing inferredPreRelease"() {
         given:
         def initialState = initialState('develop').copyWith(inferredPreRelease: 'foo')
+
         when:
         def newState = strategy.infer(initialState)
 

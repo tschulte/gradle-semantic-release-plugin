@@ -24,9 +24,11 @@ import org.ajoberstar.gradle.git.release.semver.SemVerStrategyState
  */
 class SemanticReleaseAppendBranchNameStrategy implements PartialSemVerStrategy {
 
+    private final SemanticReleaseCheckBranch onReleaseBranch
     def replacePatterns = [:]
 
-    SemanticReleaseAppendBranchNameStrategy() {
+    SemanticReleaseAppendBranchNameStrategy(SemanticReleaseCheckBranch onReleaseBranch) {
+        this.onReleaseBranch = onReleaseBranch
         replace(~/^feature[-\/](.*)$/, '$1')
     }
 
@@ -36,6 +38,10 @@ class SemanticReleaseAppendBranchNameStrategy implements PartialSemVerStrategy {
 
     @Override
     SemVerStrategyState infer(SemVerStrategyState state) {
+        if (onReleaseBranch.isReleaseBranch(state.currentBranch.name)) {
+            // no branch name if on release branch
+            return state
+        }
         def branchName = removeDisallowedChars(shortenBranch(state.currentBranch.name))
         def inferred = state.inferredPreRelease ? "${state.inferredPreRelease}.${branchName}" : "${branchName}"
         return state.copyWith(inferredPreRelease: inferred)
