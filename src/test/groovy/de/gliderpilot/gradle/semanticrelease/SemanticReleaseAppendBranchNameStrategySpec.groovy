@@ -60,6 +60,18 @@ class SemanticReleaseAppendBranchNameStrategySpec extends Specification {
         newState.inferredPreRelease == 'foo.develop'
     }
 
+    def "replace patterns are allowed to replace all"() {
+        given:
+        strategy.replace(~/develop/, '')
+        def initialState = initialState('develop')
+
+        when:
+        def newState = strategy.infer(initialState)
+
+        then:
+        newState.inferredPreRelease == null
+    }
+
     def initialState(String branchName) {
         new SemVerStrategyState(currentBranch: new Branch(fullName: branchName))
     }

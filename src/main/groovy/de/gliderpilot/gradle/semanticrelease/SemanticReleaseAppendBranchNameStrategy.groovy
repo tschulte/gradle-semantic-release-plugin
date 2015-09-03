@@ -43,6 +43,11 @@ class SemanticReleaseAppendBranchNameStrategy implements PartialSemVerStrategy {
             return state
         }
         def branchName = removeDisallowedChars(shortenBranch(state.currentBranch.name))
+        if (!branchName) {
+            // allow user to e.g. define `replace(~/develop/, '')` to disable branchname addition to versions
+            // built on the develop branch
+            return state
+        }
         def inferred = state.inferredPreRelease ? "${state.inferredPreRelease}.${branchName}" : "${branchName}"
         return state.copyWith(inferredPreRelease: inferred)
     }
