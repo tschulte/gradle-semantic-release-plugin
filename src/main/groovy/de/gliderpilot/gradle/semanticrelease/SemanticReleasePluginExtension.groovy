@@ -17,6 +17,7 @@ package de.gliderpilot.gradle.semanticrelease
 
 import org.ajoberstar.gradle.git.release.semver.PartialSemVerStrategy
 import org.ajoberstar.gradle.git.release.semver.SemVerStrategyState
+import org.ajoberstar.gradle.git.release.semver.StrategyUtil
 import org.gradle.api.Project
 import org.gradle.util.ConfigureUtil
 
@@ -33,6 +34,7 @@ class SemanticReleasePluginExtension {
     final SemanticReleaseAppendBranchNameStrategy appendBranchName
     final SemanticReleaseNormalStrategy semanticStrategy
     final SemanticReleaseStrategy releaseStrategy
+    final SemanticReleaseStrategy snapshotStrategy
 
     @Inject
     SemanticReleasePluginExtension(Project project) {
@@ -46,6 +48,19 @@ class SemanticReleasePluginExtension {
                 createTag: true,
                 selector: this.&isRelease
         )
+        snapshotStrategy = releaseStrategy.copyWith(
+                type: "SNAPSHOT",
+                preReleaseStrategy: StrategyUtil.all(
+                        appendBranchName,
+                        {
+                            it.inferredPreRelease ?
+                                    it.copyWith(inferredPreRelease: "${it.inferredPreRelease}-SNAPSHOT") :
+                                    it.copyWith(inferredPreRelease: "SNAPSHOT")
+                        } as PartialSemVerStrategy
+                ),
+                createTag: false
+        )
+
     }
 
     def changeLog(Closure closure) {

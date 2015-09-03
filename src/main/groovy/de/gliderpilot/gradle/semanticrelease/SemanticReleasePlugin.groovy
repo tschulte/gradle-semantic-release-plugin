@@ -29,22 +29,8 @@ class SemanticReleasePlugin implements Plugin<Project> {
             ReleasePluginExtension releaseExtension = project.extensions.findByType(ReleasePluginExtension)
             SemanticReleasePluginExtension semanticReleaseExtension = project.extensions.findByType(SemanticReleasePluginExtension)
             releaseExtension.with {
-                SemanticReleaseStrategy releaseStrategy = semanticReleaseExtension.releaseStrategy
-                versionStrategy releaseStrategy
-                versionStrategy releaseStrategy.copyWith(
-                        type: "SNAPSHOT",
-                        selector: { semanticReleaseExtension.onReleaseBranch.isReleaseBranch(it.currentBranch.name) },
-                        preReleaseStrategy: { it.copyWith(inferredPreRelease: "SNAPSHOT") },
-                        createTag: false
-                )
-                defaultVersionStrategy = releaseStrategy.copyWith(
-                        type: "dev-SNAPSHOT",
-                        preReleaseStrategy: StrategyUtil.all(
-                                semanticReleaseExtension.appendBranchName,
-                                { it.copyWith(inferredPreRelease: "${it.inferredPreRelease}-SNAPSHOT") } as PartialSemVerStrategy
-                        ),
-                        createTag: false
-                )
+                versionStrategy semanticReleaseExtension.releaseStrategy
+                defaultVersionStrategy = semanticReleaseExtension.snapshotStrategy
             }
         }
     }
