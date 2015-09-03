@@ -16,6 +16,7 @@
 package de.gliderpilot.gradle.semanticrelease
 
 import org.ajoberstar.gradle.git.release.semver.PartialSemVerStrategy
+import org.ajoberstar.gradle.git.release.semver.SemVerStrategyState
 import org.gradle.api.Project
 import org.gradle.util.ConfigureUtil
 
@@ -43,12 +44,7 @@ class SemanticReleasePluginExtension {
         releaseStrategy = new SemanticReleaseStrategy(
                 normalStrategy: semanticStrategy,
                 createTag: true,
-                selector: {
-                    !it.repoDirty &&
-                            onReleaseBranch.isReleaseBranch(it.currentBranch.name) &&
-                            semanticStrategy.doRelease(it) &&
-                            isRelease()
-                }
+                selector: this.&isRelease
         )
     }
 
@@ -64,8 +60,9 @@ class SemanticReleasePluginExtension {
         ConfigureUtil.configure(closure, appendBranchName)
     }
 
-    boolean isRelease() {
-        project.gradle.startParameter.taskNames.find { it == 'release' }
+    boolean isRelease(SemVerStrategyState state) {
+        !state.repoDirty && onReleaseBranch.isReleaseBranch(state.currentBranch.name) &&
+                semanticStrategy.doRelease(state) && project.gradle.startParameter.taskNames.find { it == 'release' }
     }
 
 }
