@@ -17,7 +17,6 @@ package de.gliderpilot.gradle.semanticrelease
 
 import com.github.zafarkhaja.semver.Version
 import groovy.transform.Immutable
-import groovy.transform.PackageScope
 import org.ajoberstar.gradle.git.release.base.ReleaseVersion
 import org.ajoberstar.gradle.git.release.base.VersionStrategy
 import org.ajoberstar.gradle.git.release.opinion.Strategies
@@ -74,14 +73,8 @@ final class SemanticReleaseStrategy implements VersionStrategy {
 
     @Override
     ReleaseVersion infer(Project project, Grgit grgit) {
-        doInfer(initialStateService.initialState(project, grgit))
-    }
-
-    // for unit tests
-    @PackageScope
-    ReleaseVersion doInfer(SemVerStrategyState initialState) {
-
-        logger.info('Beginning version inference using semantic-release strategy')
+        logger.info("Beginning version inference using $name strategy")
+        SemVerStrategyState initialState = initialStateService.initialState(project, grgit)
 
         Version version = StrategyUtil.all(
                 StrategyUtil.one(normalStrategy,
