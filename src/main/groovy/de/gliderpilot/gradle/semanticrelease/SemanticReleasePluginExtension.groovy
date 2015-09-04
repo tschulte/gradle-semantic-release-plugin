@@ -52,11 +52,7 @@ class SemanticReleasePluginExtension {
                 type: "SNAPSHOT",
                 preReleaseStrategy: StrategyUtil.all(
                         appendBranchName,
-                        {
-                            it.inferredPreRelease ?
-                                    it.copyWith(inferredPreRelease: "${it.inferredPreRelease}-SNAPSHOT") :
-                                    it.copyWith(inferredPreRelease: "SNAPSHOT")
-                        } as PartialSemVerStrategy
+                        appendSnapshot()
                 ),
                 createTag: false
         )
@@ -78,6 +74,14 @@ class SemanticReleasePluginExtension {
     boolean isRelease(SemVerStrategyState state) {
         !state.repoDirty && onReleaseBranch.isReleaseBranch(state.currentBranch.name) &&
                 semanticStrategy.doRelease(state) && project.gradle.startParameter.taskNames.find { it == 'release' }
+    }
+
+    private PartialSemVerStrategy appendSnapshot() {
+        return {
+            it.inferredPreRelease ?
+                    it.copyWith(inferredPreRelease: "${it.inferredPreRelease}-SNAPSHOT") :
+                    it.copyWith(inferredPreRelease: "SNAPSHOT")
+        } as PartialSemVerStrategy
     }
 
 }
