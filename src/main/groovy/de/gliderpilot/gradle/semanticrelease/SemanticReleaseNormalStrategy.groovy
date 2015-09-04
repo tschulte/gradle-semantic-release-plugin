@@ -38,7 +38,8 @@ class SemanticReleaseNormalStrategy implements PartialSemVerStrategy {
     }
 
     /**
-     * @return true if there where fixes, features or breaking changes, false otherwise
+     * @return true if the version can be released, i.e. if SemanticReleaseChangeLogService.changeScope returned a
+     * ChangeScope
      */
     boolean doRelease(SemVerStrategyState initialState) {
         doInfer(initialState) != initialState
