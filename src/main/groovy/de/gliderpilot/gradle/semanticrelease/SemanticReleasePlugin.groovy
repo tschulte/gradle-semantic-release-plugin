@@ -16,8 +16,6 @@
 package de.gliderpilot.gradle.semanticrelease
 
 import org.ajoberstar.gradle.git.release.base.ReleasePluginExtension
-import org.ajoberstar.gradle.git.release.semver.PartialSemVerStrategy
-import org.ajoberstar.gradle.git.release.semver.StrategyUtil
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 
@@ -25,9 +23,16 @@ class SemanticReleasePlugin implements Plugin<Project> {
 
     void apply(Project project) {
         project.with {
-            plugins.apply SemanticReleaseBasePlugin
-            ReleasePluginExtension releaseExtension = project.extensions.findByType(ReleasePluginExtension)
-            SemanticReleasePluginExtension semanticReleaseExtension = project.extensions.findByType(SemanticReleasePluginExtension)
+            plugins.apply('org.ajoberstar.grgit')
+            plugins.apply('org.ajoberstar.release-base')
+            SemanticReleasePluginExtension semanticReleaseExtension = extensions.create("semanticRelease", SemanticReleasePluginExtension, project)
+            ReleasePluginExtension releaseExtension = extensions.findByType(ReleasePluginExtension)
+            tasks.release.doLast {
+                if (project.version.inferredVersion.createTag) {
+                    String tag = releaseExtension.tagStrategy.prefixNameWithV ? "v$project.version" : "$project.version"
+                    semanticReleaseExtension.changeLogService.createGitHubVersion(project.release.grgit, project.version.inferredVersion)
+                }
+            }
             releaseExtension.with {
                 versionStrategy semanticReleaseExtension.releaseStrategy
                 defaultVersionStrategy = semanticReleaseExtension.snapshotStrategy

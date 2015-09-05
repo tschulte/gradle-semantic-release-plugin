@@ -23,29 +23,22 @@ import nebula.test.ProjectSpec
 class SemanticReleasePluginSpec extends ProjectSpec {
 
     private static final String PLUGIN = 'de.gliderpilot.semantic-release'
-    private static final String BASE_PLUGIN = 'de.gliderpilot.semantic-release-base'
 
     def 'apply does not throw exceptions'() {
         when:
-        project.apply plugin: pluginName
+        project.apply plugin: PLUGIN
 
         then:
         noExceptionThrown()
-
-        where:
-        pluginName << [PLUGIN, BASE_PLUGIN]
     }
 
     def 'apply is idempotent'() {
         when:
-        project.apply plugin: pluginName
-        project.apply plugin: pluginName
+        project.apply plugin: PLUGIN
+        project.apply plugin: PLUGIN
 
         then:
         noExceptionThrown()
-
-        where:
-        pluginName << [PLUGIN, BASE_PLUGIN]
     }
 
     def "can configure the changeLogService"() {
