@@ -168,6 +168,7 @@ class SemanticReleaseChangeLogServiceSpec extends Specification {
 
         where:
         changeScope | commits
+        PATCH       | ['perf: foo', 'foo bar']
         PATCH       | ['fix: foo', 'foo bar']
         MINOR       | ['fix: foo', 'feat: baz', 'foo bar']
         MAJOR       | ['fix: foo', 'feat: baz\n\nBREAKING CHANGE: This and that', 'foo bar']

@@ -111,7 +111,7 @@ class SemanticReleaseChangeLogService {
     Closure<ChangeScope> changeScopeOfCommit = { Commit commit ->
         breaks(commit) ? ChangeScope.MAJOR
                 : type(commit) == 'feat' ? ChangeScope.MINOR
-                : type(commit) == 'fix' ? ChangeScope.PATCH
+                : type(commit) in ['fix', 'perf'] ? ChangeScope.PATCH
                 : null
     }
 
