@@ -48,6 +48,66 @@ class SemanticReleaseChangeLogService {
         this.tagStrategy = tagStrategy
     }
 
+    /**
+     * Parse the commits since the last release and return the change scope to use for
+     * the next version. Return null, if no release is necessary, either because there
+     * where no changes at all, or because there where no relevant changes.
+     * If a Commit introduced relevant changes is determined using the changeScopeOfCommit
+     * closure.
+     *
+     * @param commits the commits since the last release
+     *
+     * @return the change scope or null
+     */
+    ChangeScope changeScope(List<Commit> commits) {
+        return commits.collect(changeScope).min()
+    }
+
+    /**
+     * Closure to parse a commit and return the ChangeScope for that commit. Return null,
+     * if this commit did not introduce a relevant change.
+     */
+    Closure<ChangeScope> changeScope = { Commit commit ->
+        breaks(commit) ? ChangeScope.MAJOR
+                : type(commit) == 'feat' ? ChangeScope.MINOR
+                : type(commit) in ['fix', 'perf'] ? ChangeScope.PATCH
+                : null
+    }
+
+    Writable changeLog(Grgit grgit, ReleaseVersion version) {
+        String previousVersion = Version.valueOf(version.previousVersion).majorVersion ? version.previousVersion : null
+        String previousTag = (previousVersion && tagStrategy.prefixNameWithV) ? "v$previousVersion" : previousVersion
+        String currentTag = tagStrategy.prefixNameWithV ? "v$version.version" : version.version
+        changeLog(
+                grgit,
+                previousTag,
+                currentTag,
+                version.version,
+                commits(grgit, Version.valueOf(version.previousVersion)))
+    }
+
+    /**
+     * Create a Writable that can be used to retrieve the change log.
+     *
+     * @param commits the commits since the last release
+     */
+    Closure<Writable> changeLog = { Grgit grgit, String previousTag, String currentTag, String version, List<Commit> commits ->
+        Template template = new SimpleTemplateEngine().createTemplate(getClass().getResource('/CHANGELOG.md'))
+        template.make([
+                grgit     : grgit,
+                title     : null,
+                versionUrl: versionUrl(grgit, previousTag, currentTag),
+                service   : this,
+                version   : version,
+                fix       : byTypeGroupByComponent(commits, 'fix'),
+                feat      : byTypeGroupByComponent(commits, 'feat'),
+                perf      : byTypeGroupByComponent(commits, 'perf'),
+                revert    : byTypeGroupByComponent(commits, 'revert'),
+                breaks    : commits.collect(breaks).findAll { it },
+                date      : new java.sql.Date(System.currentTimeMillis()).toString()
+        ])
+    }
+
     List<String> closesKeywords = ['Closes', 'Fixes']
 
     def closes = { Commit commit ->
@@ -105,63 +165,6 @@ class SemanticReleaseChangeLogService {
         }.groupBy(component).sort { a, b -> a.key <=> b.key }
     }
 
-    /**
-     * Closure to parse a commit and return the ChangeScope for that commit
-     */
-    Closure<ChangeScope> changeScopeOfCommit = { Commit commit ->
-        breaks(commit) ? ChangeScope.MAJOR
-                : type(commit) == 'feat' ? ChangeScope.MINOR
-                : type(commit) in ['fix', 'perf'] ? ChangeScope.PATCH
-                : null
-    }
-
-    /**
-     * Parse the commits since the last release and return the change scope to use for
-     * the next version. Return null, if no release is necessary, either because there
-     * where no changes at all, or because there where no relevant changes.
-     *
-     * @param commits the commits since the last release
-     *
-     * @return the change scope or null
-     */
-    Closure<ChangeScope> changeScope = { List<Commit> commits ->
-        return commits.collect(changeScopeOfCommit).min()
-    }
-
-    Writable changeLogForVersion(Grgit grgit, ReleaseVersion version) {
-        String previousVersion = Version.valueOf(version.previousVersion).majorVersion ? version.previousVersion : null
-        String previousTag = (previousVersion && tagStrategy.prefixNameWithV) ? "v$previousVersion" : previousVersion
-        String currentTag = tagStrategy.prefixNameWithV ? "v$version.version" : version.version
-        changeLog(
-                grgit,
-                previousTag,
-                currentTag,
-                version.version,
-                commits(grgit, Version.valueOf(version.previousVersion)))
-    }
-
-    /**
-     * Create a Writable that can be used to retrieve the change log.
-     *
-     * @param commits the commits since the last release
-     */
-    Closure<Writable> changeLog = { Grgit grgit, String previousTag, String currentTag, String version, List<Commit> commits ->
-        Template template = new SimpleTemplateEngine().createTemplate(getClass().getResource('/CHANGELOG.md'))
-        template.make([
-                grgit     : grgit,
-                title     : null,
-                versionUrl: versionUrl(grgit, previousTag, currentTag),
-                service   : this,
-                version   : version,
-                fix       : byTypeGroupByComponent(commits, 'fix'),
-                feat      : byTypeGroupByComponent(commits, 'feat'),
-                perf      : byTypeGroupByComponent(commits, 'perf'),
-                revert    : byTypeGroupByComponent(commits, 'revert'),
-                breaks    : commits.collect(breaks).findAll { it },
-                date      : new java.sql.Date(System.currentTimeMillis()).toString()
-        ])
-    }
-
     @Memoized
     String mnemo(Grgit grgit) {
         String repositoryUrl = grgit.remote.list().find { it.name == 'origin' }.url
@@ -204,6 +207,6 @@ class SemanticReleaseChangeLogService {
             return
         String tag = tagStrategy.prefixNameWithV ? "v$version.version" : "$version.version"
         Release release = github.repos().get(new Coordinates.Simple(mnemo)).releases().create(tag)
-        new Release.Smart(release).body(changeLogForVersion(grgit, version).toString())
+        new Release.Smart(release).body(changeLog(grgit, version).toString())
     }
 }
