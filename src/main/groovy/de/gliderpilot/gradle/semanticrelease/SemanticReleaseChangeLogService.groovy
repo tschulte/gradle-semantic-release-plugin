@@ -23,6 +23,7 @@ import com.jcabi.github.RtGithub
 import groovy.text.SimpleTemplateEngine
 import groovy.text.Template
 import groovy.transform.Memoized
+import org.ajoberstar.gradle.git.release.base.ReleaseVersion
 import org.ajoberstar.gradle.git.release.base.TagStrategy
 import org.ajoberstar.gradle.git.release.semver.ChangeScope
 import org.ajoberstar.grgit.Commit
@@ -128,6 +129,18 @@ class SemanticReleaseChangeLogService {
         return commits.collect(changeScopeOfCommit).min()
     }
 
+    Writable changeLogForVersion(Grgit grgit, ReleaseVersion version) {
+        String previousVersion = Version.valueOf(version.previousVersion).majorVersion ? version.previousVersion : null
+        String previousTag = (previousVersion && tagStrategy.prefixNameWithV) ? "v$previousVersion" : previousVersion
+        String currentTag = tagStrategy.prefixNameWithV ? "v$version.version" : version.version
+        changeLog(
+                grgit,
+                previousTag,
+                currentTag,
+                version.version,
+                commits(grgit, Version.valueOf(version.previousVersion)))
+    }
+
     /**
      * Create a Writable that can be used to retrieve the change log.
      *
@@ -184,13 +197,14 @@ class SemanticReleaseChangeLogService {
         }
     }
 
-    void createGitHubVersion(Grgit grgit, String tag, String changeLog) {
+    void createGitHubVersion(Grgit grgit, ReleaseVersion version) {
         String mnemo = mnemo(grgit)
         if (!mnemo)
             return
         if (!github)
             return
+        String tag = tagStrategy.prefixNameWithV ? "v$version.version" : "$version.version"
         Release release = github.repos().get(new Coordinates.Simple(mnemo)).releases().create(tag)
-        new Release.Smart(release).body(changeLog)
+        new Release.Smart(release).body(changeLogForVersion(grgit, version).toString())
     }
 }
