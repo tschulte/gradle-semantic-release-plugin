@@ -16,7 +16,6 @@
 package de.gliderpilot.gradle.semanticrelease
 
 import groovy.transform.Memoized
-import groovy.transform.PackageScope
 import org.ajoberstar.gradle.git.release.semver.NearestVersion
 import org.ajoberstar.gradle.git.release.semver.NearestVersionLocator
 import org.ajoberstar.gradle.git.release.semver.SemVerStrategyState

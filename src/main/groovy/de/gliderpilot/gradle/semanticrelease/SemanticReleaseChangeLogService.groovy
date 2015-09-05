@@ -28,7 +28,6 @@ import org.ajoberstar.gradle.git.release.base.TagStrategy
 import org.ajoberstar.gradle.git.release.semver.ChangeScope
 import org.ajoberstar.grgit.Commit
 import org.ajoberstar.grgit.Grgit
-import org.gradle.api.Project
 
 import java.util.regex.Matcher
 
