@@ -73,7 +73,7 @@ class SemanticReleasePluginExtension {
 
     boolean isRelease(SemVerStrategyState state) {
         !state.repoDirty && onReleaseBranch.isReleaseBranch(state.currentBranch.name) &&
-                semanticStrategy.doRelease(state) && project.gradle.startParameter.taskNames.find { it == 'release' }
+                semanticStrategy.canRelease(state) && project.gradle.startParameter.taskNames.find { it == 'release' }
     }
 
     private PartialSemVerStrategy appendSnapshot() {

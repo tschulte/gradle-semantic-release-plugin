@@ -42,10 +42,10 @@ class SemanticReleaseNormalStrategySpec extends Specification {
 
         when:
         def inferredState = strategy.infer(initialState)
-        def doRelease = strategy.doRelease(initialState)
+        def canRelease = strategy.canRelease(initialState)
 
         then:
-        !doRelease
+        !canRelease
         inferredState == initialState
         1 * grgit.methodMissing("log", _) >> [commit('shortMessage')]
     }
@@ -56,10 +56,10 @@ class SemanticReleaseNormalStrategySpec extends Specification {
 
         when:
         def inferredState = strategy.infer(initialState)
-        def doRelease = strategy.doRelease(initialState)
+        def canRelease = strategy.canRelease(initialState)
 
         then:
-        doRelease
+        canRelease
         inferredState == initialState.copyWith(inferredNormal: '1.0.0')
         1 * grgit.methodMissing("log", _) >> [commit('feat: desrciption')]
     }
@@ -70,10 +70,10 @@ class SemanticReleaseNormalStrategySpec extends Specification {
 
         when:
         def inferredState = strategy.infer(initialState)
-        def doRelease = strategy.doRelease(initialState)
+        def canRelease = strategy.canRelease(initialState)
 
         then:
-        !doRelease
+        !canRelease
         inferredState == initialState
         1 * grgit.methodMissing("log", _) >> [commit('shortMessage')]
     }
@@ -84,10 +84,10 @@ class SemanticReleaseNormalStrategySpec extends Specification {
 
         when:
         def inferredState = strategy.infer(initialState)
-        def doRelease = strategy.doRelease(initialState)
+        def canRelease = strategy.canRelease(initialState)
 
         then:
-        doRelease
+        canRelease
         inferredState == initialState.copyWith(inferredNormal: '1.0.0')
         1 * grgit.methodMissing("log", _) >> [commit('feat: desrciption')]
     }
@@ -98,10 +98,10 @@ class SemanticReleaseNormalStrategySpec extends Specification {
 
         when:
         def inferredState = strategy.infer(initialState)
-        def doRelease = strategy.doRelease(initialState)
+        def canRelease = strategy.canRelease(initialState)
 
         then:
-        !doRelease
+        !canRelease
         inferredState == initialState
         0 * grgit._
     }
@@ -141,10 +141,10 @@ class SemanticReleaseNormalStrategySpec extends Specification {
 
         when:
         def inferredState = strategy.infer(initialState)
-        def doRelease = strategy.doRelease(initialState)
+        def canRelease = strategy.canRelease(initialState)
 
         then:
-        !doRelease
+        !canRelease
         inferredState == initialState
         1 * grgit.methodMissing("log", _) >> [commit('foo')]
     }
@@ -156,10 +156,10 @@ class SemanticReleaseNormalStrategySpec extends Specification {
 
         when:
         def inferredState = strategy.infer(initialState)
-        def doRelease = strategy.doRelease(initialState)
+        def canRelease = strategy.canRelease(initialState)
 
         then:
-        doRelease
+        canRelease
         inferredState == initialState.copyWith(inferredNormal: "1.2.4")
         1 * grgit.methodMissing("log", _) >> [commit('fix: foo')]
     }
@@ -170,10 +170,10 @@ class SemanticReleaseNormalStrategySpec extends Specification {
 
         when:
         def inferredState = strategy.infer(initialState)
-        def doRelease = strategy.doRelease(initialState)
+        def canRelease = strategy.canRelease(initialState)
 
         then:
-        doRelease
+        canRelease
         inferredState == initialState.copyWith(inferredNormal: "1.3.0")
         1 * grgit.methodMissing("log", _) >> [commit('feat: foo')]
     }
@@ -184,10 +184,10 @@ class SemanticReleaseNormalStrategySpec extends Specification {
 
         when:
         def inferredState = strategy.infer(initialState)
-        def doRelease = strategy.doRelease(initialState)
+        def canRelease = strategy.canRelease(initialState)
 
         then:
-        doRelease
+        canRelease
         inferredState == initialState.copyWith(inferredNormal: "2.0.0")
         1 * grgit.methodMissing("log", _) >> [commit('feat: foo\n\ndescription\n\nBREAKING CHANGE: foo')]
     }
