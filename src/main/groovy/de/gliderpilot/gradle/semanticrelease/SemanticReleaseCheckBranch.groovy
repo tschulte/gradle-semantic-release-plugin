@@ -14,9 +14,6 @@
  * limitations under the License.
  */
 package de.gliderpilot.gradle.semanticrelease
-
-import groovy.transform.PackageScope
-
 /**
  * Created by tobias on 7/21/15.
  */
@@ -37,7 +34,6 @@ class SemanticReleaseCheckBranch {
         excludes.addAll(patterns)
     }
 
-    @PackageScope
     boolean isReleaseBranch(String branchName) {
         if (includes.any { branchName ==~ it })
             return true
