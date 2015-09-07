@@ -36,7 +36,7 @@ import org.slf4j.LoggerFactory
 final class SemanticReleaseStrategy implements VersionStrategy {
     private static final Logger logger = LoggerFactory.getLogger(SemanticReleaseStrategy)
 
-    SemanticReleaseInitialStateService initialStateService = new SemanticReleaseInitialStateService()
+    SemanticReleaseInitialStateService initialStateService
 
     SemanticReleaseStrategySelector selector = { false }
 
@@ -68,13 +68,13 @@ final class SemanticReleaseStrategy implements VersionStrategy {
 
     @Override
     boolean selector(Project project, Grgit grgit) {
-        return selector.selector(initialStateService.initialState(grgit))
+        return selector.selector(initialStateService.initialState())
     }
 
     @Override
     ReleaseVersion infer(Project project, Grgit grgit) {
         logger.info("Beginning version inference using $name strategy")
-        SemVerStrategyState initialState = initialStateService.initialState(grgit)
+        SemVerStrategyState initialState = initialStateService.initialState()
 
         Version version = StrategyUtil.all(
                 StrategyUtil.one(normalStrategy,

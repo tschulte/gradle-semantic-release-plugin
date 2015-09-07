@@ -31,7 +31,7 @@ class SemanticReleaseStrategySpec extends Specification {
 
     SemVerStrategyState initialState = initialState('0.0.0')
     SemanticReleaseInitialStateService initialStateService = Mock() {
-        initialState(_) >> { initialState }
+        initialState() >> { initialState }
     }
     SemanticReleaseNormalStrategy normalStrategy = Mock()
 

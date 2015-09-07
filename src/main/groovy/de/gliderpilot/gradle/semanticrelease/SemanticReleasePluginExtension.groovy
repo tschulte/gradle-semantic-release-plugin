@@ -44,6 +44,7 @@ class SemanticReleasePluginExtension {
         appendBranchName = new SemanticReleaseAppendBranchNameStrategy(onReleaseBranch)
         semanticStrategy = new SemanticReleaseNormalStrategy(project.grgit, changeLogService)
         releaseStrategy = new SemanticReleaseStrategy(
+                initialStateService: new SemanticReleaseInitialStateService(project.grgit),
                 normalStrategy: semanticStrategy,
                 createTag: true,
                 selector: this.&isRelease

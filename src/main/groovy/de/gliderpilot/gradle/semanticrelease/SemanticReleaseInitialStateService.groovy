@@ -29,8 +29,14 @@ import org.slf4j.LoggerFactory
 class SemanticReleaseInitialStateService {
     private static final Logger logger = LoggerFactory.getLogger(SemanticReleaseInitialStateService)
 
+    private Grgit grgit
+
+    SemanticReleaseInitialStateService(Grgit grgit) {
+        this.grgit = grgit
+    }
+
     @Memoized
-    SemVerStrategyState initialState(Grgit grgit) {
+    SemVerStrategyState initialState() {
         NearestVersionLocator locator = new NearestVersionLocator()
         NearestVersion nearestVersion = locator.locate(grgit)
         SemVerStrategyState initialState = new SemVerStrategyState(

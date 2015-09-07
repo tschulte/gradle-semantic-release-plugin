@@ -32,7 +32,7 @@ class SemanticReleaseInitialStateServiceSpec extends Specification {
     Grgit grgit = Grgit.open()
 
     @Subject
-    SemanticReleaseInitialStateService service = new SemanticReleaseInitialStateService()
+    SemanticReleaseInitialStateService service = new SemanticReleaseInitialStateService(grgit)
 
     def "retrieves initialState using NearestVersionLocator"() {
         given:
@@ -47,7 +47,7 @@ class SemanticReleaseInitialStateServiceSpec extends Specification {
         when:
         SemVerStrategyState initialState
         groovyMockFor.use {
-            initialState = service.initialState(grgit)
+            initialState = service.initialState()
         }
 
         then:
