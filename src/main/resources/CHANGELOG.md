@@ -9,16 +9,16 @@ def changeGroup(String title, group) {
         group.each { component, commits ->
             if (!component) {
                 commits.each { commit ->
-                    println "* ${service.subject(commit)} (${service.commitish(grgit, commit)})"
+                    println "* ${service.subject(commit)} (${service.commitish(commit)})"
                 }
             } else {
                 print "* ${component ? "**$component:**" : ""}"
                 if (component && commits.size() == 1)
-                    println " ${service.subject(commits[0])} (${service.commitish(grgit, commits[0])})"
+                    println " ${service.subject(commits[0])} (${service.commitish(commits[0])})"
                 else {
                     println()
                     commits.each { commit ->
-                        println "    * ${service.subject(commit)} (${service.commitish(grgit, commit)})"
+                        println "    * ${service.subject(commit)} (${service.commitish(commit)})"
                     }
                 }
             }

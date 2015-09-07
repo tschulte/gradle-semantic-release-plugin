@@ -28,9 +28,8 @@ import spock.lang.Unroll
 class SemanticReleaseNormalStrategySpec extends Specification {
 
     Grgit grgit = Mock()
-
     TagStrategy tagStrategy = new TagStrategy()
-    SemanticReleaseChangeLogService changeLogService = new SemanticReleaseChangeLogService(tagStrategy)
+    SemanticReleaseChangeLogService changeLogService = new SemanticReleaseChangeLogService(grgit, tagStrategy)
 
     @Subject
     SemanticReleaseNormalStrategy strategy = new SemanticReleaseNormalStrategy(grgit,

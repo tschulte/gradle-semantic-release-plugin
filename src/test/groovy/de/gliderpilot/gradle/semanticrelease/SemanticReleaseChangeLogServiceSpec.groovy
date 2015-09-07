@@ -36,10 +36,11 @@ import static org.ajoberstar.gradle.git.release.semver.ChangeScope.*
  */
 class SemanticReleaseChangeLogServiceSpec extends Specification {
 
+    Grgit grgit = Mock()
     TagStrategy tagStrategy = new TagStrategy()
 
     @Subject
-    SemanticReleaseChangeLogService changeLogService = new SemanticReleaseChangeLogService(tagStrategy)
+    SemanticReleaseChangeLogService changeLogService = new SemanticReleaseChangeLogService(grgit, tagStrategy)
 
     def "does not throw an exception if no ticket is referenced"() {
         given:
@@ -177,7 +178,8 @@ class SemanticReleaseChangeLogServiceSpec extends Specification {
 
     def "changeLog is generated"() {
         given:
-        Grgit grgit = Grgit.open()
+        grgit = Grgit.open()
+        changeLogService = new SemanticReleaseChangeLogService(grgit, tagStrategy)
 
         when:
         def commits = [
@@ -210,20 +212,21 @@ class SemanticReleaseChangeLogServiceSpec extends Specification {
         """.stripIndent()
 
         then:
-        changeLogService.changeLog(grgit, 'v1.0.0', 'v2.0.0', '2.0.0', commits.collect(asCommit)).toString() == expected
+        changeLogService.changeLog('v1.0.0', 'v2.0.0', '2.0.0', commits.collect(asCommit)).toString() == expected
     }
 
     def "change log is uploaded to GitHub"() {
         given:
-        Grgit grgit = Grgit.open()
+        grgit = Grgit.open()
+        changeLogService = new SemanticReleaseChangeLogService(grgit, tagStrategy)
         changeLogService.github = new MkGithub("tschulte")
         changeLogService.github.repos().create(Json.createObjectBuilder().add("name", "gradle-semantic-release-plugin").build())
-        changeLogService.changeLog = { Grgit git, String previousTag, String currentTag, String version, List<Commit> commits ->
+        changeLogService.changeLog = { String previousTag, String currentTag, String version, List<Commit> commits ->
             "${'changelog'}"
         }
 
         when:
-        changeLogService.createGitHubVersion(grgit, new ReleaseVersion(previousVersion: '0.0.0', version: '1.0.0'))
+        changeLogService.createGitHubVersion(new ReleaseVersion(previousVersion: '0.0.0', version: '1.0.0'))
         def releases = changeLogService.github.repos().get(new Coordinates.Simple("tschulte/gradle-semantic-release-plugin")).releases()
         def release = releases.iterate().collect { new Release.Smart(it) }.find {
             it.tag() == 'v1.0.0'
@@ -235,10 +238,11 @@ class SemanticReleaseChangeLogServiceSpec extends Specification {
 
     def "change log is not uploaded to GitHub when no gh token is set"() {
         given:
-        Grgit grgit = Grgit.open()
+        grgit = Grgit.open()
+        changeLogService = new SemanticReleaseChangeLogService(grgit, tagStrategy)
 
         when:
-        changeLogService.createGitHubVersion(grgit, new ReleaseVersion(previousVersion: '1.0.0', version: '1.0.1'))
+        changeLogService.createGitHubVersion(new ReleaseVersion(previousVersion: '1.0.0', version: '1.0.1'))
 
         then:
         noExceptionThrown()

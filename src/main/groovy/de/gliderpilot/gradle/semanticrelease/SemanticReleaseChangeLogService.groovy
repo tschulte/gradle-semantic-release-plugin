@@ -37,6 +37,7 @@ import java.util.regex.Matcher
 class SemanticReleaseChangeLogService {
 
     private final TagStrategy tagStrategy
+    private final Grgit grgit
 
     Github github
 
@@ -44,7 +45,8 @@ class SemanticReleaseChangeLogService {
         github = new RtGithub(token)
     }
 
-    SemanticReleaseChangeLogService(TagStrategy tagStrategy) {
+    SemanticReleaseChangeLogService(Grgit grgit, TagStrategy tagStrategy) {
+        this.grgit = grgit
         this.tagStrategy = tagStrategy
     }
 
@@ -74,16 +76,15 @@ class SemanticReleaseChangeLogService {
                 : null
     }
 
-    Writable changeLog(Grgit grgit, ReleaseVersion version) {
+    Writable changeLog(ReleaseVersion version) {
         String previousVersion = Version.valueOf(version.previousVersion).majorVersion ? version.previousVersion : null
         String previousTag = (previousVersion && tagStrategy.prefixNameWithV) ? "v$previousVersion" : previousVersion
         String currentTag = tagStrategy.prefixNameWithV ? "v$version.version" : version.version
         changeLog(
-                grgit,
                 previousTag,
                 currentTag,
                 version.version,
-                commits(grgit, Version.valueOf(version.previousVersion)))
+                commits(Version.valueOf(version.previousVersion)))
     }
 
     /**
@@ -91,12 +92,11 @@ class SemanticReleaseChangeLogService {
      *
      * @param commits the commits since the last release
      */
-    Closure<Writable> changeLog = { Grgit grgit, String previousTag, String currentTag, String version, List<Commit> commits ->
+    Closure<Writable> changeLog = { String previousTag, String currentTag, String version, List<Commit> commits ->
         Template template = new SimpleTemplateEngine().createTemplate(getClass().getResource('/CHANGELOG.md'))
         template.make([
-                grgit     : grgit,
                 title     : null,
-                versionUrl: versionUrl(grgit, previousTag, currentTag),
+                versionUrl: versionUrl(previousTag, currentTag),
                 service   : this,
                 version   : version,
                 fix       : byTypeGroupByComponent(commits, 'fix'),
@@ -154,8 +154,8 @@ class SemanticReleaseChangeLogService {
         matcher[0][1].trim()
     }
 
-    def commitish = { Grgit grgit, Commit commit ->
-        String url = repositoryUrl(grgit, "commit/${commit.abbreviatedId}")
+    def commitish = { Commit commit ->
+        String url = repositoryUrl("commit/${commit.abbreviatedId}")
         url ? "[${commit.abbreviatedId}]($url)" : "${commit.abbreviatedId}"
     }
 
@@ -166,7 +166,7 @@ class SemanticReleaseChangeLogService {
     }
 
     @Memoized
-    String mnemo(Grgit grgit) {
+    String mnemo() {
         String repositoryUrl = grgit.remote.list().find { it.name == 'origin' }.url
         Matcher matcher = repositoryUrl =~ /.*github.com[\/:]((?:.+?)\/(?:.+?))(?:\.git)/
         if (!matcher)
@@ -174,21 +174,21 @@ class SemanticReleaseChangeLogService {
         return matcher.group(1)
     }
 
-    Closure<String> repositoryUrl = { Grgit grgit, String suffix ->
-        String mnemo = mnemo(grgit)
+    Closure<String> repositoryUrl = { String suffix ->
+        String mnemo = mnemo()
         if (!mnemo)
             return null
         return "https://github.com/${mnemo}/$suffix"
     }
 
-    Closure<String> versionUrl = { Grgit grgit, String previousTag, String currentTag ->
+    Closure<String> versionUrl = { String previousTag, String currentTag ->
         if (!(previousTag && currentTag))
             return null
-        repositoryUrl(grgit, "compare/${previousTag}...${currentTag}")
+        repositoryUrl("compare/${previousTag}...${currentTag}")
     }
 
     @Memoized
-    List<Commit> commits(Grgit grgit, Version previousVersion) {
+    List<Commit> commits(Version previousVersion) {
         grgit.log {
             includes << 'HEAD'
             if (previousVersion.majorVersion) {
@@ -199,14 +199,14 @@ class SemanticReleaseChangeLogService {
         }
     }
 
-    void createGitHubVersion(Grgit grgit, ReleaseVersion version) {
-        String mnemo = mnemo(grgit)
+    void createGitHubVersion(ReleaseVersion version) {
+        String mnemo = mnemo()
         if (!mnemo)
             return
         if (!github)
             return
         String tag = tagStrategy.prefixNameWithV ? "v$version.version" : "$version.version"
         Release release = github.repos().get(new Coordinates.Simple(mnemo)).releases().create(tag)
-        new Release.Smart(release).body(changeLog(grgit, version).toString())
+        new Release.Smart(release).body(changeLog(version).toString())
     }
 }

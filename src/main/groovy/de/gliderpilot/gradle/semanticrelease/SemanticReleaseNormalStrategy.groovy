@@ -59,7 +59,7 @@ class SemanticReleaseNormalStrategy implements PartialSemVerStrategy {
             return initialState
         }
 
-        List<Commit> log = changeLogService.commits(grgit, previousVersion)
+        List<Commit> log = changeLogService.commits(previousVersion)
 
         ChangeScope scope = changeLogService.changeScope(log)
         if (scope) {

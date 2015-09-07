@@ -39,7 +39,7 @@ class SemanticReleasePluginExtension {
     @Inject
     SemanticReleasePluginExtension(Project project) {
         this.project = project
-        changeLogService = new SemanticReleaseChangeLogService(project.release.tagStrategy)
+        changeLogService = new SemanticReleaseChangeLogService(project.grgit, project.release.tagStrategy)
         onReleaseBranch = new SemanticReleaseCheckBranch()
         appendBranchName = new SemanticReleaseAppendBranchNameStrategy(onReleaseBranch)
         semanticStrategy = new SemanticReleaseNormalStrategy(project.grgit, changeLogService)
