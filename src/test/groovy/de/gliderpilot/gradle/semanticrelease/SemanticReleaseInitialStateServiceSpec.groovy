@@ -21,7 +21,6 @@ import org.ajoberstar.gradle.git.release.semver.NearestVersion
 import org.ajoberstar.gradle.git.release.semver.NearestVersionLocator
 import org.ajoberstar.gradle.git.release.semver.SemVerStrategyState
 import org.ajoberstar.grgit.Grgit
-import org.gradle.api.Project
 import spock.lang.Specification
 import spock.lang.Subject
 
@@ -30,7 +29,6 @@ import spock.lang.Subject
  */
 class SemanticReleaseInitialStateServiceSpec extends Specification {
 
-    Project project = Mock()
     Grgit grgit = Grgit.open()
 
     @Subject
@@ -49,7 +47,7 @@ class SemanticReleaseInitialStateServiceSpec extends Specification {
         when:
         SemVerStrategyState initialState
         groovyMockFor.use {
-            initialState = service.initialState(project, grgit)
+            initialState = service.initialState(grgit)
         }
 
         then:

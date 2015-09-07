@@ -68,13 +68,13 @@ final class SemanticReleaseStrategy implements VersionStrategy {
 
     @Override
     boolean selector(Project project, Grgit grgit) {
-        return selector.selector(initialStateService.initialState(project, grgit))
+        return selector.selector(initialStateService.initialState(grgit))
     }
 
     @Override
     ReleaseVersion infer(Project project, Grgit grgit) {
         logger.info("Beginning version inference using $name strategy")
-        SemVerStrategyState initialState = initialStateService.initialState(project, grgit)
+        SemVerStrategyState initialState = initialStateService.initialState(grgit)
 
         Version version = StrategyUtil.all(
                 StrategyUtil.one(normalStrategy,

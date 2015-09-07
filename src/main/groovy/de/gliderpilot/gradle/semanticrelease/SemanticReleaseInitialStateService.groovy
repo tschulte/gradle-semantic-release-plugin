@@ -20,7 +20,6 @@ import org.ajoberstar.gradle.git.release.semver.NearestVersion
 import org.ajoberstar.gradle.git.release.semver.NearestVersionLocator
 import org.ajoberstar.gradle.git.release.semver.SemVerStrategyState
 import org.ajoberstar.grgit.Grgit
-import org.gradle.api.Project
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
@@ -31,7 +30,7 @@ class SemanticReleaseInitialStateService {
     private static final Logger logger = LoggerFactory.getLogger(SemanticReleaseInitialStateService)
 
     @Memoized
-    SemVerStrategyState initialState(Project project, Grgit grgit) {
+    SemVerStrategyState initialState(Grgit grgit) {
         NearestVersionLocator locator = new NearestVersionLocator()
         NearestVersion nearestVersion = locator.locate(grgit)
         SemVerStrategyState initialState = new SemVerStrategyState(
