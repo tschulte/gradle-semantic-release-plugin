@@ -29,7 +29,7 @@ class SemanticReleasePlugin implements Plugin<Project> {
             ReleasePluginExtension releaseExtension = extensions.findByType(ReleasePluginExtension)
             tasks.release.doLast {
                 if (project.version.inferredVersion.createTag) {
-                    semanticReleaseExtension.changeLogService.createGitHubVersion(project.release.grgit, project.version.inferredVersion)
+                    semanticReleaseExtension.changeLogService.createGitHubVersion(project.version.inferredVersion)
                 }
             }
             releaseExtension.with {
