@@ -212,7 +212,7 @@ class SemanticReleaseChangeLogServiceSpec extends Specification {
         """.stripIndent()
 
         then:
-        changeLogService.changeLog('v1.0.0', 'v2.0.0', '2.0.0', commits.collect(asCommit)).toString() == expected
+        changeLogService.changeLog(commits.collect(asCommit), new ReleaseVersion(previousVersion: '1.0.0', version: '2.0.0', createTag: true)).toString() == expected
     }
 
     def "change log is uploaded to GitHub"() {
@@ -221,7 +221,7 @@ class SemanticReleaseChangeLogServiceSpec extends Specification {
         changeLogService = new SemanticReleaseChangeLogService(grgit, tagStrategy)
         changeLogService.github = new MkGithub("tschulte")
         changeLogService.github.repos().create(Json.createObjectBuilder().add("name", "gradle-semantic-release-plugin").build())
-        changeLogService.changeLog = { String previousTag, String currentTag, String version, List<Commit> commits ->
+        changeLogService.changeLog = { List<Commit> commits, ReleaseVersion version ->
             "${'changelog'}"
         }
 
