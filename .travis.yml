@@ -18,6 +18,6 @@ before_install:
 install:
   - echo "skip default gradlew assemble"
 script:
-  - ./gradlew release cobertura -Dorg.ajoberstar.grgit.auth.username=${GH_TOKEN} -Dorg.ajoberstar.grgit.auth.password -Pgradle.publish.key=${GRADLE_KEY} -Pgradle.publish.secret=${GRADLE_SECRET} --info --stacktrace
+  - ./gradlew release cobertura -Dorg.ajoberstar.grgit.auth.username=${GH_TOKEN} -Dorg.ajoberstar.grgit.auth.password -Dgradle.publish.key=${GRADLE_KEY} -Dgradle.publish.secret=${GRADLE_SECRET} --info --stacktrace
 after_success:
   - ./gradlew coveralls
