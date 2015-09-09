@@ -55,7 +55,7 @@ task integTest {
 
 tasks.release {
     dependsOn build
-    finalizedBy bintrayUpload, artifactoryPublish, publishPlugins
+    finalizedBy publishPlugins, bintrayUpload, artifactoryPublish
 }
 
 test {
