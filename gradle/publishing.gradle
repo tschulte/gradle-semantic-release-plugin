@@ -88,10 +88,6 @@ pluginBundle {
     tags = ['semver', 'release', 'semantic-release']
 
     plugins {
-        semanticReleaseBasePlugin {
-            id = 'de.gliderpilot.semantic-release-base'
-            displayName = 'semantic-release base'
-        }
         semanticReleasePlugin {
             id = 'de.gliderpilot.semantic-release'
             displayName = 'semantic-release'
