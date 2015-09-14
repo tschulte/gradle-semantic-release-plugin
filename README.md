@@ -234,8 +234,6 @@ It is indeed a great idea because it _forces_ you to follow best practices. If y
 
 `gradle-semantic-release-plugin` has a full unit- and integration-test-suite. Additionally we eat our own dogfood and release using our own plugin -- A new version won't get published if there is an error.
 
-Note: Currently integration-tests don't run on Travis CI.
-
 ## License
 
 Apache License
