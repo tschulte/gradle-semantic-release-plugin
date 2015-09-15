@@ -48,7 +48,8 @@ class SemanticReleaseChangeLogService {
     }
 
     void setGhToken(String token) {
-        github = new RtGithub(token)
+        if (token)
+            github = new RtGithub(token)
     }
 
     /**
