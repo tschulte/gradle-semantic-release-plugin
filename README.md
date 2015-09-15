@@ -114,7 +114,11 @@ addons:
 language: java
 jdk: oraclejdk7
 env: TERM=dumb
+branches:
+  except:
+    - /^v\d+\.\d+\.\d+$/
 before_install:
+  - git fetch --unshallow
   - git config user.email "name@example.com"
   - git config user.name "Travis-CI"
   - git config url.https://.insteadOf git://
