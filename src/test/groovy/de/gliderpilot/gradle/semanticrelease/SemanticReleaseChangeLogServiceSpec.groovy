@@ -183,11 +183,11 @@ class SemanticReleaseChangeLogServiceSpec extends Specification {
 
         when:
         def commits = [
-                'fix(component1): foo',
+                'fix(component1): foo\n\nCloses #123, #124',
                 'fix(component1): bar',
-                'fix(component2): baz',
-                'fix: no component',
-                'feat: baz\n\nBREAKING CHANGE: This and that', 'foo bar']
+                'fix(component2): baz\n\nCloses #123\nCloses #124',
+                'fix: no component\n\nCloses #456, #789',
+                'feat: baz\n\nCloses #159\n\nBREAKING CHANGE: This and that', 'foo bar']
         def expected = """\
             <a name="2.0.0"></a>
             # [2.0.0](https://github.com/tschulte/gradle-semantic-release-plugin/compare/v1.0.0...v2.0.0) (${
@@ -196,15 +196,15 @@ class SemanticReleaseChangeLogServiceSpec extends Specification {
 
             ### Bug Fixes
 
-            * no component ([1234567](https://github.com/tschulte/gradle-semantic-release-plugin/commit/1234567))
+            * no component ([1234567](https://github.com/tschulte/gradle-semantic-release-plugin/commit/1234567), closes #456, #789)
             * **component1:**
-                * foo ([1234567](https://github.com/tschulte/gradle-semantic-release-plugin/commit/1234567))
+                * foo ([1234567](https://github.com/tschulte/gradle-semantic-release-plugin/commit/1234567), closes #123, #124)
                 * bar ([1234567](https://github.com/tschulte/gradle-semantic-release-plugin/commit/1234567))
-            * **component2:** baz ([1234567](https://github.com/tschulte/gradle-semantic-release-plugin/commit/1234567))
+            * **component2:** baz ([1234567](https://github.com/tschulte/gradle-semantic-release-plugin/commit/1234567), closes #123, #124)
 
             ### Features
 
-            * baz ([1234567](https://github.com/tschulte/gradle-semantic-release-plugin/commit/1234567))
+            * baz ([1234567](https://github.com/tschulte/gradle-semantic-release-plugin/commit/1234567), closes #159)
 
             ### BREAKING CHANGES
 
