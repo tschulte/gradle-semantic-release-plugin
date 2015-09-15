@@ -9,6 +9,10 @@ env: TERM=dumb
 cache:
   directories:
   - $HOME/.gradle
+# don't build tags -- they would fail due to gradle-git anyway
+branches:
+  except:
+    - /^v\d+\.\d+\.\d+$/
 before_install:
   - git config user.email "tobias.schulte@gliderpilot.de"
   - git config user.name "Travis-CI"
