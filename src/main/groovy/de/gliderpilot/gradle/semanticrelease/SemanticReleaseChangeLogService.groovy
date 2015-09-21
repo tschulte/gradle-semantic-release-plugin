@@ -16,10 +16,7 @@
 package de.gliderpilot.gradle.semanticrelease
 
 import com.github.zafarkhaja.semver.Version
-import com.jcabi.github.Coordinates
-import com.jcabi.github.Github
-import com.jcabi.github.Release
-import com.jcabi.github.RtGithub
+import com.jcabi.github.*
 import groovy.text.SimpleTemplateEngine
 import groovy.text.Template
 import groovy.transform.Memoized
@@ -214,7 +211,24 @@ class SemanticReleaseChangeLogService {
         if (!github)
             return
         String tag = tagStrategy.prefixNameWithV ? "v$version.version" : "$version.version"
-        Release release = github.repos().get(new Coordinates.Simple(mnemo)).releases().create(tag)
+
+        Repo repo = github.repos().get(new Coordinates.Simple(mnemo))
+
+        // check for the existance of the tag using the api -> #3
+        long start = System.currentTimeMillis()
+        while(!tagExists(repo, tag) && System.currentTimeMillis() - start < 60000) {}
+
+        Release release = repo.releases().create(tag)
         new Release.Smart(release).body(changeLog(commits(Version.valueOf(version.previousVersion)), version).toString())
     }
+
+    private boolean tagExists(Repo repo, String tag) {
+        try {
+            repo.git().references().get("refs/tags/$tag").json()
+            return true
+        } catch (Throwable t) {
+            return false
+        }
+    }
+
 }

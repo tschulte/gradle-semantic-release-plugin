@@ -25,6 +25,7 @@ import org.ajoberstar.grgit.Commit
 import org.ajoberstar.grgit.Grgit
 import spock.lang.Specification
 import spock.lang.Subject
+import spock.lang.Timeout
 import spock.lang.Unroll
 
 import javax.json.Json
@@ -215,19 +216,22 @@ class SemanticReleaseChangeLogServiceSpec extends Specification {
         changeLogService.changeLog(commits.collect(asCommit), new ReleaseVersion(previousVersion: '1.0.0', version: '2.0.0', createTag: true)).toString() == expected
     }
 
+    @Timeout(10)
     def "change log is uploaded to GitHub"() {
         given:
         grgit = Grgit.open()
         changeLogService = new SemanticReleaseChangeLogService(grgit, tagStrategy)
         changeLogService.github = new MkGithub("tschulte")
         changeLogService.github.repos().create(Json.createObjectBuilder().add("name", "gradle-semantic-release-plugin").build())
+        def coordinates = new Coordinates.Simple("tschulte/gradle-semantic-release-plugin")
+        changeLogService.github.repos().get(coordinates).git().references().create("refs/tags/v1.0.0", "affe")
         changeLogService.changeLog = { List<Commit> commits, ReleaseVersion version ->
             "${'changelog'}"
         }
 
         when:
         changeLogService.createGitHubVersion(new ReleaseVersion(previousVersion: '0.0.0', version: '1.0.0'))
-        def releases = changeLogService.github.repos().get(new Coordinates.Simple("tschulte/gradle-semantic-release-plugin")).releases()
+        def releases = changeLogService.github.repos().get(coordinates).releases()
         def release = releases.iterate().collect { new Release.Smart(it) }.find {
             it.tag() == 'v1.0.0'
         }
