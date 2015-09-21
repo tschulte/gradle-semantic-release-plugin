@@ -5,6 +5,7 @@ apply plugin: 'com.github.ben-manes.versions'
 apply from: 'gradle/credentials.gradle'
 apply from: 'gradle/compile.gradle'
 apply from: 'gradle/publishing.gradle'
+apply from: 'gradle/publish-plugin.gradle'
 apply from: 'gradle/bintray.gradle'
 apply from: 'gradle/artifactory.gradle'
 apply from: 'gradle/code-quality.gradle'
@@ -32,8 +33,8 @@ apply from: 'compile-dependencies.gradle'
 
 dependencies {
     testCompile 'com.netflix.nebula:nebula-test:2.2.2', {
-		exclude module: 'groovy-all'
-	}
+        exclude module: 'groovy-all'
+    }
 }
 
 // workaround for tests to run (see http://stackoverflow.com/questions/29377544/my-gradle-project-depends-on-commons-io-2-4-but-gradle-puts-gradle-home-common)
@@ -43,10 +44,10 @@ sourceSets {
     }
 }
 
-group='de.gliderpilot.gradle.semantic-release'
+group = 'de.gliderpilot.gradle.semantic-release'
 
 semanticRelease {
-    changeLogService.ghToken = ghToken
+    changeLog.ghToken = project.ext.ghToken
 }
 
 task integTest {
