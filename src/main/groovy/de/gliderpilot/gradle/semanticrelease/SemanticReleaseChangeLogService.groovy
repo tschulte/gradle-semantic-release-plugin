@@ -26,6 +26,8 @@ import org.ajoberstar.gradle.git.release.base.TagStrategy
 import org.ajoberstar.gradle.git.release.semver.ChangeScope
 import org.ajoberstar.grgit.Commit
 import org.ajoberstar.grgit.Grgit
+import org.gradle.api.logging.Logger
+import org.gradle.api.logging.Logging
 
 import java.util.regex.Matcher
 
@@ -34,9 +36,12 @@ import java.util.regex.Matcher
  */
 class SemanticReleaseChangeLogService {
 
+    private final Logger logger = Logging.getLogger(getClass())
+
     private final TagStrategy tagStrategy
     private final Grgit grgit
 
+    @PackageScope
     Github github
 
     SemanticReleaseChangeLogService(Grgit grgit, TagStrategy tagStrategy) {
@@ -47,6 +52,18 @@ class SemanticReleaseChangeLogService {
     void setGhToken(String token) {
         if (token)
             github = new RtGithub(token)
+    }
+
+    @Deprecated
+    Github getGithub() {
+        logger.warn("semanticRelease.changeLog.github is deprecated and will be removed in v2.0.0")
+        github
+    }
+
+    @Deprecated
+    void setGithub(Github github) {
+        logger.warn("semanticRelease.changeLog.github is deprecated and will be removed in v2.0.0")
+        this.github = github
     }
 
     /**
