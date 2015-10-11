@@ -23,8 +23,8 @@ class SemanticReleasePlugin implements Plugin<Project> {
 
     void apply(Project project) {
         project.with {
-            plugins.apply('org.ajoberstar.grgit')
-            plugins.apply('org.ajoberstar.release-base')
+            plugins.apply(org.ajoberstar.gradle.git.base.GrgitPlugin)
+            plugins.apply(org.ajoberstar.gradle.git.release.base.BaseReleasePlugin)
             SemanticReleasePluginExtension semanticReleaseExtension = extensions.create("semanticRelease", SemanticReleasePluginExtension, project)
             ReleasePluginExtension releaseExtension = extensions.findByType(ReleasePluginExtension)
             tasks.release.doLast {

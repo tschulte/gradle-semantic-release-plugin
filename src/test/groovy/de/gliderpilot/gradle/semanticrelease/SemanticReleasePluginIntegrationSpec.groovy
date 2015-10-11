@@ -28,7 +28,33 @@ import spock.lang.Unroll
 class SemanticReleasePluginIntegrationSpec extends IntegrationSpec {
 
     def setup() {
-        // create remote repository
+        setupGit()
+        setupGradleProject()
+        setupGitignore()
+        runTasksSuccessfully(':wrapper')
+        commit('initial project layout')
+        push()
+    }
+
+    def setupGitignore() {
+        file('.gitignore') << '''\
+            .gradle-test-kit/
+            .gradle/
+            gradle/
+            build/
+            cobertura.ser
+        '''.stripIndent()
+    }
+
+    def setupGradleProject() {
+        buildFile << '''
+            apply plugin: 'de.gliderpilot.semantic-release'
+            println version
+        '''
+    }
+
+    def setupGit() {
+// create remote repository
         File origin = new File(projectDir, "../${projectDir.name}.git")
         origin.mkdir()
         execute origin, 'git', 'init', '--bare'
@@ -41,23 +67,6 @@ class SemanticReleasePluginIntegrationSpec extends IntegrationSpec {
 
         execute 'git', 'remote', 'add', 'origin', "$origin"
         commit 'initial commit'
-        push()
-
-        buildFile << '''
-            apply plugin: 'de.gliderpilot.semantic-release'
-            println version
-        '''
-        file('.gitignore') << '''\
-            .gradle-test-kit/
-            .gradle/
-            gradle/
-            build/
-            cobertura.ser
-        '''.stripIndent()
-
-        runTasksSuccessfully(':wrapper')
-
-        commit('initial project layout')
         push()
     }
 
@@ -252,22 +261,45 @@ class SemanticReleasePluginIntegrationSpec extends IntegrationSpec {
         thrown(RuntimeException)
     }
 
+
+    def executeOnWindows(File workingDir, String... command) {
+        def lastLine
+        def process = new ProcessBuilder(command)
+                .directory(workingDir)
+                .redirectErrorStream(true)
+                .start()
+        process.inputStream.eachLine {
+            println it
+            lastLine = it
+        }
+
+        def exitValue = process.exitValue()
+        if(exitValue != 0)
+            throw new RuntimeException("failed to execute ${command.join(' ')}")
+        return lastLine
+
+    }
+
     def execute(File dir = projectDir, String... args) {
         println "========"
         println "executing ${args.join(' ')}"
         println "--------"
-        def process = args.execute(null, dir)
-        String processOut = process.inputStream.text.trim()
-        String processErr = process.errorStream.text.trim()
-        println processOut
-        println processErr
-        if (process.waitFor() != 0)
-            throw new RuntimeException("failed to execute ${args.join(' ')}")
-        return processOut
+        if(isWindows())
+            executeOnWindows(dir, args)
+        else{
+            def process = args.execute(null, dir)
+            String processOut = process.inputStream.text.trim()
+            String processErr = process.errorStream.text.trim()
+            println processOut
+            println processErr
+            if (process.waitFor() != 0)
+                throw new RuntimeException("failed to execute ${args.join(' ')}")
+            return processOut
+        }
     }
 
     def release() {
-        execute './gradlew', '-I', '.gradle-test-kit/init.gradle', 'release', '--info', '--stacktrace'
+        execute "./gradlew${isWindows()?'.bat':''}", '-I', '.gradle-test-kit/init.gradle', 'release', '--info', '--stacktrace'
         lastVersion()
     }
 
@@ -282,7 +314,7 @@ class SemanticReleasePluginIntegrationSpec extends IntegrationSpec {
 
     def commit(message) {
         execute 'git', 'add', '.'
-        execute 'git', 'commit', '--allow-empty', '--allow-empty-message', '-m', message
+        execute 'git', 'commit', '--allow-empty', '--allow-empty-message', '-m', message?:"''"
     }
 
     def push() {
@@ -297,4 +329,9 @@ class SemanticReleasePluginIntegrationSpec extends IntegrationSpec {
     def checkout(String branch) {
         execute "git", "checkout", branch
     }
+
+    boolean isWindows(){
+        System.properties['os.name'].toLowerCase().contains('windows')
+    }
+
 }
