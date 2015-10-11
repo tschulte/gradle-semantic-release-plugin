@@ -14,8 +14,6 @@ class SemanticReleaseIntegrationAuxScriptSpec extends SemanticReleasePluginInteg
             apply from:'release.gradle'
             println version
         '''
-        setupGitignore()
-
         file('release.gradle') << """
             buildscript{
 
@@ -35,8 +33,7 @@ class SemanticReleaseIntegrationAuxScriptSpec extends SemanticReleasePluginInteg
             apply plugin: de.gliderpilot.gradle.semanticrelease.SemanticReleasePlugin
 
 """
-        runTasksSuccessfully(':wrapper')
-    }
+}
 
     def getPluginCompileDir(){
         URL url=SemanticReleasePlugin.class.getResource(SemanticReleasePlugin.class.getSimpleName() + ".class")
