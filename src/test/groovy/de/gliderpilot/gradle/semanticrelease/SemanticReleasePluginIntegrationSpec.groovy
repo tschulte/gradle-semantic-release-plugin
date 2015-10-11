@@ -28,7 +28,33 @@ import spock.lang.Unroll
 class SemanticReleasePluginIntegrationSpec extends IntegrationSpec {
 
     def setup() {
-        // create remote repository
+        setupGit()
+        setupGradleProject()
+        setupGitignore()
+        runTasksSuccessfully(':wrapper')
+        commit('initial project layout')
+        push()
+    }
+
+    private File setupGitignore() {
+        file('.gitignore') << '''\
+            .gradle-test-kit/
+            .gradle/
+            gradle/
+            build/
+            cobertura.ser
+        '''.stripIndent()
+    }
+
+    private File setupGradleProject() {
+        buildFile << '''
+            apply plugin: 'de.gliderpilot.semantic-release'
+            println version
+        '''
+    }
+
+    private void setupGit() {
+// create remote repository
         File origin = new File(projectDir, "../${projectDir.name}.git")
         origin.mkdir()
         execute origin, 'git', 'init', '--bare'
@@ -41,23 +67,6 @@ class SemanticReleasePluginIntegrationSpec extends IntegrationSpec {
 
         execute 'git', 'remote', 'add', 'origin', "$origin"
         commit 'initial commit'
-        push()
-
-        buildFile << '''
-            apply plugin: 'de.gliderpilot.semantic-release'
-            println version
-        '''
-        file('.gitignore') << '''\
-            .gradle-test-kit/
-            .gradle/
-            gradle/
-            build/
-            cobertura.ser
-        '''.stripIndent()
-
-        runTasksSuccessfully(':wrapper')
-
-        commit('initial project layout')
         push()
     }
 
