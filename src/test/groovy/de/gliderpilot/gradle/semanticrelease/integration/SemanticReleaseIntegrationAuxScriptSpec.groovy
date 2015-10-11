@@ -9,7 +9,7 @@ import spock.lang.Specification
 class SemanticReleaseIntegrationAuxScriptSpec extends SemanticReleasePluginIntegrationSpec {
 
     @Override
-    void setupGradleProject(){
+    def setupGradleProject(){
         buildFile << '''
             apply from:'release.gradle'
             println version

@@ -36,7 +36,7 @@ class SemanticReleasePluginIntegrationSpec extends IntegrationSpec {
         push()
     }
 
-    private File setupGitignore() {
+    def setupGitignore() {
         file('.gitignore') << '''\
             .gradle-test-kit/
             .gradle/
@@ -46,14 +46,14 @@ class SemanticReleasePluginIntegrationSpec extends IntegrationSpec {
         '''.stripIndent()
     }
 
-    private File setupGradleProject() {
+    def setupGradleProject() {
         buildFile << '''
             apply plugin: 'de.gliderpilot.semantic-release'
             println version
         '''
     }
 
-    private void setupGit() {
+    def setupGit() {
 // create remote repository
         File origin = new File(projectDir, "../${projectDir.name}.git")
         origin.mkdir()
