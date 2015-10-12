@@ -32,7 +32,7 @@ buildscript {
 apply from: 'compile-dependencies.gradle'
 
 dependencies {
-    testCompile 'com.netflix.nebula:nebula-test:2.2.2', {
+    testCompile 'com.netflix.nebula:nebula-test:3.1.0', {
         exclude module: 'groovy-all'
     }
 }
