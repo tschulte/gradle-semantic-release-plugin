@@ -15,7 +15,6 @@
  */
 package de.gliderpilot.gradle.semanticrelease.integration
 
-import de.gliderpilot.gradle.semanticrelease.SemanticReleasePluginIntegrationSpec
 import spock.lang.Requires
 
 // always run on travis

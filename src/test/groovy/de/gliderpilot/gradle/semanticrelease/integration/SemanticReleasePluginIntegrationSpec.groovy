@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.gliderpilot.gradle.semanticrelease
+package de.gliderpilot.gradle.semanticrelease.integration
 
 import nebula.test.IntegrationSpec
 import spock.lang.Requires
