@@ -303,7 +303,7 @@ class SemanticReleasePluginIntegrationSpec extends IntegrationSpec {
     }
 
     def release() {
-        execute "./gradlew${isWindows() ? '.bat' : ''}", 'release', '--info', '--stacktrace'
+        execute "${isWindows() ? 'gradlew.bat' : './gradlew'}", 'release', '--info', '--stacktrace'
         lastVersion()
     }
 
