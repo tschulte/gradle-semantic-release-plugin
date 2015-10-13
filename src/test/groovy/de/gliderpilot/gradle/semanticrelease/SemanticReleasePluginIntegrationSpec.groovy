@@ -283,41 +283,23 @@ class SemanticReleasePluginIntegrationSpec extends IntegrationSpec {
         thrown(RuntimeException)
     }
 
-
-    def executeOnWindows(File workingDir, String... command) {
+    def execute(File dir = projectDir, String... args) {
+        println "========"
+        println "executing ${args.join(' ')}"
+        println "--------"
         def lastLine
-        def process = new ProcessBuilder(command)
-                .directory(workingDir)
+        def process = new ProcessBuilder(args)
+                .directory(dir)
                 .redirectErrorStream(true)
                 .start()
         process.inputStream.eachLine {
             println it
             lastLine = it
         }
-
-        def exitValue = process.exitValue()
+        def exitValue = process.waitFor()
         if (exitValue != 0)
             throw new RuntimeException("failed to execute ${command.join(' ')}")
         return lastLine
-
-    }
-
-    def execute(File dir = projectDir, String... args) {
-        println "========"
-        println "executing ${args.join(' ')}"
-        println "--------"
-        if (isWindows())
-            executeOnWindows(dir, args)
-        else {
-            def process = args.execute(null, dir)
-            String processOut = process.inputStream.text.trim()
-            String processErr = process.errorStream.text.trim()
-            println processOut
-            println processErr
-            if (process.waitFor() != 0)
-                throw new RuntimeException("failed to execute ${args.join(' ')}")
-            return processOut
-        }
     }
 
     def release() {
