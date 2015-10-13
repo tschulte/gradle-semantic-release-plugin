@@ -19,8 +19,12 @@ import de.gliderpilot.gradle.semanticrelease.SemanticReleasePlugin
 import de.gliderpilot.gradle.semanticrelease.SemanticReleasePluginIntegrationSpec
 import nebula.test.IntegrationSpec
 import nebula.test.functional.ExecutionResult
+import spock.lang.Requires
 import spock.lang.Specification
 
+// always run on travis
+// also run on ./gradlew integTest
+@Requires({ env['TRAVIS'] || properties['integTest'] })
 class SemanticReleaseIntegrationAuxScriptSpec extends SemanticReleasePluginIntegrationSpec {
 
     @Override
