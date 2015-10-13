@@ -22,8 +22,7 @@ class SemanticReleaseIntegrationAuxScriptSpec extends SemanticReleasePluginInteg
                 }
 
                 dependencies{
-                    classpath files('${getPluginCompileDir()}')
-                    classpath files('${getPluginCompileDir().replace('/classes/','/resources/')}')
+                    classpath files('../../../classes/main')
                     classpath "org.ajoberstar:gradle-git:1.3.0"
                     classpath 'com.jcabi:jcabi-github:0.23'
                 }
