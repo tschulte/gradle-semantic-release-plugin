@@ -298,7 +298,7 @@ class SemanticReleasePluginIntegrationSpec extends IntegrationSpec {
         }
         def exitValue = process.waitFor()
         if (exitValue != 0)
-            throw new RuntimeException("failed to execute ${command.join(' ')}")
+            throw new RuntimeException("failed to execute ${args.join(' ')}")
         return lastLine
     }
 
