@@ -23,6 +23,12 @@ import spock.lang.Requires
 class SemanticReleaseIntegrationAuxScriptSpec extends SemanticReleasePluginIntegrationSpec {
 
     @Override
+    def setupGradleWrapper() {
+        gradleVersion = '2.1'
+        super.setupGradleWrapper()
+    }
+
+    @Override
     def setupGradleProject() {
         buildFile << '''
             apply from:'release.gradle'
