@@ -181,6 +181,7 @@ class SemanticReleaseChangeLogServiceSpec extends Specification {
         given:
         grgit = Grgit.open()
         changeLogService = new SemanticReleaseChangeLogService(grgit, tagStrategy)
+        String mnemo = changeLogService.mnemo()
 
         when:
         def commits = [
@@ -191,21 +192,21 @@ class SemanticReleaseChangeLogServiceSpec extends Specification {
                 'feat: baz\n\nCloses #159\n\nBREAKING CHANGE: This and that', 'foo bar']
         def expected = """\
             <a name="2.0.0"></a>
-            # [2.0.0](https://github.com/tschulte/gradle-semantic-release-plugin/compare/v1.0.0...v2.0.0) (${
+            # [2.0.0](https://github.com/$mnemo/compare/v1.0.0...v2.0.0) (${
             new java.sql.Date(System.currentTimeMillis())
         })
 
             ### Bug Fixes
 
-            * no component ([1234567](https://github.com/tschulte/gradle-semantic-release-plugin/commit/1234567), closes #456, #789)
+            * no component ([1234567](https://github.com/$mnemo/commit/1234567), closes #456, #789)
             * **component1:**
-                * foo ([1234567](https://github.com/tschulte/gradle-semantic-release-plugin/commit/1234567), closes #123, #124)
-                * bar ([1234567](https://github.com/tschulte/gradle-semantic-release-plugin/commit/1234567))
-            * **component2:** baz ([1234567](https://github.com/tschulte/gradle-semantic-release-plugin/commit/1234567), closes #123, #124)
+                * foo ([1234567](https://github.com/$mnemo/commit/1234567), closes #123, #124)
+                * bar ([1234567](https://github.com/$mnemo/commit/1234567))
+            * **component2:** baz ([1234567](https://github.com/$mnemo/commit/1234567), closes #123, #124)
 
             ### Features
 
-            * baz ([1234567](https://github.com/tschulte/gradle-semantic-release-plugin/commit/1234567), closes #159)
+            * baz ([1234567](https://github.com/$mnemo/commit/1234567), closes #159)
 
             ### BREAKING CHANGES
 
@@ -221,9 +222,12 @@ class SemanticReleaseChangeLogServiceSpec extends Specification {
         given:
         grgit = Grgit.open()
         changeLogService = new SemanticReleaseChangeLogService(grgit, tagStrategy)
-        changeLogService.github = new MkGithub("tschulte")
-        changeLogService.github.repos().create(Json.createObjectBuilder().add("name", "gradle-semantic-release-plugin").build())
-        def coordinates = new Coordinates.Simple("tschulte/gradle-semantic-release-plugin")
+        String mnemo = changeLogService.mnemo()
+        String user = mnemo.substring(0, mnemo.indexOf("/"))
+        String repo = mnemo.substring(mnemo.indexOf("/") + 1)
+        changeLogService.github = new MkGithub(user)
+        changeLogService.github.repos().create(Json.createObjectBuilder().add("name", repo).build())
+        def coordinates = new Coordinates.Simple("$mnemo")
         changeLogService.github.repos().get(coordinates).git().references().create("refs/tags/v1.0.0", "affe")
         changeLogService.changeLog = { List<Commit> commits, ReleaseVersion version ->
             "${'changelog'}"
