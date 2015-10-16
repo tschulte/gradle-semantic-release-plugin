@@ -19,6 +19,9 @@ import nebula.test.IntegrationSpec
 import spock.lang.Requires
 import spock.lang.Unroll
 
+import java.lang.management.ManagementFactory
+import java.lang.management.RuntimeMXBean
+
 /**
  * Created by tobias on 7/2/15.
  */
@@ -28,6 +31,7 @@ import spock.lang.Unroll
 class SemanticReleasePluginIntegrationSpec extends IntegrationSpec {
 
     def setup() {
+        setupJvmArguments()
         setupGit()
         // create the gradle wrapper before the project is setup
         setupGradleWrapper()
@@ -35,6 +39,13 @@ class SemanticReleasePluginIntegrationSpec extends IntegrationSpec {
         setupGitignore()
         commit('initial project layout')
         push()
+    }
+
+    def setupJvmArguments() {
+        RuntimeMXBean runtimeMxBean = ManagementFactory.getRuntimeMXBean()
+        String buildDir = new File('build').canonicalPath
+        jvmArguments = runtimeMxBean.getInputArguments().collect { it.replaceAll(/([:=])build/, '$1' + buildDir) }
+        file('gradle.properties') << "org.gradle.jvmargs=${jvmArguments.join(' ')}"
     }
 
     /**
