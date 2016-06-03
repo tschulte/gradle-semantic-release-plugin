@@ -38,7 +38,7 @@ format that includes a **type**, a **scope** and a **subject**:
 <footer>
 ```
 
-> [Full explanation](https://github.com/ajoslin/conventional-changelog/blob/master/conventions/angular.md)
+> [Full explanation](https://github.com/conventional-changelog/conventional-changelog-angular/blob/master/convention.md)
 
 Under the hood this plugin uses [gradle-git](https://github.com/ajoberstar/gradle-git)'s release-base plugin and configures it to automatically increment the major, minor or patch version depending on the commit messages since the last release. Releases are only performed on certain branches (/master/ and /(?:release[-\/])?\d+(?:\.\d+)?\.x/ by default). On other branches only SNAPSHOT versions are built. On these branches the branch name is automatically appended to the version.
 
