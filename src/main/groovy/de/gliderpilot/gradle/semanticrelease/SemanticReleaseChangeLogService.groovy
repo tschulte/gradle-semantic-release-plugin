@@ -152,14 +152,14 @@ class SemanticReleaseChangeLogService {
     def type = { Commit commit ->
         def pattern = /(.*?)(?:\(.+\))?:.*/
         def matcher = commit.shortMessage =~ pattern
-        matcher ? matcher.group(1) : null
+        matcher ? matcher.group(1).trim() : null
     }
 
     @PackageScope
     def component = { Commit commit ->
         def pattern = /.*?\((.+)\):.*/
         def matcher = commit.shortMessage =~ pattern
-        matcher ? matcher.group(1) : null
+        matcher ? matcher.group(1).trim() : null
     }
 
     @PackageScope
@@ -208,6 +208,11 @@ class SemanticReleaseChangeLogService {
     }
 
     @PackageScope
+    def releaseAsset = { ReleaseAssets assets, String currentTag ->
+        // waiting the custom implementation
+    }
+
+    @PackageScope
     @Memoized
     List<Commit> commits(Version previousVersion) {
         grgit.log {
@@ -237,6 +242,7 @@ class SemanticReleaseChangeLogService {
 
         Release release = repo.releases().create(tag)
         new Release.Smart(release).body(changeLog(commits(Version.valueOf(version.previousVersion)), version).toString())
+        releaseAsset(release.assets(), "$version.version")
     }
 
     private boolean tagExists(Repo repo, String tag) {
