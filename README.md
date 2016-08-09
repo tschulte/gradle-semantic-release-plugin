@@ -101,6 +101,21 @@ semanticRelease {
 }
 ```
 
+### Enable upload release files to GitHub 
+
+The **ghToken** is mandatory.
+
+```groovy
+semanticRelease {
+    changeLog {
+        releaseAsset = { ReleaseAssets assets, String currentTag ->
+            assets.upload(file("build/libs/value-${currentTag}.jar").bytes, "application/zip", "run-${currentTag}.jar")
+        }
+    }
+}
+```
+
+
 ### Setup travis-ci
 
 First, you need to [configure the environment variable GH_TOKEN in travis](http://docs.travis-ci.com/user/environment-variables/). Then you need a `.travis.yml`
