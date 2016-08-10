@@ -25,9 +25,3 @@ bintray {
         }
     }
 }
-
-bintrayUpload {
-    onlyIf {
-        !project.version.toString().endsWith('-SNAPSHOT')
-    }
-}

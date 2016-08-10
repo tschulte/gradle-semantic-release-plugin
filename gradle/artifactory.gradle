@@ -21,11 +21,3 @@ artifactory {
     }
 
 }
-
-artifactoryPublish {
-    onlyIf {
-        def pullRequest = System.getenv('TRAVIS_PULL_REQUEST')
-
-        project.version.toString().endsWith('-SNAPSHOT') && (!pullRequest || pullRequest=='false')
-    }
-}
