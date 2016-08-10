@@ -18,6 +18,9 @@ package de.gliderpilot.gradle.semanticrelease
 import org.ajoberstar.gradle.git.release.base.ReleasePluginExtension
 import org.gradle.api.Plugin
 import org.gradle.api.Project
+import org.gradle.api.plugins.BasePlugin
+import org.gradle.api.plugins.JavaBasePlugin
+import org.gradle.api.publish.plugins.PublishingPlugin
 
 class SemanticReleasePlugin implements Plugin<Project> {
 
@@ -27,7 +30,8 @@ class SemanticReleasePlugin implements Plugin<Project> {
             plugins.apply(org.ajoberstar.gradle.git.release.base.BaseReleasePlugin)
             SemanticReleasePluginExtension semanticReleaseExtension = extensions.create("semanticRelease", SemanticReleasePluginExtension, project)
             ReleasePluginExtension releaseExtension = extensions.findByType(ReleasePluginExtension)
-            tasks.release.doLast {
+            def releaseTask = tasks.release
+            releaseTask.doLast {
                 if (project.version.inferredVersion.createTag) {
                     semanticReleaseExtension.changeLog.createGitHubVersion(project.version.inferredVersion)
                 }
@@ -35,6 +39,17 @@ class SemanticReleasePlugin implements Plugin<Project> {
             releaseExtension.with {
                 versionStrategy semanticReleaseExtension.releaseStrategy
                 defaultVersionStrategy = semanticReleaseExtension.snapshotStrategy
+            }
+            allprojects { prj ->
+                prj.plugins.withType(JavaBasePlugin) {
+                    releaseTask.dependsOn prj.tasks.build
+                }
+                prj.plugins.withType(BasePlugin) {
+                    releaseTask.finalizedBy prj.tasks.uploadArchives
+                }
+                prj.plugins.withType(PublishingPlugin) {
+                    releaseTask.finalizedBy prj.tasks.publish
+                }
             }
         }
     }

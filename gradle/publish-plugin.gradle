@@ -13,9 +13,3 @@ pluginBundle {
         }
     }
 }
-
-tasks.publishPlugins {
-    onlyIf {
-        !project.version.toString().endsWith('-SNAPSHOT')
-    }
-}
