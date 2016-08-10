@@ -152,4 +152,18 @@ class SemanticReleasePluginSpec extends ProjectSpec {
         project.semanticRelease.branchNames.replacePatterns.foo == 'bar'
     }
 
+    def "autowires release task dependencies"() {
+        when:
+        project.with {
+            apply plugin: PLUGIN
+            apply plugin: 'java'
+            apply plugin: 'maven-publish'
+        }
+
+        then:
+        project.tasks.release.dependsOn.contains(project.tasks.build)
+        project.tasks.release.finalizedBy.getDependencies(project.tasks.release).contains(project.tasks.publish)
+        project.tasks.release.finalizedBy.getDependencies(project.tasks.release).contains(project.tasks.uploadArchives)
+    }
+
 }
