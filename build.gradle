@@ -54,12 +54,10 @@ task integTest {
     dependsOn test
 }
 
-publish {
-    if (!version.toString().endsWith('-SNAPSHOT'))
-        dependsOn publishPlugins, bintrayUpload
-    else if ((System.getenv('TRAVIS_PULL_REQUEST') ?: "false") == "false")
-        dependsOn artifactoryPublish
-}
+if (!version.toString().endsWith('-SNAPSHOT'))
+    publish.dependsOn publishPlugins, bintrayUpload
+else if ((System.getenv('TRAVIS_PULL_REQUEST') ?: "false") == "false")
+    publish.dependsOn artifactoryPublish
 
 test {
     if (gradle.startParameter.taskNames.find { ['integTest', 'release'].contains(it) })
