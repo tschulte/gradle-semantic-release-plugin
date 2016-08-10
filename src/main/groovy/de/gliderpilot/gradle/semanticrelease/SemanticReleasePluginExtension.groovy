@@ -29,9 +29,9 @@ import javax.inject.Inject
 class SemanticReleasePluginExtension {
 
     final Project project
-    final SemanticReleaseChangeLogService changeLogService
-    final SemanticReleaseCheckBranch onReleaseBranch
-    final SemanticReleaseAppendBranchNameStrategy appendBranchName
+    final SemanticReleaseChangeLogService changeLog
+    final SemanticReleaseCheckBranch releaseBranches
+    final SemanticReleaseAppendBranchNameStrategy branchNames
     final SemanticReleaseNormalStrategy semanticStrategy
     final SemanticReleaseStrategy releaseStrategy
     final SemanticReleaseStrategy snapshotStrategy
@@ -39,12 +39,12 @@ class SemanticReleasePluginExtension {
     @Inject
     SemanticReleasePluginExtension(Project project) {
         this.project = project
-        changeLogService = new SemanticReleaseChangeLogService(project.grgit, project.release.tagStrategy)
-        onReleaseBranch = new SemanticReleaseCheckBranch()
-        appendBranchName = new SemanticReleaseAppendBranchNameStrategy(onReleaseBranch)
-        semanticStrategy = new SemanticReleaseNormalStrategy(project.grgit, changeLogService)
+        changeLog = new SemanticReleaseChangeLogService(project.grgit, project.release.tagStrategy)
+        releaseBranches = new SemanticReleaseCheckBranch()
+        branchNames = new SemanticReleaseAppendBranchNameStrategy(releaseBranches)
+        semanticStrategy = new SemanticReleaseNormalStrategy(project.grgit, changeLog)
         releaseStrategy = new SemanticReleaseStrategy(
-                initialStateService: new SemanticReleaseInitialStateService(project.grgit),
+                initialStateService: new SemanticReleaseInitialStateService(project.grgit, project.release.tagStrategy),
                 normalStrategy: semanticStrategy,
                 createTag: true,
                 selector: this.&isRelease
@@ -52,29 +52,48 @@ class SemanticReleasePluginExtension {
         snapshotStrategy = releaseStrategy.copyWith(
                 type: "SNAPSHOT",
                 preReleaseStrategy: StrategyUtil.all(
-                        appendBranchName,
+                        branchNames,
                         appendSnapshot()
                 ),
-                createTag: false
+                createTag: false,
+                selector: { true }
         )
 
     }
 
     def changeLog(Closure closure) {
-        ConfigureUtil.configure(closure, changeLogService)
+        ConfigureUtil.configure(closure, changeLog)
     }
 
     def releaseBranches(Closure closure) {
-        ConfigureUtil.configure(closure, onReleaseBranch)
+        ConfigureUtil.configure(closure, releaseBranches)
     }
 
     def branchNames(Closure closure) {
-        ConfigureUtil.configure(closure, appendBranchName)
+        ConfigureUtil.configure(closure, branchNames)
     }
 
     boolean isRelease(SemVerStrategyState state) {
-        !state.repoDirty && onReleaseBranch.isReleaseBranch(state.currentBranch.name) &&
+        !state.repoDirty && releaseBranches.isReleaseBranch(state.currentBranch.name) &&
                 semanticStrategy.canRelease(state) && project.gradle.startParameter.taskNames.find { it == 'release' }
+    }
+
+    @Deprecated
+    SemanticReleaseChangeLogService getChangeLogService() {
+        project.logger.warn("semanticRelease.changeLogService is deprecated and will be removed in v2.0.0")
+        changeLog
+    }
+
+    @Deprecated
+    SemanticReleaseCheckBranch getOnReleaseBranch() {
+        project.logger.warn("semanticRelease.onReleaseBranch is deprecated and will be removed in v2.0.0")
+        releaseBranches
+    }
+
+    @Deprecated
+    SemanticReleaseAppendBranchNameStrategy getAppendBranchName() {
+        project.logger.warn("semanticRelease.appendBranchName is deprecated and will be removed in v2.0.0")
+        branchNames
     }
 
     private PartialSemVerStrategy appendSnapshot() {

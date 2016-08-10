@@ -17,6 +17,7 @@ package de.gliderpilot.gradle.semanticrelease
 
 import com.jcabi.github.Coordinates
 import com.jcabi.github.Release
+import com.jcabi.github.Repos
 import com.jcabi.github.RtGithub
 import com.jcabi.github.mock.MkGithub
 import org.ajoberstar.gradle.git.release.base.ReleaseVersion
@@ -25,9 +26,8 @@ import org.ajoberstar.grgit.Commit
 import org.ajoberstar.grgit.Grgit
 import spock.lang.Specification
 import spock.lang.Subject
+import spock.lang.Timeout
 import spock.lang.Unroll
-
-import javax.json.Json
 
 import static org.ajoberstar.gradle.git.release.semver.ChangeScope.*
 
@@ -180,31 +180,32 @@ class SemanticReleaseChangeLogServiceSpec extends Specification {
         given:
         grgit = Grgit.open()
         changeLogService = new SemanticReleaseChangeLogService(grgit, tagStrategy)
+        String mnemo = changeLogService.mnemo()
 
         when:
         def commits = [
-                'fix(component1): foo',
+                'fix(component1): foo\n\nCloses #123, #124',
                 'fix(component1): bar',
-                'fix(component2): baz',
-                'fix: no component',
-                'feat: baz\n\nBREAKING CHANGE: This and that', 'foo bar']
+                'fix(component2): baz\n\nCloses #123\nCloses #124',
+                'fix: no component\n\nCloses #456, #789',
+                'feat: baz\n\nCloses #159\n\nBREAKING CHANGE: This and that', 'foo bar']
         def expected = """\
             <a name="2.0.0"></a>
-            # [2.0.0](https://github.com/tschulte/gradle-semantic-release-plugin/compare/v1.0.0...v2.0.0) (${
+            # [2.0.0](https://github.com/$mnemo/compare/v1.0.0...v2.0.0) (${
             new java.sql.Date(System.currentTimeMillis())
         })
 
             ### Bug Fixes
 
-            * no component ([1234567](https://github.com/tschulte/gradle-semantic-release-plugin/commit/1234567))
+            * no component ([1234567](https://github.com/$mnemo/commit/1234567), closes #456, #789)
             * **component1:**
-                * foo ([1234567](https://github.com/tschulte/gradle-semantic-release-plugin/commit/1234567))
-                * bar ([1234567](https://github.com/tschulte/gradle-semantic-release-plugin/commit/1234567))
-            * **component2:** baz ([1234567](https://github.com/tschulte/gradle-semantic-release-plugin/commit/1234567))
+                * foo ([1234567](https://github.com/$mnemo/commit/1234567), closes #123, #124)
+                * bar ([1234567](https://github.com/$mnemo/commit/1234567))
+            * **component2:** baz ([1234567](https://github.com/$mnemo/commit/1234567), closes #123, #124)
 
             ### Features
 
-            * baz ([1234567](https://github.com/tschulte/gradle-semantic-release-plugin/commit/1234567))
+            * baz ([1234567](https://github.com/$mnemo/commit/1234567), closes #159)
 
             ### BREAKING CHANGES
 
@@ -215,19 +216,25 @@ class SemanticReleaseChangeLogServiceSpec extends Specification {
         changeLogService.changeLog(commits.collect(asCommit), new ReleaseVersion(previousVersion: '1.0.0', version: '2.0.0', createTag: true)).toString() == expected
     }
 
+    @Timeout(10)
     def "change log is uploaded to GitHub"() {
         given:
         grgit = Grgit.open()
         changeLogService = new SemanticReleaseChangeLogService(grgit, tagStrategy)
-        changeLogService.github = new MkGithub("tschulte")
-        changeLogService.github.repos().create(Json.createObjectBuilder().add("name", "gradle-semantic-release-plugin").build())
+        String mnemo = changeLogService.mnemo()
+        String user = mnemo.substring(0, mnemo.indexOf("/"))
+        String repo = mnemo.substring(mnemo.indexOf("/") + 1)
+        changeLogService.github = new MkGithub(user)
+        changeLogService.github.repos().create(new Repos.RepoCreate(repo, false))
+        def coordinates = new Coordinates.Simple("$mnemo")
+        changeLogService.github.repos().get(coordinates).git().references().create("refs/tags/v1.0.0", "affe")
         changeLogService.changeLog = { List<Commit> commits, ReleaseVersion version ->
             "${'changelog'}"
         }
 
         when:
         changeLogService.createGitHubVersion(new ReleaseVersion(previousVersion: '0.0.0', version: '1.0.0'))
-        def releases = changeLogService.github.repos().get(new Coordinates.Simple("tschulte/gradle-semantic-release-plugin")).releases()
+        def releases = changeLogService.github.repos().get(coordinates).releases()
         def release = releases.iterate().collect { new Release.Smart(it) }.find {
             it.tag() == 'v1.0.0'
         }

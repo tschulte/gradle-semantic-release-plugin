@@ -53,7 +53,29 @@ class SemanticReleasePluginSpec extends ProjectSpec {
         }
 
         then:
-        project.semanticRelease.changeLogService.breakingChangeKeywords == ['breaks']
+        project.semanticRelease.changeLog.breakingChangeKeywords == ['breaks']
+    }
+
+    def "can configure the changeLogService using the property"() {
+        when:
+        project.with {
+            apply plugin: PLUGIN
+            semanticRelease.changeLog.breakingChangeKeywords = ['breaks']
+        }
+
+        then:
+        project.semanticRelease.changeLog.breakingChangeKeywords == ['breaks']
+    }
+
+    def "can configure the changeLogService using the deprecated property"() {
+        when:
+        project.with {
+            apply plugin: PLUGIN
+            semanticRelease.changeLogService.breakingChangeKeywords = ['breaks']
+        }
+
+        then:
+        project.semanticRelease.changeLog.breakingChangeKeywords == ['breaks']
     }
 
     def "can configure the release branches"() {
@@ -68,7 +90,29 @@ class SemanticReleasePluginSpec extends ProjectSpec {
         }
 
         then:
-        project.semanticRelease.onReleaseBranch.excludes == ['foo'] as Set
+        project.semanticRelease.releaseBranches.excludes == ['foo'] as Set
+    }
+
+    def "can configure the release branches using the property"() {
+        when:
+        project.with {
+            apply plugin: PLUGIN
+            semanticRelease.releaseBranches.exclude 'foo'
+        }
+
+        then:
+        project.semanticRelease.releaseBranches.excludes == ['foo'] as Set
+    }
+
+    def "can configure the release branches using the deprecated property"() {
+        when:
+        project.with {
+            apply plugin: PLUGIN
+            semanticRelease.onReleaseBranch.exclude 'foo'
+        }
+
+        then:
+        project.semanticRelease.releaseBranches.excludes == ['foo'] as Set
     }
 
     def "can configure the branchNames strategy"() {
@@ -83,7 +127,29 @@ class SemanticReleasePluginSpec extends ProjectSpec {
         }
 
         then:
-        project.semanticRelease.appendBranchName.replacePatterns.foo == 'bar'
+        project.semanticRelease.branchNames.replacePatterns.foo == 'bar'
+    }
+
+    def "can configure the branchNames using the property"() {
+        when:
+        project.with {
+            apply plugin: PLUGIN
+            semanticRelease.branchNames.replace 'foo', 'bar'
+        }
+
+        then:
+        project.semanticRelease.branchNames.replacePatterns.foo == 'bar'
+    }
+
+    def "can configure the branchNames using the deprecated property"() {
+        when:
+        project.with {
+            apply plugin: PLUGIN
+            semanticRelease.appendBranchName.replace 'foo', 'bar'
+        }
+
+        then:
+        project.semanticRelease.branchNames.replacePatterns.foo == 'bar'
     }
 
 }

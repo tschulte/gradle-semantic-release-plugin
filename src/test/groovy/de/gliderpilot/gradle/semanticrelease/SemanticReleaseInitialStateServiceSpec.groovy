@@ -17,6 +17,7 @@ package de.gliderpilot.gradle.semanticrelease
 
 import com.github.zafarkhaja.semver.Version
 import groovy.mock.interceptor.MockFor
+import org.ajoberstar.gradle.git.release.base.TagStrategy
 import org.ajoberstar.gradle.git.release.semver.NearestVersion
 import org.ajoberstar.gradle.git.release.semver.NearestVersionLocator
 import org.ajoberstar.gradle.git.release.semver.SemVerStrategyState
@@ -32,7 +33,7 @@ class SemanticReleaseInitialStateServiceSpec extends Specification {
     Grgit grgit = Grgit.open()
 
     @Subject
-    SemanticReleaseInitialStateService service = new SemanticReleaseInitialStateService(grgit)
+    SemanticReleaseInitialStateService service = new SemanticReleaseInitialStateService(grgit, new TagStrategy())
 
     def "retrieves initialState using NearestVersionLocator"() {
         given:

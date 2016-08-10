@@ -1,6 +1,5 @@
 // configuration of the Maven artifacts
 apply plugin: 'maven-publish'
-apply plugin: 'com.gradle.plugin-publish'
 
 import java.text.SimpleDateFormat
 Date buildTimeAndDate = new Date()
@@ -78,29 +77,5 @@ publishing {
                 asNode().children().last() + pomConfig
             }
         }
-    }
-}
-
-pluginBundle {
-    website = 'https://github.com/tschulte/gradle-semantic-release-plugin'
-    vcsUrl = 'https://github.com/tschulte/gradle-semantic-release-plugin'
-    description = 'At its core semantic-release is a set of conventions that gives you entirely automated, semver-compliant package publishing.'
-    tags = ['semver', 'release', 'semantic-release']
-
-    plugins {
-        semanticReleaseBasePlugin {
-            id = 'de.gliderpilot.semantic-release-base'
-            displayName = 'semantic-release base'
-        }
-        semanticReleasePlugin {
-            id = 'de.gliderpilot.semantic-release'
-            displayName = 'semantic-release'
-        }
-    }
-}
-
-tasks.publishPlugins {
-    onlyIf {
-        !project.version.toString().endsWith('-SNAPSHOT')
     }
 }

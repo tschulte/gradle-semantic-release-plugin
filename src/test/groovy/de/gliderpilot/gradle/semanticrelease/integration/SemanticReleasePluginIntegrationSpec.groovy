@@ -13,11 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.gliderpilot.gradle.semanticrelease
+package de.gliderpilot.gradle.semanticrelease.integration
 
 import nebula.test.IntegrationSpec
 import spock.lang.Requires
 import spock.lang.Unroll
+
+import java.lang.management.ManagementFactory
+import java.lang.management.RuntimeMXBean
 
 /**
  * Created by tobias on 7/2/15.
@@ -28,6 +31,62 @@ import spock.lang.Unroll
 class SemanticReleasePluginIntegrationSpec extends IntegrationSpec {
 
     def setup() {
+        setupJvmArguments()
+        setupGit()
+        // create the gradle wrapper before the project is setup
+        setupGradleWrapper()
+        setupGradleProject()
+        setupGitignore()
+        commit('initial project layout')
+        push()
+    }
+
+    def setupJvmArguments() {
+        RuntimeMXBean runtimeMxBean = ManagementFactory.getRuntimeMXBean()
+        String buildDir = new File('build').canonicalPath
+        jvmArguments = runtimeMxBean.getInputArguments().collect { it.replaceAll(/([:=])build/, '$1' + buildDir) }
+        file('gradle.properties') << "org.gradle.jvmargs=${jvmArguments.join(' ')}"
+    }
+
+    /**
+     * Gradle-git seems to have issues when run using the nebula integration spec.
+     * This results in the integration spec to publish to the real repo -- even creating tags there.
+     * Therefore we must not use the runTasks methods. This is the first and only time, we use it --
+     * to create the wrapper (and the .gradle-test-kit/init.gradle script).
+     */
+    def setupGradleWrapper() {
+        runTasksSuccessfully(':wrapper')
+    }
+
+    /**
+     * extract the buildscript block from the file .gradle-test-kit/init.gradle
+     */
+    def buildscript() {
+        def lines = file('.gradle-test-kit/init.gradle').readLines()
+        lines.remove(0)
+        lines.remove(lines.size() - 1)
+        lines.join(System.getProperty("line.separator")).stripIndent()
+    }
+
+    def setupGitignore() {
+        file('.gitignore') << '''\
+            .gradle-test-kit/
+            .gradle/
+            gradle/
+            build/
+            cobertura.ser
+            '''.stripIndent()
+    }
+
+    def setupGradleProject() {
+        buildFile << buildscript()
+        buildFile << """
+            apply plugin: 'de.gliderpilot.semantic-release'
+            println version
+            """.stripIndent()
+    }
+
+    def setupGit() {
         // create remote repository
         File origin = new File(projectDir, "../${projectDir.name}.git")
         origin.mkdir()
@@ -41,23 +100,6 @@ class SemanticReleasePluginIntegrationSpec extends IntegrationSpec {
 
         execute 'git', 'remote', 'add', 'origin', "$origin"
         commit 'initial commit'
-        push()
-
-        buildFile << '''
-            apply plugin: 'de.gliderpilot.semantic-release'
-            println version
-        '''
-        file('.gitignore') << '''\
-            .gradle-test-kit/
-            .gradle/
-            gradle/
-            build/
-            cobertura.ser
-        '''.stripIndent()
-
-        runTasksSuccessfully(':wrapper')
-
-        commit('initial project layout')
         push()
     }
 
@@ -256,18 +298,23 @@ class SemanticReleasePluginIntegrationSpec extends IntegrationSpec {
         println "========"
         println "executing ${args.join(' ')}"
         println "--------"
-        def process = args.execute(null, dir)
-        String processOut = process.inputStream.text.trim()
-        String processErr = process.errorStream.text.trim()
-        println processOut
-        println processErr
-        if (process.waitFor() != 0)
+        def lastLine
+        def process = new ProcessBuilder(args)
+                .directory(dir)
+                .redirectErrorStream(true)
+                .start()
+        process.inputStream.eachLine {
+            println it
+            lastLine = it
+        }
+        def exitValue = process.waitFor()
+        if (exitValue != 0)
             throw new RuntimeException("failed to execute ${args.join(' ')}")
-        return processOut
+        return lastLine
     }
 
     def release() {
-        execute './gradlew', '-I', '.gradle-test-kit/init.gradle', 'release', '--info', '--stacktrace'
+        execute "${isWindows() ? 'gradlew.bat' : './gradlew'}", 'release', '--info', '--stacktrace'
         lastVersion()
     }
 
@@ -282,7 +329,7 @@ class SemanticReleasePluginIntegrationSpec extends IntegrationSpec {
 
     def commit(message) {
         execute 'git', 'add', '.'
-        execute 'git', 'commit', '--allow-empty', '--allow-empty-message', '-m', message
+        execute 'git', 'commit', '--allow-empty', '--allow-empty-message', '-m', message ?: "''"
     }
 
     def push() {
@@ -297,4 +344,9 @@ class SemanticReleasePluginIntegrationSpec extends IntegrationSpec {
     def checkout(String branch) {
         execute "git", "checkout", branch
     }
+
+    boolean isWindows() {
+        System.properties['os.name'].toLowerCase().contains('windows')
+    }
+
 }

@@ -16,10 +16,7 @@
 package de.gliderpilot.gradle.semanticrelease
 
 import com.github.zafarkhaja.semver.Version
-import com.jcabi.github.Coordinates
-import com.jcabi.github.Github
-import com.jcabi.github.Release
-import com.jcabi.github.RtGithub
+import com.jcabi.github.*
 import groovy.text.SimpleTemplateEngine
 import groovy.text.Template
 import groovy.transform.Memoized
@@ -29,6 +26,8 @@ import org.ajoberstar.gradle.git.release.base.TagStrategy
 import org.ajoberstar.gradle.git.release.semver.ChangeScope
 import org.ajoberstar.grgit.Commit
 import org.ajoberstar.grgit.Grgit
+import org.gradle.api.logging.Logger
+import org.gradle.api.logging.Logging
 
 import java.util.regex.Matcher
 
@@ -37,9 +36,12 @@ import java.util.regex.Matcher
  */
 class SemanticReleaseChangeLogService {
 
+    private final Logger logger = Logging.getLogger(getClass())
+
     private final TagStrategy tagStrategy
     private final Grgit grgit
 
+    @PackageScope
     Github github
 
     SemanticReleaseChangeLogService(Grgit grgit, TagStrategy tagStrategy) {
@@ -48,7 +50,20 @@ class SemanticReleaseChangeLogService {
     }
 
     void setGhToken(String token) {
-        github = new RtGithub(token)
+        if (token)
+            github = new RtGithub(token)
+    }
+
+    @Deprecated
+    Github getGithub() {
+        logger.warn("semanticRelease.changeLog.github is deprecated and will be removed in v2.0.0")
+        github
+    }
+
+    @Deprecated
+    void setGithub(Github github) {
+        logger.warn("semanticRelease.changeLog.github is deprecated and will be removed in v2.0.0")
+        this.github = github
     }
 
     /**
@@ -83,8 +98,8 @@ class SemanticReleaseChangeLogService {
      */
     Closure<Writable> changeLog = { List<Commit> commits, ReleaseVersion version ->
         String previousVersion = Version.valueOf(version.previousVersion).majorVersion ? version.previousVersion : null
-        String previousTag = (previousVersion && tagStrategy.prefixNameWithV) ? "v$previousVersion" : previousVersion
-        String currentTag = version.createTag ? (tagStrategy.prefixNameWithV ? "v$version.version" : version.version) : null
+        String previousTag = tagStrategy.toTagString(previousVersion)
+        String currentTag = version.createTag ? tagStrategy.toTagString(version.version) : null
         Template template = new SimpleTemplateEngine().createTemplate(getClass().getResource('/CHANGELOG.md'))
         template.make([
                 title     : null,
@@ -198,7 +213,7 @@ class SemanticReleaseChangeLogService {
         grgit.log {
             includes << 'HEAD'
             if (previousVersion.majorVersion) {
-                String previousVersionString = (tagStrategy.prefixNameWithV ? 'v' : '') + previousVersion.toString()
+                String previousVersionString = tagStrategy.toTagString(previousVersion.toString())
                 // range previousVersionString, 'HEAD' does not work: https://github.com/ajoberstar/grgit/issues/71
                 excludes << "${previousVersionString}^{commit}".toString()
             }
@@ -212,8 +227,26 @@ class SemanticReleaseChangeLogService {
             return
         if (!github)
             return
-        String tag = tagStrategy.prefixNameWithV ? "v$version.version" : "$version.version"
-        Release release = github.repos().get(new Coordinates.Simple(mnemo)).releases().create(tag)
+        String tag = tagStrategy.toTagString(version.version)
+
+        Repo repo = github.repos().get(new Coordinates.Simple(mnemo))
+
+        // check for the existance of the tag using the api -> #3
+        long start = System.currentTimeMillis()
+        while (!tagExists(repo, tag) && System.currentTimeMillis() - start < 60000) {
+        }
+
+        Release release = repo.releases().create(tag)
         new Release.Smart(release).body(changeLog(commits(Version.valueOf(version.previousVersion)), version).toString())
     }
+
+    private boolean tagExists(Repo repo, String tag) {
+        try {
+            repo.git().references().get("refs/tags/$tag").json()
+            return true
+        } catch (Throwable t) {
+            return false
+        }
+    }
+
 }
