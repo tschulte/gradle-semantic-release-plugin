@@ -16,6 +16,7 @@
 package de.gliderpilot.gradle.semanticrelease
 
 import groovy.transform.Memoized
+import org.ajoberstar.gradle.git.release.base.TagStrategy
 import org.ajoberstar.gradle.git.release.semver.NearestVersion
 import org.ajoberstar.gradle.git.release.semver.NearestVersionLocator
 import org.ajoberstar.gradle.git.release.semver.SemVerStrategyState
@@ -30,14 +31,16 @@ class SemanticReleaseInitialStateService {
     private static final Logger logger = LoggerFactory.getLogger(SemanticReleaseInitialStateService)
 
     private Grgit grgit
+    private TagStrategy tagStrategy
 
-    SemanticReleaseInitialStateService(Grgit grgit) {
+    SemanticReleaseInitialStateService(Grgit grgit, TagStrategy tagStrategy) {
         this.grgit = grgit
+        this.tagStrategy = tagStrategy
     }
 
     @Memoized
     SemVerStrategyState initialState() {
-        NearestVersionLocator locator = new NearestVersionLocator()
+        NearestVersionLocator locator = new NearestVersionLocator(tagStrategy)
         NearestVersion nearestVersion = locator.locate(grgit)
         SemVerStrategyState initialState = new SemVerStrategyState(
                 scopeFromProp: null,

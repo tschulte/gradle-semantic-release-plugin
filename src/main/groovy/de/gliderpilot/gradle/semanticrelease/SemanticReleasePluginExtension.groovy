@@ -44,7 +44,7 @@ class SemanticReleasePluginExtension {
         branchNames = new SemanticReleaseAppendBranchNameStrategy(releaseBranches)
         semanticStrategy = new SemanticReleaseNormalStrategy(project.grgit, changeLog)
         releaseStrategy = new SemanticReleaseStrategy(
-                initialStateService: new SemanticReleaseInitialStateService(project.grgit),
+                initialStateService: new SemanticReleaseInitialStateService(project.grgit, project.release.tagStrategy),
                 normalStrategy: semanticStrategy,
                 createTag: true,
                 selector: this.&isRelease
@@ -55,7 +55,8 @@ class SemanticReleasePluginExtension {
                         branchNames,
                         appendSnapshot()
                 ),
-                createTag: false
+                createTag: false,
+                selector: { true }
         )
 
     }

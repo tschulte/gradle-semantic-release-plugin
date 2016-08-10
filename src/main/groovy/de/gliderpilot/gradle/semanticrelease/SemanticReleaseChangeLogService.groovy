@@ -98,8 +98,8 @@ class SemanticReleaseChangeLogService {
      */
     Closure<Writable> changeLog = { List<Commit> commits, ReleaseVersion version ->
         String previousVersion = Version.valueOf(version.previousVersion).majorVersion ? version.previousVersion : null
-        String previousTag = (previousVersion && tagStrategy.prefixNameWithV) ? "v$previousVersion" : previousVersion
-        String currentTag = version.createTag ? (tagStrategy.prefixNameWithV ? "v$version.version" : version.version) : null
+        String previousTag = tagStrategy.toTagString(previousVersion)
+        String currentTag = version.createTag ? tagStrategy.toTagString(version.version) : null
         Template template = new SimpleTemplateEngine().createTemplate(getClass().getResource('/CHANGELOG.md'))
         template.make([
                 title     : null,
@@ -213,7 +213,7 @@ class SemanticReleaseChangeLogService {
         grgit.log {
             includes << 'HEAD'
             if (previousVersion.majorVersion) {
-                String previousVersionString = (tagStrategy.prefixNameWithV ? 'v' : '') + previousVersion.toString()
+                String previousVersionString = tagStrategy.toTagString(previousVersion.toString())
                 // range previousVersionString, 'HEAD' does not work: https://github.com/ajoberstar/grgit/issues/71
                 excludes << "${previousVersionString}^{commit}".toString()
             }
@@ -227,13 +227,14 @@ class SemanticReleaseChangeLogService {
             return
         if (!github)
             return
-        String tag = tagStrategy.prefixNameWithV ? "v$version.version" : "$version.version"
+        String tag = tagStrategy.toTagString(version.version)
 
         Repo repo = github.repos().get(new Coordinates.Simple(mnemo))
 
         // check for the existance of the tag using the api -> #3
         long start = System.currentTimeMillis()
-        while(!tagExists(repo, tag) && System.currentTimeMillis() - start < 60000) {}
+        while (!tagExists(repo, tag) && System.currentTimeMillis() - start < 60000) {
+        }
 
         Release release = repo.releases().create(tag)
         new Release.Smart(release).body(changeLog(commits(Version.valueOf(version.previousVersion)), version).toString())

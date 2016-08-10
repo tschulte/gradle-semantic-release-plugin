@@ -17,6 +17,7 @@ package de.gliderpilot.gradle.semanticrelease
 
 import com.jcabi.github.Coordinates
 import com.jcabi.github.Release
+import com.jcabi.github.Repos
 import com.jcabi.github.RtGithub
 import com.jcabi.github.mock.MkGithub
 import org.ajoberstar.gradle.git.release.base.ReleaseVersion
@@ -27,8 +28,6 @@ import spock.lang.Specification
 import spock.lang.Subject
 import spock.lang.Timeout
 import spock.lang.Unroll
-
-import javax.json.Json
 
 import static org.ajoberstar.gradle.git.release.semver.ChangeScope.*
 
@@ -226,7 +225,7 @@ class SemanticReleaseChangeLogServiceSpec extends Specification {
         String user = mnemo.substring(0, mnemo.indexOf("/"))
         String repo = mnemo.substring(mnemo.indexOf("/") + 1)
         changeLogService.github = new MkGithub(user)
-        changeLogService.github.repos().create(Json.createObjectBuilder().add("name", repo).build())
+        changeLogService.github.repos().create(new Repos.RepoCreate(repo, false))
         def coordinates = new Coordinates.Simple("$mnemo")
         changeLogService.github.repos().get(coordinates).git().references().create("refs/tags/v1.0.0", "affe")
         changeLogService.changeLog = { List<Commit> commits, ReleaseVersion version ->
