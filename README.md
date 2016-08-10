@@ -82,10 +82,39 @@ group = 'org.example'
 publishing {
     [...]
 }
-tasks.release {
-    dependsOn build
-    finalizedBy publish
+```
+
+There is a new `release` task, which automatically dependsOn the `build` task and is finalizedBy the `publish` task
+(and the `uploadArchives` task, if you use the old publishing mechanism).
+
+### Uploading SNAPSHOT and releases to different repositories
+
+Because the `release` task does automatically execute the `publish` task, you must take care of configuring only valid
+repositories.
+
+```groovy
+publishing {
+    repositories {
+        maven {
+            if (version.toString().endsWith("-SNAPSHOT") {
+                url "http://.../snapshots"
+            } else {
+                url "http://.../releases"
+            }
+        }
+    }
 }
+```
+
+### Uploading using other plugins
+
+If you need other mechanisms to upload your artifacts, you need to manually configure this.
+
+```groovy
+if (!version.toString().endsWith('-SNAPSHOT'))
+    publish.dependsOn publishPlugins, bintrayUpload
+else if ((System.getenv('TRAVIS_PULL_REQUEST') ?: "false") == "false")
+    publish.dependsOn artifactoryPublish
 ```
 
 ### Enable upload of the changelog to GitHub
