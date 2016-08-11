@@ -43,10 +43,14 @@ class SemanticReleaseChangeLogService {
 
     @PackageScope
     Github github
+    private Closure<Iterable<File>> files
+    private Iterable<File> releaseAssets
 
-    SemanticReleaseChangeLogService(Grgit grgit, TagStrategy tagStrategy) {
+    SemanticReleaseChangeLogService(Grgit grgit, TagStrategy tagStrategy, Closure<Iterable<File>> files) {
         this.grgit = grgit
         this.tagStrategy = tagStrategy
+        this.files = files
+        releaseAssets = files()
     }
 
     void setGhToken(String token) {
@@ -207,9 +211,8 @@ class SemanticReleaseChangeLogService {
         repositoryUrl("compare/${previousTag}...${currentTag}")
     }
 
-    @PackageScope
-    def releaseAsset = { ReleaseAssets assets, String currentTag ->
-        // waiting the custom implementation
+    void releaseAssets(Object... assets) {
+        releaseAssets += files(assets)
     }
 
     @PackageScope
@@ -243,7 +246,9 @@ class SemanticReleaseChangeLogService {
 
         Release release = repo.releases().create(tag)
         new Release.Smart(release).body(changeLog(commits(Version.valueOf(version.previousVersion)), version).toString())
-        releaseAsset(release.assets(), "$version.version")
+        releaseAssets.each {
+            release.assets().upload(it.bytes, URLConnection.guessContentTypeFromName(it.name) ?: "application/octet-stream", it.name)
+        }
     }
 
     private boolean tagExists(Repo repo, String tag) {

@@ -166,4 +166,19 @@ class SemanticReleasePluginSpec extends ProjectSpec {
         project.tasks.release.finalizedBy.getDependencies(project.tasks.release).contains(project.tasks.uploadArchives)
     }
 
+    def "can define releaseAssets"() {
+        when:
+        project.with {
+            apply plugin: PLUGIN
+            apply plugin: 'java'
+            semanticRelease {
+                changeLog {
+                    releaseAssets jar
+                }
+            }
+        }
+
+        then:
+        project.semanticRelease.changeLog.releaseAssets.toList().containsAll(project.jar.outputs.files.files)
+    }
 }

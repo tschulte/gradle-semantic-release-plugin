@@ -39,8 +39,10 @@ class SemanticReleaseChangeLogServiceSpec extends Specification {
     Grgit grgit = Mock()
     TagStrategy tagStrategy = new TagStrategy()
 
+    Closure<Iterable<File>> files = { it instanceof Object[] ? it as List : [] }
+
     @Subject
-    SemanticReleaseChangeLogService changeLogService = new SemanticReleaseChangeLogService(grgit, tagStrategy)
+    SemanticReleaseChangeLogService changeLogService = new SemanticReleaseChangeLogService(grgit, tagStrategy, files)
 
     def "does not throw an exception if no ticket is referenced"() {
         given:
@@ -179,7 +181,7 @@ class SemanticReleaseChangeLogServiceSpec extends Specification {
     def "changeLog is generated"() {
         given:
         grgit = Grgit.open()
-        changeLogService = new SemanticReleaseChangeLogService(grgit, tagStrategy)
+        changeLogService = new SemanticReleaseChangeLogService(grgit, tagStrategy, files)
         String mnemo = changeLogService.mnemo()
 
         when:
@@ -220,7 +222,9 @@ class SemanticReleaseChangeLogServiceSpec extends Specification {
     def "change log is uploaded to GitHub"() {
         given:
         grgit = Grgit.open()
-        changeLogService = new SemanticReleaseChangeLogService(grgit, tagStrategy)
+        changeLogService = new SemanticReleaseChangeLogService(grgit, tagStrategy, files)
+        File asset = new File('settings.gradle')
+        changeLogService.releaseAssets(asset)
         String mnemo = changeLogService.mnemo()
         String user = mnemo.substring(0, mnemo.indexOf("/"))
         String repo = mnemo.substring(mnemo.indexOf("/") + 1)
@@ -241,12 +245,13 @@ class SemanticReleaseChangeLogServiceSpec extends Specification {
 
         then:
         release?.body() == 'changelog'
+        release?.assets().iterate().any { it.json().getString("name") == asset.name }
     }
 
     def "change log is not uploaded to GitHub when no gh token is set"() {
         given:
         grgit = Grgit.open()
-        changeLogService = new SemanticReleaseChangeLogService(grgit, tagStrategy)
+        changeLogService = new SemanticReleaseChangeLogService(grgit, tagStrategy, files)
 
         when:
         changeLogService.createGitHubVersion(new ReleaseVersion(previousVersion: '1.0.0', version: '1.0.1'))

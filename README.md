@@ -135,11 +135,14 @@ semanticRelease {
 The **ghToken** is mandatory.
 
 ```groovy
+apply plugin: 'java'
+task sourcesJar(type: Jar) {
+    classifier = 'sources'
+    from sourceSets.main.allSource
+}
 semanticRelease {
     changeLog {
-        releaseAsset = { ReleaseAssets assets, String currentTag ->
-            assets.upload(file("build/libs/value-${currentTag}.jar").bytes, "application/zip", "run-${currentTag}.jar")
-        }
+        releaseAssets(jar, sourcesJar)
     }
 }
 ```
