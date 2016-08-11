@@ -16,6 +16,7 @@
 package de.gliderpilot.gradle.semanticrelease
 
 import nebula.test.ProjectSpec
+import org.gradle.api.tasks.bundling.Jar
 
 /**
  * Created by tobias on 7/2/15.
@@ -167,18 +168,36 @@ class SemanticReleasePluginSpec extends ProjectSpec {
     }
 
     def "can define releaseAssets"() {
-        when:
+        given:
         project.with {
             apply plugin: PLUGIN
             apply plugin: 'java'
+            tasks.create(name: "sourcesJar", type: Jar) {
+                classifier = 'sources'
+                from sourceSets.main.allSource
+            }
+            tasks.create(name: "javadocJar", type: Jar) {
+                classifier = 'javadoc'
+                from javadoc
+            }
             semanticRelease {
                 changeLog {
-                    releaseAssets jar
+                    releaseAssets jar, sourcesJar, javadocJar
                 }
             }
         }
 
+        when:
+        List<File> releaseAssets = project.semanticRelease.changeLog.releaseAssets.toList()
+
         then:
-        project.semanticRelease.changeLog.releaseAssets.toList().containsAll(project.jar.outputs.files.files)
+        releaseAssets.containsAll(project.jar.outputs.files.files)
+        releaseAssets.containsAll(project.sourcesJar.outputs.files.files)
+        releaseAssets.containsAll(project.javadocJar.outputs.files.files)
+
+        and: "task dependencies are automatically added"
+        project.tasks.release.dependsOn.contains(project.jar)
+        project.tasks.release.dependsOn.contains(project.sourcesJar)
+        project.tasks.release.dependsOn.contains(project.javadocJar)
     }
 }
