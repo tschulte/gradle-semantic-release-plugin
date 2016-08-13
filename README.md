@@ -141,8 +141,12 @@ task sourcesJar(type: Jar) {
     from sourceSets.main.allSource
 }
 semanticRelease {
-    changeLog {
-        releaseAssets(jar, sourcesJar)
+    repo {
+        releaseAsset jar
+        // optionally set name, label and/or contentType
+        releaseAsset sourcesJar, name: "the-sources.jar", label: 'the sources jar', contentType: 'application/zip'
+        // or
+        // releaseAsset sourcesJar name "the-sources.jar" label "the sources jar" contentType "application/zip"
     }
 }
 ```

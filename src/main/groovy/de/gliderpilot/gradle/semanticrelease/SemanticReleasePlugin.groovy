@@ -31,11 +31,8 @@ class SemanticReleasePlugin implements Plugin<Project> {
             SemanticReleasePluginExtension semanticReleaseExtension = extensions.create("semanticRelease", SemanticReleasePluginExtension, project)
             ReleasePluginExtension releaseExtension = extensions.findByType(ReleasePluginExtension)
             def releaseTask = tasks.release
-            releaseTask.doLast {
-                if (project.version.inferredVersion.createTag) {
-                    semanticReleaseExtension.changeLog.createGitHubVersion(project.version.inferredVersion)
-                }
-            }
+            tasks.create("updateGithubRelease", UpdateGithubRelease)
+            releaseTask.finalizedBy project.tasks.updateGithubRelease
             releaseExtension.with {
                 versionStrategy semanticReleaseExtension.releaseStrategy
                 defaultVersionStrategy = semanticReleaseExtension.snapshotStrategy

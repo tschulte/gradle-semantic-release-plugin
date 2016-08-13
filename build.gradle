@@ -47,7 +47,7 @@ sourceSets {
 group = 'de.gliderpilot.gradle.semantic-release'
 
 semanticRelease {
-    changeLog.ghToken = project.ext.ghToken
+    repo.ghToken = project.ext.ghToken
 }
 
 task integTest {

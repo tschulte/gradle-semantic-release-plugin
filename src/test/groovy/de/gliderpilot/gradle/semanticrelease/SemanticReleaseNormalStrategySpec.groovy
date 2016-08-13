@@ -29,7 +29,8 @@ class SemanticReleaseNormalStrategySpec extends Specification {
 
     Grgit grgit = Mock()
     TagStrategy tagStrategy = new TagStrategy()
-    SemanticReleaseChangeLogService changeLogService = new SemanticReleaseChangeLogService(grgit, tagStrategy, { [] })
+    GitRepo repo = new GithubRepo(grgit)
+    SemanticReleaseChangeLogService changeLogService = new SemanticReleaseChangeLogService(grgit, repo, tagStrategy)
 
     @Subject
     SemanticReleaseNormalStrategy strategy = new SemanticReleaseNormalStrategy(grgit,

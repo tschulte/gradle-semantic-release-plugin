@@ -181,14 +181,20 @@ class SemanticReleasePluginSpec extends ProjectSpec {
                 from javadoc
             }
             semanticRelease {
-                changeLog {
-                    releaseAssets jar, sourcesJar, javadocJar
+                repo {
+                    releaseAsset jar, name: "thejar.jar"
+                    releaseAsset sourcesJar, label: 'thelabel'
+                    releaseAsset javadocJar, contentType: 'thecontenttype'
                 }
             }
         }
 
         when:
-        List<File> releaseAssets = project.semanticRelease.changeLog.releaseAssets.toList()
+        Collection<File> releaseAssets = project.semanticRelease.repo.releaseAssets.collect { it.file }
+        def finalizedBy = project.tasks.release.finalizedBy.getDependencies(project.tasks.release)
+        def dependsOn = project.tasks.updateGithubRelease.dependsOn.collect {
+            it instanceof Closure ? it() : it
+        }.flatten()
 
         then:
         releaseAssets.containsAll(project.jar.outputs.files.files)
@@ -196,8 +202,10 @@ class SemanticReleasePluginSpec extends ProjectSpec {
         releaseAssets.containsAll(project.javadocJar.outputs.files.files)
 
         and: "task dependencies are automatically added"
-        project.tasks.release.dependsOn.contains(project.jar)
-        project.tasks.release.dependsOn.contains(project.sourcesJar)
-        project.tasks.release.dependsOn.contains(project.javadocJar)
+        finalizedBy.contains(project.tasks.updateGithubRelease)
+
+        dependsOn.contains(project.jar)
+        dependsOn.contains(project.sourcesJar)
+        dependsOn.contains(project.javadocJar)
     }
 }

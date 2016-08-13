@@ -29,6 +29,7 @@ import javax.inject.Inject
 class SemanticReleasePluginExtension {
 
     final Project project
+    final GitRepo repo
     final SemanticReleaseChangeLogService changeLog
     final SemanticReleaseCheckBranch releaseBranches
     final SemanticReleaseAppendBranchNameStrategy branchNames
@@ -39,12 +40,8 @@ class SemanticReleasePluginExtension {
     @Inject
     SemanticReleasePluginExtension(Project project) {
         this.project = project
-        def files = { Object[] args ->
-            if (args)
-                project.tasks.release.dependsOn args
-            project.files(args)
-        }
-        changeLog = new SemanticReleaseChangeLogService(project.grgit, project.release.tagStrategy, files)
+        this.repo = new GithubRepo(project.grgit)
+        changeLog = new SemanticReleaseChangeLogService(project.grgit, repo, project.release.tagStrategy)
         releaseBranches = new SemanticReleaseCheckBranch()
         branchNames = new SemanticReleaseAppendBranchNameStrategy(releaseBranches)
         semanticStrategy = new SemanticReleaseNormalStrategy(project.grgit, changeLog)
@@ -68,6 +65,10 @@ class SemanticReleasePluginExtension {
 
     def changeLog(Closure closure) {
         ConfigureUtil.configure(closure, changeLog)
+    }
+
+    def repo(Closure closure) {
+        ConfigureUtil.configure(closure, repo)
     }
 
     def releaseBranches(Closure closure) {

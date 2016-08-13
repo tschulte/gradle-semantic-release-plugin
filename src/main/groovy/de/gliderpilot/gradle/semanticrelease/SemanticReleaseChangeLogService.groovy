@@ -16,7 +16,7 @@
 package de.gliderpilot.gradle.semanticrelease
 
 import com.github.zafarkhaja.semver.Version
-import com.jcabi.github.*
+import com.jcabi.github.Github
 import groovy.text.SimpleTemplateEngine
 import groovy.text.Template
 import groovy.transform.Memoized
@@ -29,8 +29,6 @@ import org.ajoberstar.grgit.Grgit
 import org.gradle.api.logging.Logger
 import org.gradle.api.logging.Logging
 
-import java.util.regex.Matcher
-
 /**
  * Created by tobias on 7/26/15.
  */
@@ -40,34 +38,31 @@ class SemanticReleaseChangeLogService {
 
     private final TagStrategy tagStrategy
     private final Grgit grgit
+    private final GitRepo repo
 
-    @PackageScope
-    Github github
-    private Closure<Iterable<File>> files
-    private Iterable<File> releaseAssets
-
-    SemanticReleaseChangeLogService(Grgit grgit, TagStrategy tagStrategy, Closure<Iterable<File>> files) {
+    SemanticReleaseChangeLogService(Grgit grgit, GitRepo repo, TagStrategy tagStrategy) {
         this.grgit = grgit
+        this.repo = repo
         this.tagStrategy = tagStrategy
-        this.files = files
-        releaseAssets = files()
     }
 
+    @Deprecated
     void setGhToken(String token) {
-        if (token)
-            github = new RtGithub(token)
+        logger.warn("semanticRelease.changeLog.ghToken is deprecated and will be removed in v2.0.0")
+        logger.warn("use semanticRelease.gitRepo.ghToken instead")
+        repo.ghToken = token
     }
 
     @Deprecated
     Github getGithub() {
         logger.warn("semanticRelease.changeLog.github is deprecated and will be removed in v2.0.0")
-        github
+        repo.github
     }
 
     @Deprecated
     void setGithub(Github github) {
         logger.warn("semanticRelease.changeLog.github is deprecated and will be removed in v2.0.0")
-        this.github = github
+        repo.github = github
     }
 
     /**
@@ -107,7 +102,7 @@ class SemanticReleaseChangeLogService {
         Template template = new SimpleTemplateEngine().createTemplate(getClass().getResource('/CHANGELOG.md'))
         template.make([
                 title     : null,
-                versionUrl: versionUrl(previousTag, currentTag),
+                versionUrl: repo.diffUrl(previousTag, currentTag),
                 service   : this,
                 version   : version.version,
                 fix       : byTypeGroupByComponent(commits, 'fix'),
@@ -175,7 +170,7 @@ class SemanticReleaseChangeLogService {
 
     @PackageScope
     def commitish = { Commit commit ->
-        String url = repositoryUrl("commit/${commit.abbreviatedId}")
+        String url = repo.commitUrl(commit.abbreviatedId)
         url ? "[${commit.abbreviatedId}]($url)" : "${commit.abbreviatedId}"
     }
 
@@ -188,35 +183,6 @@ class SemanticReleaseChangeLogService {
 
     @PackageScope
     @Memoized
-    String mnemo() {
-        String repositoryUrl = grgit.remote.list().find { it.name == 'origin' }.url
-        Matcher matcher = repositoryUrl =~ /.*github.com[\/:]((?:.+?)\/(?:.+?))(?:\.git)/
-        if (!matcher)
-            return null
-        return matcher.group(1)
-    }
-
-    @PackageScope
-    Closure<String> repositoryUrl = { String suffix ->
-        String mnemo = mnemo()
-        if (!mnemo)
-            return null
-        return "https://github.com/${mnemo}/$suffix"
-    }
-
-    @PackageScope
-    Closure<String> versionUrl = { String previousTag, String currentTag ->
-        if (!(previousTag && currentTag))
-            return null
-        repositoryUrl("compare/${previousTag}...${currentTag}")
-    }
-
-    void releaseAssets(Object... assets) {
-        releaseAssets += files(assets)
-    }
-
-    @PackageScope
-    @Memoized
     List<Commit> commits(Version previousVersion) {
         grgit.log {
             includes << 'HEAD'
@@ -225,38 +191,6 @@ class SemanticReleaseChangeLogService {
                 // range previousVersionString, 'HEAD' does not work: https://github.com/ajoberstar/grgit/issues/71
                 excludes << "${previousVersionString}^{commit}".toString()
             }
-        }
-    }
-
-    @PackageScope
-    void createGitHubVersion(ReleaseVersion version) {
-        String mnemo = mnemo()
-        if (!mnemo)
-            return
-        if (!github)
-            return
-        String tag = tagStrategy.toTagString(version.version)
-
-        Repo repo = github.repos().get(new Coordinates.Simple(mnemo))
-
-        // check for the existance of the tag using the api -> #3
-        long start = System.currentTimeMillis()
-        while (!tagExists(repo, tag) && System.currentTimeMillis() - start < 60000) {
-        }
-
-        Release release = repo.releases().create(tag)
-        new Release.Smart(release).body(changeLog(commits(Version.valueOf(version.previousVersion)), version).toString())
-        releaseAssets.each {
-            release.assets().upload(it.bytes, URLConnection.guessContentTypeFromName(it.name) ?: "application/octet-stream", it.name)
-        }
-    }
-
-    private boolean tagExists(Repo repo, String tag) {
-        try {
-            repo.git().references().get("refs/tags/$tag").json()
-            return true
-        } catch (Throwable t) {
-            return false
         }
     }
 

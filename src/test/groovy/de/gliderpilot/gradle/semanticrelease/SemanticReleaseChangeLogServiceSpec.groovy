@@ -15,18 +15,12 @@
  */
 package de.gliderpilot.gradle.semanticrelease
 
-import com.jcabi.github.Coordinates
-import com.jcabi.github.Release
-import com.jcabi.github.Repos
-import com.jcabi.github.RtGithub
-import com.jcabi.github.mock.MkGithub
 import org.ajoberstar.gradle.git.release.base.ReleaseVersion
 import org.ajoberstar.gradle.git.release.base.TagStrategy
 import org.ajoberstar.grgit.Commit
 import org.ajoberstar.grgit.Grgit
 import spock.lang.Specification
 import spock.lang.Subject
-import spock.lang.Timeout
 import spock.lang.Unroll
 
 import static org.ajoberstar.gradle.git.release.semver.ChangeScope.*
@@ -39,10 +33,10 @@ class SemanticReleaseChangeLogServiceSpec extends Specification {
     Grgit grgit = Mock()
     TagStrategy tagStrategy = new TagStrategy()
 
-    Closure<Iterable<File>> files = { it instanceof Object[] ? it as List : [] }
+    GitRepo repo = new GithubRepo(grgit)
 
     @Subject
-    SemanticReleaseChangeLogService changeLogService = new SemanticReleaseChangeLogService(grgit, tagStrategy, files)
+    SemanticReleaseChangeLogService changeLogService = new SemanticReleaseChangeLogService(grgit, repo, tagStrategy)
 
     def "does not throw an exception if no ticket is referenced"() {
         given:
@@ -56,14 +50,6 @@ class SemanticReleaseChangeLogServiceSpec extends Specification {
         ''            | _
         'foo'         | _
         '\n'          | _
-    }
-
-    def "creates github service upon setting ghToken"() {
-        when:
-        changeLogService.ghToken = '12345'
-
-        then:
-        changeLogService.github instanceof RtGithub
     }
 
     def "finds referenced tickets one on each line"() {
@@ -181,8 +167,9 @@ class SemanticReleaseChangeLogServiceSpec extends Specification {
     def "changeLog is generated"() {
         given:
         grgit = Grgit.open()
-        changeLogService = new SemanticReleaseChangeLogService(grgit, tagStrategy, files)
-        String mnemo = changeLogService.mnemo()
+        repo = new GithubRepo(grgit)
+        changeLogService = new SemanticReleaseChangeLogService(grgit, repo, tagStrategy)
+        String mnemo = repo.mnemo
 
         when:
         def commits = [
@@ -216,48 +203,6 @@ class SemanticReleaseChangeLogServiceSpec extends Specification {
 
         then:
         changeLogService.changeLog(commits.collect(asCommit), new ReleaseVersion(previousVersion: '1.0.0', version: '2.0.0', createTag: true)).toString() == expected
-    }
-
-    @Timeout(10)
-    def "change log is uploaded to GitHub"() {
-        given:
-        grgit = Grgit.open()
-        changeLogService = new SemanticReleaseChangeLogService(grgit, tagStrategy, files)
-        File asset = new File('settings.gradle')
-        changeLogService.releaseAssets(asset)
-        String mnemo = changeLogService.mnemo()
-        String user = mnemo.substring(0, mnemo.indexOf("/"))
-        String repo = mnemo.substring(mnemo.indexOf("/") + 1)
-        changeLogService.github = new MkGithub(user)
-        changeLogService.github.repos().create(new Repos.RepoCreate(repo, false))
-        def coordinates = new Coordinates.Simple("$mnemo")
-        changeLogService.github.repos().get(coordinates).git().references().create("refs/tags/v1.0.0", "affe")
-        changeLogService.changeLog = { List<Commit> commits, ReleaseVersion version ->
-            "${'changelog'}"
-        }
-
-        when:
-        changeLogService.createGitHubVersion(new ReleaseVersion(previousVersion: '0.0.0', version: '1.0.0'))
-        def releases = changeLogService.github.repos().get(coordinates).releases()
-        def release = releases.iterate().collect { new Release.Smart(it) }.find {
-            it.tag() == 'v1.0.0'
-        }
-
-        then:
-        release?.body() == 'changelog'
-        release?.assets().iterate().any { it.json().getString("name") == asset.name }
-    }
-
-    def "change log is not uploaded to GitHub when no gh token is set"() {
-        given:
-        grgit = Grgit.open()
-        changeLogService = new SemanticReleaseChangeLogService(grgit, tagStrategy, files)
-
-        when:
-        changeLogService.createGitHubVersion(new ReleaseVersion(previousVersion: '1.0.0', version: '1.0.1'))
-
-        then:
-        noExceptionThrown()
     }
 
     static asCommit = { new Commit(fullMessage: it, shortMessage: it.readLines().first(), id: '123456789abc') }
