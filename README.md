@@ -263,6 +263,8 @@ The plugin does configure gradle-git with one versionStrategy and one defaultVer
 The `gradle-semantic-release-plugin` defines it's own extension `semanticRelease`. When configuring gradle-git, you **must not** use the VersionStrategies defined by gradle-git directly, but you **must use** the releaseStrategy or snapshotStrategy of the semanticRelease extension as a base and use copyWith. Otherwise the version will not be inferred based on the commit messages.
 
 ```groovy
+import org.ajoberstar.gradle.git.release.semver.*
+import org.ajoberstar.gradle.git.release.opinion.Strategies
 release {
     // replace the default strategy to add '-FINAL' to the version
     versionStrategy semanticRelease.releaseStrategy.copyWith{
@@ -277,7 +279,7 @@ release {
             !state.repoDirty && state.currentBranch.name ==~ /rc\/.*/ &&
                     semanticRelease.semanticStrategy.canRelease(state) && project.gradle.startParameter.taskNames.find { it == 'release' }
         },
-        preReleaseStrategy: StrategyUtil.all({ it.copyWith(inferredPreRelease: 'rc') }, Strategies.PreRelease.COUNT_INCREMENTED)
+        preReleaseStrategy: StrategyUtil.all({ it.copyWith(inferredPreRelease: 'rc') } as PartialSemVerStrategy, Strategies.PreRelease.COUNT_INCREMENTED)
     )
 }
 ```
