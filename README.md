@@ -25,12 +25,12 @@ When `semantic-release` got setup it will do that after every successful continu
 
 This module ships with the [AngularJS Commit Message Conventions](https://github.com/angular/angular.js/blob/master/CONTRIBUTING.md#commit) and changelog generator, but you can [define your own](#configuration) style.
 
-> ### Commit Message Format
+### Commit Message Format
 
-> Each commit message consists of a **header**, a **body** and a **footer**.  The header has a special
+Each commit message consists of a **header**, a **body** and a **footer**.  The header has a special
 format that includes a **type**, a **scope** and a **subject**:
 
-> ```
+```
 <type>(<scope>): <subject>
 <BLANK LINE>
 <body>
@@ -130,7 +130,7 @@ semanticRelease {
 }
 ```
 
-### Enable upload release files to GitHub 
+### Enable upload release files to GitHub
 
 The **ghToken** is mandatory.
 
@@ -148,6 +148,24 @@ semanticRelease {
         // or
         // releaseAsset sourcesJar name "the-sources.jar" label "the sources jar" contentType "application/zip"
     }
+}
+```
+
+### Using with GitHub Enterprise
+
+By specifying two additional properties, `ghApi` and `ghBaseUrl`, this plugin can be
+used to publish releases along with the changelog to a GitHub Enterprise server.
+
+```groovy
+semanticRelease {
+  changeLog {
+    ghToken = project.ext.ghToken
+  }
+  repo {
+    ghToken = project.ext.ghToken
+    ghBaseUrl = "https://github.enterprise" // base url
+    ghApi = "https://github.enterprise/api/v3/" // api endpoint
+  }
 }
 ```
 
