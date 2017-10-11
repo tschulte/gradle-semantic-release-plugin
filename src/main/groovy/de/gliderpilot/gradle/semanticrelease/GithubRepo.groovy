@@ -21,6 +21,11 @@ import groovy.transform.Memoized
 import groovy.transform.PackageScope
 import org.ajoberstar.grgit.Grgit
 
+import javax.ws.rs.core.HttpHeaders;
+import javax.ws.rs.core.MediaType;
+import com.jcabi.http.request.ApacheRequest;
+import com.jcabi.http.wire.AutoRedirectingWire;
+
 import java.util.regex.Matcher
 
 class GithubRepo extends GitRepo {
@@ -29,34 +34,69 @@ class GithubRepo extends GitRepo {
 
     private Github github
 
+    private String ghBaseUrl
+
+    private String ghApi
+
+    private String ghToken
+
     @PackageScope
     Github getGithub() {
         github
     }
 
     GithubRepo(Grgit grgit) {
+        this.ghBaseUrl = "https://github.com"
         this.grgit = grgit
     }
 
-    void setGhToken(String token) {
-        if (token)
-            github = new RtGithub(token)
+    void setGhBaseUrl(String ghBaseUrl) {
+      this.ghBaseUrl = ghBaseUrl.replaceAll("/+\$", "") // remove trailing slashes
+    }
+
+    void setGhApi(String githubApi) {
+      this.ghApi = githubApi.replaceAll("/+\$", "") // remove trailing slashes
+      github = buildGithubReference()
+    }
+
+    void setGhToken(String githubToken) {
+      this.ghToken = githubToken
+      github = buildGithubReference()
     }
 
     @PackageScope
     @Memoized
     String getMnemo() {
         String repositoryUrl = grgit.remote.list().find { it.name == 'origin' }.url
-        Matcher matcher = repositoryUrl =~ /.*github.com[\/:]((?:.+?)\/(?:.+?))(?:\.git)/
+        Matcher matcher = repositoryUrl =~ /.*[\/:](.*\/.*)(?:\.git)$/
         if (!matcher)
             return null
         return matcher.group(1)
     }
 
+    private RtGithub buildGithubReference() {
+      if (this.ghApi != null) { // for github enterprise repositories
+        def request = new ApacheRequest(this.ghApi)
+          .header(HttpHeaders.USER_AGENT, RtGithub.USER_AGENT)
+          .header(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON)
+          .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON)
+
+        if (this.ghToken != null) { // also add authentication token, if available
+          request = request.header(HttpHeaders.AUTHORIZATION, "token ${ghToken}")
+        }
+
+        request = request.through(AutoRedirectingWire.class)
+
+        return new RtGithub(request)
+      } else if (this.ghToken) { // for github.com repositories
+        return new RtGithub(this.ghToken)
+      }
+    }
+
     private String repositoryUrl(String suffix) {
         if (!mnemo)
             return null
-        return "https://github.com/${mnemo}/$suffix"
+        return "${ghBaseUrl}/${mnemo}/$suffix"
     }
 
     String diffUrl(String previousTag, String currentTag) {

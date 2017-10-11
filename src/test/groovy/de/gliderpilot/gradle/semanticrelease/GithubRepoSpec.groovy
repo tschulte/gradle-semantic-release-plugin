@@ -29,7 +29,11 @@ class GithubRepoSpec extends Specification {
 
     @Shared
     @Subject
-    GithubRepo repo = new GithubRepo(grgit)
+    GithubRepo repo
+
+    def setup() {
+      repo = new GithubRepo(grgit)
+    }
 
     def "creates github service upon setting ghToken"() {
         when:
@@ -37,6 +41,33 @@ class GithubRepoSpec extends Specification {
 
         then:
         repo.github instanceof RtGithub
+    }
+
+    def "creates github service upon setting ghToken with api endpoint"() {
+        when:
+        repo.ghToken = '12345'
+        repo.ghApi = 'https://github.enterprise/api/v3'
+
+        then:
+        repo.github instanceof RtGithub
+        repo.github.entry().uri.equals("https://github.enterprise/api/v3")
+    }
+
+    @Unroll
+    def "diffUrl for #tag1 and #tag2 is #expectedUrl when setting ghBaseUrl"() {
+        when:
+        repo.ghBaseUrl = 'https://github.enterprise/'
+        String diffUrl = repo.diffUrl(tag1, tag2)
+
+        then:
+        diffUrl == expectedUrl
+
+        where:
+        tag1     | tag2     | expectedUrl
+        "v1.0.0" | "v1.1.0" | "https://github.enterprise/${repo.mnemo}/compare/v1.0.0...v1.1.0"
+        "v1.0.0" | null     | null
+        null     | "v1.1.0" | null
+
     }
 
     @Unroll
