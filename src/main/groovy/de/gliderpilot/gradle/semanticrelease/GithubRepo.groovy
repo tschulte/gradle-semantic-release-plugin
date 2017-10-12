@@ -36,7 +36,7 @@ class GithubRepo extends GitRepo {
 
     private String ghBaseUrl
 
-    private String ghApi
+    private boolean isGhEnterprise
 
     private String ghToken
 
@@ -48,20 +48,18 @@ class GithubRepo extends GitRepo {
     GithubRepo(Grgit grgit) {
         this.ghBaseUrl = "https://github.com"
         this.grgit = grgit
-    }
-
-    void setGhBaseUrl(String ghBaseUrl) {
-      this.ghBaseUrl = ghBaseUrl.replaceAll("/+\$", "") // remove trailing slashes
-    }
-
-    void setGhApi(String githubApi) {
-      this.ghApi = githubApi.replaceAll("/+\$", "") // remove trailing slashes
-      github = buildGithubReference()
+        this.isGhEnterprise = false
     }
 
     void setGhToken(String githubToken) {
       this.ghToken = githubToken
-      github = buildGithubReference()
+      this.github = buildGithubReference()
+    }
+
+    public void useGhEnterprise(String ghEnterpriseUrl) {
+      this.ghBaseUrl = ghEnterpriseUrl.replaceAll("/+\$", "") // remove trailing slashes
+      this.isGhEnterprise = true;
+      this.github = buildGithubReference()
     }
 
     @PackageScope
@@ -75,8 +73,8 @@ class GithubRepo extends GitRepo {
     }
 
     private RtGithub buildGithubReference() {
-      if (this.ghApi != null) { // for github enterprise repositories
-        def request = new ApacheRequest(this.ghApi)
+      if (this.isGhEnterprise) { // for github enterprise repositories
+        def request = new ApacheRequest("${ghBaseUrl}/api/v3")
           .header(HttpHeaders.USER_AGENT, RtGithub.USER_AGENT)
           .header(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON)
           .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON)

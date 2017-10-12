@@ -41,22 +41,42 @@ class GithubRepoSpec extends Specification {
 
         then:
         repo.github instanceof RtGithub
+        repo.github.entry().uri().get().toString().contains("github.com")
     }
 
-    def "creates github service upon setting ghToken with api endpoint"() {
+    def "creates github enterprise service with api endpoint"() {
         when:
         repo.ghToken = '12345'
-        repo.ghApi = 'https://github.enterprise/api/v3'
+        repo.useGhEnterprise 'https://github.enterprise/'
 
         then:
         repo.github instanceof RtGithub
-        repo.github.entry().uri.equals("https://github.enterprise/api/v3")
+        repo.github.entry().uri().get().toString().equals("https://github.enterprise/api/v3")
+    }
+
+    def "creates github enterprise service with http authorization token upon setting ghToken and useGhEnterprise"() {
+        when:
+        repo.ghToken = '12345'
+        repo.useGhEnterprise 'https://github.enterprise/'
+
+        then:
+        repo.github instanceof RtGithub
+        repo.github.entry().toString().contains("Authorization: token 12345")
+    }
+
+    def "creates github enterprise service upon setting ghToken and useGhEnterprise"() {
+        when:
+        repo.useGhEnterprise 'https://github.enterprise/'
+
+        then:
+        repo.github instanceof RtGithub
+        !repo.github.entry().toString().contains("Authorization: ")
     }
 
     @Unroll
     def "diffUrl for #tag1 and #tag2 is #expectedUrl when setting ghBaseUrl"() {
         when:
-        repo.ghBaseUrl = 'https://github.enterprise/'
+        repo.useGhEnterprise 'https://github.enterprise/'
         String diffUrl = repo.diffUrl(tag1, tag2)
 
         then:
