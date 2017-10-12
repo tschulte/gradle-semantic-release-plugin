@@ -153,8 +153,7 @@ semanticRelease {
 
 ### Using with GitHub Enterprise
 
-By specifying two additional properties, `ghApi` and `ghBaseUrl`, this plugin can be
-used to publish releases along with the changelog to a GitHub Enterprise server.
+By specifying `useGhEnterprise` this plugin can be used to publish releases along with the changelog to a GitHub Enterprise server.
 
 ```groovy
 semanticRelease {
@@ -163,8 +162,7 @@ semanticRelease {
   }
   repo {
     ghToken = project.ext.ghToken
-    ghBaseUrl = "https://github.enterprise" // base url
-    ghApi = "https://github.enterprise/api/v3/" // api endpoint
+    useGhEnterprise "https://github.enterprise" // GitHub Enterprise URL
   }
 }
 ```
