@@ -21,10 +21,10 @@ import groovy.transform.Memoized
 import groovy.transform.PackageScope
 import org.ajoberstar.grgit.Grgit
 
-import javax.ws.rs.core.HttpHeaders;
-import javax.ws.rs.core.MediaType;
-import com.jcabi.http.request.ApacheRequest;
-import com.jcabi.http.wire.AutoRedirectingWire;
+import javax.ws.rs.core.HttpHeaders
+import javax.ws.rs.core.MediaType
+import com.jcabi.http.request.ApacheRequest
+import com.jcabi.http.wire.AutoRedirectingWire
 
 import java.util.regex.Matcher
 
@@ -52,14 +52,18 @@ class GithubRepo extends GitRepo {
     }
 
     void setGhToken(String githubToken) {
-      this.ghToken = githubToken
-      this.github = buildGithubReference()
+        this.ghToken = githubToken
+        this.github = buildGithubReference()
+    }
+
+    public String getGhBaseUrl() {
+        return this.ghBaseUrl
     }
 
     public void useGhEnterprise(String ghEnterpriseUrl) {
-      this.ghBaseUrl = ghEnterpriseUrl.replaceAll("/+\$", "") // remove trailing slashes
-      this.isGhEnterprise = true;
-      this.github = buildGithubReference()
+        this.ghBaseUrl = ghEnterpriseUrl.replaceAll("/+\$", "") // remove trailing slashes
+        this.isGhEnterprise = true
+        this.github = buildGithubReference()
     }
 
     @PackageScope
@@ -73,22 +77,23 @@ class GithubRepo extends GitRepo {
     }
 
     private RtGithub buildGithubReference() {
-      if (this.isGhEnterprise) { // for github enterprise repositories
-        def request = new ApacheRequest("${ghBaseUrl}/api/v3")
-          .header(HttpHeaders.USER_AGENT, RtGithub.USER_AGENT)
-          .header(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON)
-          .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON)
+        if (this.isGhEnterprise) {
+            // for github enterprise repositories
+            def request = new ApacheRequest("${ghBaseUrl}/api/v3")
+                    .header(HttpHeaders.USER_AGENT, RtGithub.USER_AGENT)
+                    .header(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON)
+                    .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON)
 
-        if (this.ghToken != null) { // also add authentication token, if available
-          request = request.header(HttpHeaders.AUTHORIZATION, "token ${ghToken}")
+            if (this.ghToken != null) { // also add authentication token, if available
+                request = request.header(HttpHeaders.AUTHORIZATION, "token ${ghToken}")
+            }
+
+            request = request.through(AutoRedirectingWire.class)
+
+            return new RtGithub(request)
+        } else if (this.ghToken) { // for github.com repositories
+            return new RtGithub(this.ghToken)
         }
-
-        request = request.through(AutoRedirectingWire.class)
-
-        return new RtGithub(request)
-      } else if (this.ghToken) { // for github.com repositories
-        return new RtGithub(this.ghToken)
-      }
     }
 
     private String repositoryUrl(String suffix) {
