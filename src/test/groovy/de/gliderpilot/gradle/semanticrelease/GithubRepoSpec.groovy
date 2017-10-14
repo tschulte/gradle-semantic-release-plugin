@@ -15,8 +15,10 @@
  */
 package de.gliderpilot.gradle.semanticrelease
 
-import com.jcabi.github.RtGithub
 import org.ajoberstar.grgit.Grgit
+
+import com.jcabi.github.RtGithub
+
 import spock.lang.Shared
 import spock.lang.Specification
 import spock.lang.Subject
@@ -32,7 +34,7 @@ class GithubRepoSpec extends Specification {
     GithubRepo repo
 
     def setup() {
-      repo = new GithubRepo(grgit)
+        repo = new GithubRepo(grgit)
     }
 
     def "creates github service upon setting ghToken"() {
@@ -74,6 +76,25 @@ class GithubRepoSpec extends Specification {
     }
 
     @Unroll
+    def "extract repository path for github.com and github enterprise from url"() {
+        when:
+        if (ghEnterprise) {
+            repo.useGhEnterprise 'https://github.enterprise/'
+        }
+
+        then:
+        repo.getPathFromRepositoryUrl(url) == expectedMnemo
+
+        where:
+        ghEnterprise | url                                                                    | expectedMnemo
+        false        | "http://github.com/org/repo.git"                                       | "org/repo"
+        true         | "https://anyurl/enterprise/repo.git"                                   | "enterprise/repo"
+        false        | "git@github.com:tschulte/gradle-semantic-release-plugin.git"           | "tschulte/gradle-semantic-release-plugin"
+        true         | "git@githubenterprise.com:tschulte/gradle-semantic-release-plugin.git" | "tschulte/gradle-semantic-release-plugin"
+        false        | "git@githubenterprise.com:tschulte/gradle-semantic-release-plugin.git" | null
+    }
+
+    @Unroll
     def "diffUrl for #tag1 and #tag2 is #expectedUrl when setting ghBaseUrl"() {
         when:
         repo.useGhEnterprise 'https://github.enterprise/'
@@ -87,7 +108,6 @@ class GithubRepoSpec extends Specification {
         "v1.0.0" | "v1.1.0" | "https://github.enterprise/${repo.mnemo}/compare/v1.0.0...v1.1.0"
         "v1.0.0" | null     | null
         null     | "v1.1.0" | null
-
     }
 
     @Unroll
@@ -103,7 +123,6 @@ class GithubRepoSpec extends Specification {
         "v1.0.0" | "v1.1.0" | "https://github.com/${repo.mnemo}/compare/v1.0.0...v1.1.0"
         "v1.0.0" | null     | null
         null     | "v1.1.0" | null
-
     }
 
     def "generates commitUrl"() {
@@ -118,5 +137,4 @@ class GithubRepoSpec extends Specification {
         expect:
         repo.commitUrl(null) == null
     }
-
 }

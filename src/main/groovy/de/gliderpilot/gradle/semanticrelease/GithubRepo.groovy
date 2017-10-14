@@ -15,18 +15,20 @@
  */
 package de.gliderpilot.gradle.semanticrelease
 
-import com.jcabi.github.Github
-import com.jcabi.github.RtGithub
-import groovy.transform.Memoized
-import groovy.transform.PackageScope
-import org.ajoberstar.grgit.Grgit
+import java.util.regex.Matcher
 
 import javax.ws.rs.core.HttpHeaders
 import javax.ws.rs.core.MediaType
+
+import org.ajoberstar.grgit.Grgit
+
+import com.jcabi.github.Github
+import com.jcabi.github.RtGithub
 import com.jcabi.http.request.ApacheRequest
 import com.jcabi.http.wire.AutoRedirectingWire
 
-import java.util.regex.Matcher
+import groovy.transform.Memoized
+import groovy.transform.PackageScope
 
 class GithubRepo extends GitRepo {
 
@@ -69,11 +71,28 @@ class GithubRepo extends GitRepo {
     @PackageScope
     @Memoized
     String getMnemo() {
-        String repositoryUrl = grgit.remote.list().find { it.name == 'origin' }.url
-        Matcher matcher = repositoryUrl =~ /.*[\/:](.*\/.*)(?:\.git)$/
-        if (!matcher)
-            return null
-        return matcher.group(1)
+        String repositoryUrl = grgit.getRemote().list().find { it.name == 'origin' }.url
+
+        return getPathFromRepositoryUrl(repositoryUrl)
+    }
+
+    /** Extracts the path of the repository.
+     * 
+     *  Will not check for the base path defined in ghBasePath
+     * 
+     * @param repositoryUrl git remote url
+     * @return null when repository is not a github.com or GitHub Enterprise repository, otherwise path
+     */
+    String getPathFromRepositoryUrl(String repositoryUrl) {
+        // pathfinding logic extracted for better testability
+        boolean isGithubComRepository = (repositoryUrl ==~ /.*github.com[\/:]((?:.+?)\/(?:.+?))(?:\.git)/)
+        Matcher matcher = (repositoryUrl =~ /.+[\/:](.+?\/.+?)(?:\.git)$/)
+
+        if (isGithubComRepository || this.isGhEnterprise) {
+            println matcher.matches()
+            return matcher.group(1)
+        }
+        return null
     }
 
     private RtGithub buildGithubReference() {
