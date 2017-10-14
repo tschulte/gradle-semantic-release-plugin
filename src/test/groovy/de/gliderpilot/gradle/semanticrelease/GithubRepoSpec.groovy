@@ -90,8 +90,9 @@ class GithubRepoSpec extends Specification {
         false        | "http://github.com/org/repo.git"                                       | "org/repo"
         true         | "https://anyurl/enterprise/repo.git"                                   | "enterprise/repo"
         false        | "git@github.com:tschulte/gradle-semantic-release-plugin.git"           | "tschulte/gradle-semantic-release-plugin"
-        true         | "git@githubenterprise.com:tschulte/gradle-semantic-release-plugin.git" | "tschulte/gradle-semantic-release-plugin"
-        false        | "git@githubenterprise.com:tschulte/gradle-semantic-release-plugin.git" | null
+        true         | "git@github.enterprise:tschulte/gradle-semantic-release-plugin.git" | "tschulte/gradle-semantic-release-plugin"
+        false        | "git@github.enterprise:tschulte/gradle-semantic-release-plugin.git" | null
+        false        | "https://github.enterprise:tschulte/gradle-semantic-release-plugin.git"   | null
     }
 
     @Unroll
