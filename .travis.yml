@@ -6,7 +6,6 @@ addons:
 language: groovy
 jdk:
   - oraclejdk8
-  - openjdk7
 env: TERM=dumb
 cache:
   directories:
