@@ -4,7 +4,9 @@ addons:
     packages:
     - git
 language: groovy
-jdk: oraclejdk7
+jdk:
+  - oraclejdk8
+  - openjdk7
 env: TERM=dumb
 cache:
   directories:
