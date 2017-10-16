@@ -89,7 +89,6 @@ class GithubRepo extends GitRepo {
         Matcher matcher = (repositoryUrl =~ /.+[\/:](.+?\/.+?)(?:\.git)$/)
 
         if (isGithubComRepository || this.isGhEnterprise) {
-            println matcher.matches()
             return matcher.group(1)
         }
         return null
