@@ -15,20 +15,17 @@
  */
 package de.gliderpilot.gradle.semanticrelease
 
-import java.util.regex.Matcher
-
-import javax.ws.rs.core.HttpHeaders
-import javax.ws.rs.core.MediaType
-
-import org.ajoberstar.grgit.Grgit
-
 import com.jcabi.github.Github
 import com.jcabi.github.RtGithub
 import com.jcabi.http.request.ApacheRequest
 import com.jcabi.http.wire.AutoRedirectingWire
-
 import groovy.transform.Memoized
 import groovy.transform.PackageScope
+import org.ajoberstar.grgit.Grgit
+
+import javax.ws.rs.core.HttpHeaders
+import javax.ws.rs.core.MediaType
+import java.util.regex.Matcher
 
 class GithubRepo extends GitRepo {
 
@@ -77,12 +74,13 @@ class GithubRepo extends GitRepo {
     }
 
     /** Extracts the path of the repository.
-     * 
+     *
      *  Will not check for the base path defined in ghBasePath
-     * 
+     *
      * @param repositoryUrl git remote url
      * @return null when repository is not a github.com or GitHub Enterprise repository, otherwise path
      */
+    @PackageScope
     String getPathFromRepositoryUrl(String repositoryUrl) {
         // pathfinding logic extracted for better testability
         boolean isGithubComRepository = (repositoryUrl ==~ /.*github.com[\/:]((?:.+?)\/(?:.+?))(?:\.git)/)
