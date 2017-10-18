@@ -29,7 +29,11 @@ class GithubRepoSpec extends Specification {
 
     @Shared
     @Subject
-    GithubRepo repo = new GithubRepo(grgit)
+    GithubRepo repo
+
+    def setup() {
+        repo = new GithubRepo(grgit)
+    }
 
     def "creates github service upon setting ghToken"() {
         when:
@@ -37,6 +41,72 @@ class GithubRepoSpec extends Specification {
 
         then:
         repo.github instanceof RtGithub
+        repo.github.entry().uri().get().toString().contains("github.com")
+    }
+
+    def "creates github enterprise service with api endpoint"() {
+        when:
+        repo.ghToken = '12345'
+        repo.useGhEnterprise 'https://github.enterprise/'
+
+        then:
+        repo.github instanceof RtGithub
+        repo.github.entry().uri().get().toString().equals("https://github.enterprise/api/v3")
+    }
+
+    def "creates github enterprise service with http authorization token upon setting ghToken and useGhEnterprise"() {
+        when:
+        repo.ghToken = '12345'
+        repo.useGhEnterprise 'https://github.enterprise/'
+
+        then:
+        repo.github instanceof RtGithub
+        repo.github.entry().toString().contains("Authorization: token 12345")
+    }
+
+    def "creates github enterprise service upon setting ghToken and useGhEnterprise"() {
+        when:
+        repo.useGhEnterprise 'https://github.enterprise/'
+
+        then:
+        repo.github instanceof RtGithub
+        !repo.github.entry().toString().contains("Authorization: ")
+    }
+
+    @Unroll
+    def "extract repository path for github.com and github enterprise from url"() {
+        when:
+        if (ghEnterprise) {
+            repo.useGhEnterprise 'https://github.enterprise/'
+        }
+
+        then:
+        repo.getPathFromRepositoryUrl(url) == expectedMnemo
+
+        where:
+        ghEnterprise | url                                                                     | expectedMnemo
+        false        | "http://github.com/org/repo.git"                                        | "org/repo"
+        true         | "https://anyurl/enterprise/repo.git"                                    | "enterprise/repo"
+        false        | "git@github.com:tschulte/gradle-semantic-release-plugin.git"            | "tschulte/gradle-semantic-release-plugin"
+        true         | "git@github.enterprise:tschulte/gradle-semantic-release-plugin.git"     | "tschulte/gradle-semantic-release-plugin"
+        false        | "git@github.enterprise:tschulte/gradle-semantic-release-plugin.git"     | null
+        false        | "https://github.enterprise:tschulte/gradle-semantic-release-plugin.git" | null
+    }
+
+    @Unroll
+    def "diffUrl for #tag1 and #tag2 is #expectedUrl when setting ghBaseUrl"() {
+        when:
+        repo.useGhEnterprise 'https://github.enterprise/'
+        String diffUrl = repo.diffUrl(tag1, tag2)
+
+        then:
+        diffUrl == expectedUrl
+
+        where:
+        tag1     | tag2     | expectedUrl
+        "v1.0.0" | "v1.1.0" | "https://github.enterprise/${repo.mnemo}/compare/v1.0.0...v1.1.0"
+        "v1.0.0" | null     | null
+        null     | "v1.1.0" | null
     }
 
     @Unroll
@@ -52,7 +122,6 @@ class GithubRepoSpec extends Specification {
         "v1.0.0" | "v1.1.0" | "https://github.com/${repo.mnemo}/compare/v1.0.0...v1.1.0"
         "v1.0.0" | null     | null
         null     | "v1.1.0" | null
-
     }
 
     def "generates commitUrl"() {
@@ -67,5 +136,4 @@ class GithubRepoSpec extends Specification {
         expect:
         repo.commitUrl(null) == null
     }
-
 }

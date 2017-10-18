@@ -49,7 +49,7 @@ class SemanticReleaseChangeLogService {
     @Deprecated
     void setGhToken(String token) {
         logger.warn("semanticRelease.changeLog.ghToken is deprecated and will be removed in v2.0.0")
-        logger.warn("use semanticRelease.gitRepo.ghToken instead")
+        logger.warn("use semanticRelease.repo.ghToken instead")
         repo.ghToken = token
     }
 

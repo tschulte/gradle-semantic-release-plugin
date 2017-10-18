@@ -1,5 +1,6 @@
 apply plugin: 'de.gliderpilot.semantic-release'
 apply plugin: 'idea'
+apply plugin: 'eclipse'
 apply plugin: 'com.github.ben-manes.versions'
 
 apply from: 'gradle/credentials.gradle'

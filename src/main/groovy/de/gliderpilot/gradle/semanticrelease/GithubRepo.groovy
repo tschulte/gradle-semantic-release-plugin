@@ -17,10 +17,14 @@ package de.gliderpilot.gradle.semanticrelease
 
 import com.jcabi.github.Github
 import com.jcabi.github.RtGithub
+import com.jcabi.http.request.ApacheRequest
+import com.jcabi.http.wire.AutoRedirectingWire
 import groovy.transform.Memoized
 import groovy.transform.PackageScope
 import org.ajoberstar.grgit.Grgit
 
+import javax.ws.rs.core.HttpHeaders
+import javax.ws.rs.core.MediaType
 import java.util.regex.Matcher
 
 class GithubRepo extends GitRepo {
@@ -29,34 +33,89 @@ class GithubRepo extends GitRepo {
 
     private Github github
 
+    private String ghBaseUrl
+
+    private boolean isGhEnterprise
+
+    private String ghToken
+
     @PackageScope
     Github getGithub() {
         github
     }
 
     GithubRepo(Grgit grgit) {
+        this.ghBaseUrl = "https://github.com"
         this.grgit = grgit
+        this.isGhEnterprise = false
     }
 
-    void setGhToken(String token) {
-        if (token)
-            github = new RtGithub(token)
+    void setGhToken(String githubToken) {
+        this.ghToken = githubToken
+        this.github = buildGithubReference()
+    }
+
+    public String getGhBaseUrl() {
+        return this.ghBaseUrl
+    }
+
+    public void useGhEnterprise(String ghEnterpriseUrl) {
+        this.ghBaseUrl = ghEnterpriseUrl.replaceAll("/+\$", "") // remove trailing slashes
+        this.isGhEnterprise = true
+        this.github = buildGithubReference()
     }
 
     @PackageScope
     @Memoized
     String getMnemo() {
-        String repositoryUrl = grgit.remote.list().find { it.name == 'origin' }.url
-        Matcher matcher = repositoryUrl =~ /.*github.com[\/:]((?:.+?)\/(?:.+?))(?:\.git)/
-        if (!matcher)
-            return null
-        return matcher.group(1)
+        String repositoryUrl = grgit.getRemote().list().find { it.name == 'origin' }.url
+
+        return getPathFromRepositoryUrl(repositoryUrl)
+    }
+
+    /** Extracts the path of the repository.
+     *
+     *  Will not check for the base path defined in ghBasePath
+     *
+     * @param repositoryUrl git remote url
+     * @return null when repository is not a github.com or GitHub Enterprise repository, otherwise path
+     */
+    @PackageScope
+    String getPathFromRepositoryUrl(String repositoryUrl) {
+        // pathfinding logic extracted for better testability
+        boolean isGithubComRepository = (repositoryUrl ==~ /.*github.com[\/:]((?:.+?)\/(?:.+?))(?:\.git)/)
+        Matcher matcher = (repositoryUrl =~ /.+[\/:](.+?\/.+?)(?:\.git)$/)
+
+        if (isGithubComRepository || this.isGhEnterprise) {
+            return matcher.group(1)
+        }
+        return null
+    }
+
+    private RtGithub buildGithubReference() {
+        if (this.isGhEnterprise) {
+            // for github enterprise repositories
+            def request = new ApacheRequest("${ghBaseUrl}/api/v3")
+                    .header(HttpHeaders.USER_AGENT, RtGithub.USER_AGENT)
+                    .header(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON)
+                    .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON)
+
+            if (this.ghToken != null) { // also add authentication token, if available
+                request = request.header(HttpHeaders.AUTHORIZATION, "token ${ghToken}")
+            }
+
+            request = request.through(AutoRedirectingWire.class)
+
+            return new RtGithub(request)
+        } else if (this.ghToken) { // for github.com repositories
+            return new RtGithub(this.ghToken)
+        }
     }
 
     private String repositoryUrl(String suffix) {
         if (!mnemo)
             return null
-        return "https://github.com/${mnemo}/$suffix"
+        return "${ghBaseUrl}/${mnemo}/$suffix"
     }
 
     String diffUrl(String previousTag, String currentTag) {
