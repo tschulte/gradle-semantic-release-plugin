@@ -124,7 +124,7 @@ In order to automatically upload the changelog to GitHub, you need a [GitHub tok
 ```groovy
 project.ext.ghToken = project.hasProperty('ghToken') ? project.getProperty('ghToken') : System.getenv('GH_TOKEN') ?: null
 semanticRelease {
-    changeLog {
+    repo {
         ghToken = project.ghToken
     }
 }
@@ -157,9 +157,6 @@ By specifying `useGhEnterprise` this plugin can be used to publish releases alon
 
 ```groovy
 semanticRelease {
-  changeLog {
-    ghToken = project.ext.ghToken
-  }
   repo {
     ghToken = project.ext.ghToken
     useGhEnterprise "https://github.enterprise" // GitHub Enterprise URL
