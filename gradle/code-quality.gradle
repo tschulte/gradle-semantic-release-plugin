@@ -37,10 +37,10 @@ license {
     strictCheck = true
     ignoreFailures = true
     mapping {
-        java   = 'SLASHSTAR_STYLE'
+        java = 'SLASHSTAR_STYLE'
         groovy = 'SLASHSTAR_STYLE'
     }
-    ext.year = '2015'
+    ext.year = '2017'
 }
 
 licenseTest {
