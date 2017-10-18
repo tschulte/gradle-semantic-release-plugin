@@ -15,10 +15,8 @@
  */
 package de.gliderpilot.gradle.semanticrelease
 
-import org.ajoberstar.grgit.Grgit
-
 import com.jcabi.github.RtGithub
-
+import org.ajoberstar.grgit.Grgit
 import spock.lang.Shared
 import spock.lang.Specification
 import spock.lang.Subject
@@ -86,13 +84,13 @@ class GithubRepoSpec extends Specification {
         repo.getPathFromRepositoryUrl(url) == expectedMnemo
 
         where:
-        ghEnterprise | url                                                                    | expectedMnemo
-        false        | "http://github.com/org/repo.git"                                       | "org/repo"
-        true         | "https://anyurl/enterprise/repo.git"                                   | "enterprise/repo"
-        false        | "git@github.com:tschulte/gradle-semantic-release-plugin.git"           | "tschulte/gradle-semantic-release-plugin"
-        true         | "git@github.enterprise:tschulte/gradle-semantic-release-plugin.git" | "tschulte/gradle-semantic-release-plugin"
-        false        | "git@github.enterprise:tschulte/gradle-semantic-release-plugin.git" | null
-        false        | "https://github.enterprise:tschulte/gradle-semantic-release-plugin.git"   | null
+        ghEnterprise | url                                                                     | expectedMnemo
+        false        | "http://github.com/org/repo.git"                                        | "org/repo"
+        true         | "https://anyurl/enterprise/repo.git"                                    | "enterprise/repo"
+        false        | "git@github.com:tschulte/gradle-semantic-release-plugin.git"            | "tschulte/gradle-semantic-release-plugin"
+        true         | "git@github.enterprise:tschulte/gradle-semantic-release-plugin.git"     | "tschulte/gradle-semantic-release-plugin"
+        false        | "git@github.enterprise:tschulte/gradle-semantic-release-plugin.git"     | null
+        false        | "https://github.enterprise:tschulte/gradle-semantic-release-plugin.git" | null
     }
 
     @Unroll
