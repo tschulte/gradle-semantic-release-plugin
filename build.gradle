@@ -52,7 +52,19 @@ semanticRelease {
 }
 
 task integTest {
-    dependsOn test
+    dependsOn cleanIntegTest, test
+}
+
+cleanIntegTest {
+  delete new File(buildDir, 'nebulatest')
+}
+
+test {
+    dependsOn cleanTest
+}
+
+cleanTest {
+  delete new File(buildDir, 'nebulatest')
 }
 
 if (!version.toString().endsWith('-SNAPSHOT'))
