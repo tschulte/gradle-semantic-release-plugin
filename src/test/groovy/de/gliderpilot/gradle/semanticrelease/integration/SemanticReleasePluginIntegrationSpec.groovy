@@ -88,7 +88,7 @@ class SemanticReleasePluginIntegrationSpec extends IntegrationSpec {
 
     def setupGit() {
         // create remote repository
-        File origin = new File(projectDir, "../${projectDir.name}.git")
+        File origin = new File(projectDir, "../${projectDir.name}.git").canonicalFile
         origin.mkdir()
         execute origin, 'git', 'init', '--bare'
 
