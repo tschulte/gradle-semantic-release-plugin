@@ -83,8 +83,8 @@ class GithubRepo extends GitRepo {
     @PackageScope
     String getPathFromRepositoryUrl(String repositoryUrl) {
         // pathfinding logic extracted for better testability
-        boolean isGithubComRepository = (repositoryUrl ==~ /.*github.com[\/:]((?:.+?)\/(?:.+?))(?:\.git)/)
-        Matcher matcher = (repositoryUrl =~ /.+[\/:](.+?\/.+?)(?:\.git)$/)
+        boolean isGithubComRepository = (repositoryUrl ==~ /.*github.com[\/:]((?:.+?)\/(?:.+?))(?:\.git)?$/)
+        Matcher matcher = (repositoryUrl =~ /.+[\/:](.+?\/.+?)(?:\.git)?$/)
 
         if (!matcher)
             return null
