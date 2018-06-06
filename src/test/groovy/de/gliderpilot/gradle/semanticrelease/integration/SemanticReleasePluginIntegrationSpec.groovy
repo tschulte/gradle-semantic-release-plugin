@@ -44,6 +44,7 @@ class SemanticReleasePluginIntegrationSpec extends IntegrationSpec {
     def setupJvmArguments() {
         RuntimeMXBean runtimeMxBean = ManagementFactory.getRuntimeMXBean()
         String buildDir = new File('build').canonicalPath
+        if (isWindows()) buildDir = buildDir.replace('\\', '/')
         jvmArguments = runtimeMxBean.getInputArguments().collect { it.replaceAll(/([:=])build/, '$1' + buildDir) }
         file('gradle.properties') << "org.gradle.jvmargs=${jvmArguments.join(' ')}"
     }
