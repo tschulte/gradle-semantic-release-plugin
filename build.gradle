@@ -36,6 +36,7 @@ dependencies {
     testCompile 'com.netflix.nebula:nebula-test:2.2.2', {
         exclude module: 'groovy-all'
     }
+    testCompile 'org.apache.commons:commons-exec:1.3'
 }
 
 // workaround for tests to run (see http://stackoverflow.com/questions/29377544/my-gradle-project-depends-on-commons-io-2-4-but-gradle-puts-gradle-home-common)
@@ -52,7 +53,19 @@ semanticRelease {
 }
 
 task integTest {
-    dependsOn test
+    dependsOn cleanIntegTest, test
+}
+
+cleanIntegTest {
+  delete new File(buildDir, 'nebulatest')
+}
+
+test {
+    dependsOn cleanTest
+}
+
+cleanTest {
+  delete new File(buildDir, 'nebulatest')
 }
 
 if (!version.toString().endsWith('-SNAPSHOT'))

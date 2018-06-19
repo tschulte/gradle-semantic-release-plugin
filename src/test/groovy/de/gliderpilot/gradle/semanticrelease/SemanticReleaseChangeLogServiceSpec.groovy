@@ -202,7 +202,7 @@ class SemanticReleaseChangeLogServiceSpec extends Specification {
         """.stripIndent()
 
         then:
-        changeLogService.changeLog(commits.collect(asCommit), new ReleaseVersion(previousVersion: '1.0.0', version: '2.0.0', createTag: true)).toString() == expected
+        changeLogService.changeLog(commits.collect(asCommit), new ReleaseVersion(previousVersion: '1.0.0', version: '2.0.0', createTag: true)).toString().normalize() == expected
     }
 
     static asCommit = { new Commit(fullMessage: it, shortMessage: it.readLines().first(), id: '123456789abc') }

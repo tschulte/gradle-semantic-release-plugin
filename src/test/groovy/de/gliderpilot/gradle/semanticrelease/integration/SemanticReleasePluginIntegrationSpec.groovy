@@ -22,6 +22,8 @@ import spock.lang.Unroll
 import java.lang.management.ManagementFactory
 import java.lang.management.RuntimeMXBean
 
+import org.apache.commons.exec.util.StringUtils
+
 /**
  * Created by tobias on 7/2/15.
  */
@@ -44,6 +46,7 @@ class SemanticReleasePluginIntegrationSpec extends IntegrationSpec {
     def setupJvmArguments() {
         RuntimeMXBean runtimeMxBean = ManagementFactory.getRuntimeMXBean()
         String buildDir = new File('build').canonicalPath
+        if (isWindows()) buildDir = buildDir.replace('\\', '/')
         jvmArguments = runtimeMxBean.getInputArguments().collect { it.replaceAll(/([:=])build/, '$1' + buildDir) }
         file('gradle.properties') << "org.gradle.jvmargs=${jvmArguments.join(' ')}"
     }
@@ -88,7 +91,7 @@ class SemanticReleasePluginIntegrationSpec extends IntegrationSpec {
 
     def setupGit() {
         // create remote repository
-        File origin = new File(projectDir, "../${projectDir.name}.git")
+        File origin = new File(projectDir, "../${projectDir.name}.git").canonicalFile
         origin.mkdir()
         execute origin, 'git', 'init', '--bare'
 
@@ -295,8 +298,9 @@ class SemanticReleasePluginIntegrationSpec extends IntegrationSpec {
     }
 
     def execute(File dir = projectDir, String... args) {
+        def argsString = args.collect { StringUtils.quoteArgument(it) }.join(' ')
         println "========"
-        println "executing ${args.join(' ')}"
+        println "executing $argsString"
         println "--------"
         def lastLine
         def process = new ProcessBuilder(args)
@@ -309,7 +313,7 @@ class SemanticReleasePluginIntegrationSpec extends IntegrationSpec {
         }
         def exitValue = process.waitFor()
         if (exitValue != 0)
-            throw new RuntimeException("failed to execute ${args.join(' ')}")
+            throw new RuntimeException("failed to execute $argsString")
         return lastLine
     }
 
