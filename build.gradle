@@ -27,13 +27,20 @@ buildscript {
         classpath 'org.kt3k.gradle.plugin:coveralls-gradle-plugin:2.6.3'
         classpath 'com.github.ben-manes:gradle-versions-plugin:0.13.0'
         classpath "com.gradle.publish:plugin-publish-plugin:0.9.9"
+        classpath "gradle.plugin.de.gliderpilot.gradle.semantic-release:gradle-semantic-release-plugin:1.4.0"
     }
 }
 
-apply from: 'compile-dependencies.gradle'
+repositories {
+    jcenter()
+}
 
 dependencies {
-    testCompile 'com.netflix.nebula:nebula-test:2.2.2', {
+    compile localGroovy()
+    compile gradleApi()
+    compile "org.ajoberstar:gradle-git:1.7.2"
+    compile "com.jcabi:jcabi-github:0.28"
+    testCompile 'com.netflix.nebula:nebula-test:4.4.3', {
         exclude module: 'groovy-all'
     }
 }
