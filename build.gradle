@@ -45,13 +45,6 @@ dependencies {
     }
 }
 
-// workaround for tests to run (see http://stackoverflow.com/questions/29377544/my-gradle-project-depends-on-commons-io-2-4-but-gradle-puts-gradle-home-common)
-sourceSets {
-    test {
-        runtimeClasspath -= files("$gradle.gradleHomeDir/lib/commons-io-1.4.jar")
-    }
-}
-
 group = 'de.gliderpilot.gradle.semantic-release'
 
 semanticRelease {
