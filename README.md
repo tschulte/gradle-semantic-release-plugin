@@ -298,7 +298,7 @@ You can trigger a release by pushing to your GitHub repository. You deliberately
 
 ### Is it _really_ a good idea to release on every push?
 
-It is indeed a great idea because it _forces_ you to follow best practices. If you don't feel comfortable making every passing feature or fix on your master branch addressable you might not treat your master right. Have a look at [branch workflows](https://guides.github.com/introduction/flow/index.html). If you still think you should have control over the exact point in time of your release, e.g. because you are following a release schedule, you can release only on the release` branch and push your code there in certain intervals.
+It is indeed a great idea because it _forces_ you to follow best practices. If you don't feel comfortable making every passing feature or fix on your master branch addressable you might not treat your master right. Have a look at [branch workflows](https://guides.github.com/introduction/flow/index.html). If you still think you should have control over the exact point in time of your release, e.g. because you are following a release schedule, you can release only on the `release` branch and push your code there in certain intervals.
 
 ### Why should I trust `semantic-release` with my releases?
 
