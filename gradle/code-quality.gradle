@@ -3,7 +3,7 @@ apply plugin: 'jdepend'
 apply plugin: 'license'
 
 findbugs {
-    toolVersion = '3.0.0'
+    toolVersion = '3.0.1'
     sourceSets = [sourceSets.main]
     ignoreFailures = true
     reportsDir = file("${project.buildDir}/reports/findbugs")
