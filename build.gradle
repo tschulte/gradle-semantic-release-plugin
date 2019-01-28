@@ -27,23 +27,23 @@ buildscript {
         classpath 'org.kt3k.gradle.plugin:coveralls-gradle-plugin:2.6.3'
         classpath 'com.github.ben-manes:gradle-versions-plugin:0.13.0'
         classpath "com.gradle.publish:plugin-publish-plugin:0.9.9"
+        classpath "gradle.plugin.de.gliderpilot.gradle.semantic-release:gradle-semantic-release-plugin:1.+"
     }
 }
 
-apply from: 'compile-dependencies.gradle'
+repositories {
+    jcenter()
+}
 
 dependencies {
-    testCompile 'com.netflix.nebula:nebula-test:2.2.2', {
+    compile localGroovy()
+    compile gradleApi()
+    compile "org.ajoberstar:gradle-git:1.7.2"
+    compile "com.jcabi:jcabi-github:0.28"
+    testCompile 'com.netflix.nebula:nebula-test:4.4.3', {
         exclude module: 'groovy-all'
     }
     testCompile 'org.apache.commons:commons-exec:1.3'
-}
-
-// workaround for tests to run (see http://stackoverflow.com/questions/29377544/my-gradle-project-depends-on-commons-io-2-4-but-gradle-puts-gradle-home-common)
-sourceSets {
-    test {
-        runtimeClasspath -= files("$gradle.gradleHomeDir/lib/commons-io-1.4.jar")
-    }
 }
 
 group = 'de.gliderpilot.gradle.semantic-release'
