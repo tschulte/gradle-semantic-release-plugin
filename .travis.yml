@@ -2,28 +2,28 @@ sudo: false
 addons:
   apt:
     packages:
-      - git
+    - git
 language: groovy
 jdk:
-  - oraclejdk8
+- oraclejdk8
 env: TERM=dumb
 cache:
   directories:
-    - $HOME/.gradle
+  - $HOME/.gradle
 # don't build tags -- they would fail due to gradle-git anyway
 branches:
   except:
-    - /^v\d+\.\d+\.\d+$/
+  - /^v\d+\.\d+\.\d+$/
 before_install:
-  - git fetch --unshallow
-  - git config user.email "tobias.schulte@gliderpilot.de"
-  - git config user.name "Travis-CI"
-  - git config url.https://.insteadOf git://
-  - [ "${TRAVIS_PULL_REQUEST}" = "false" ] && git checkout -qf $TRAVIS_BRANCH
+- git fetch --unshallow
+- git config user.email "tobias.schulte@gliderpilot.de"
+- git config user.name "Travis-CI"
+- git config url.https://.insteadOf git://
+- [ "${TRAVIS_PULL_REQUEST}" = "false" ] && git checkout -qf $TRAVIS_BRANCH
 # skip default gradlew assemble
 install:
-  - echo "skip default gradlew assemble"
+- echo "skip default gradlew assemble"
 script:
-  - '[ "${TRAVIS_PULL_REQUEST}" = "false" ] && ./gradlew release -Dorg.ajoberstar.grgit.auth.username=${GH_TOKEN} -Dorg.ajoberstar.grgit.auth.password -Dgradle.publish.key=${GRADLE_KEY} -Dgradle.publish.secret=${GRADLE_SECRET} --info --stacktrace || ./gradlew integTest build --info --stacktrace'
+- '[ "${TRAVIS_PULL_REQUEST}" = "false" ] && ./gradlew release -Dorg.ajoberstar.grgit.auth.username=${GH_TOKEN} -Dorg.ajoberstar.grgit.auth.password -Dgradle.publish.key=${GRADLE_KEY} -Dgradle.publish.secret=${GRADLE_SECRET} --info --stacktrace || ./gradlew integTest build --info --stacktrace'
 after_success:
-  - ./gradlew jacocoTestReport coveralls
+- ./gradlew jacocoTestReport coveralls
