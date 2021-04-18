@@ -5,7 +5,7 @@ addons:
     - git
 language: groovy
 jdk:
-- oraclejdk8
+- openjdk8
 env: TERM=dumb
 cache:
   directories:
@@ -19,7 +19,7 @@ before_install:
 - git config user.email "tobias.schulte@gliderpilot.de"
 - git config user.name "Travis-CI"
 - git config url.https://.insteadOf git://
-- [ "${TRAVIS_PULL_REQUEST}" = "false" ] && git checkout -qf $TRAVIS_BRANCH
+- if [ "${TRAVIS_PULL_REQUEST}" = "false" ]; then git checkout -qf $TRAVIS_BRANCH; fi
 # skip default gradlew assemble
 install:
 - echo "skip default gradlew assemble"
