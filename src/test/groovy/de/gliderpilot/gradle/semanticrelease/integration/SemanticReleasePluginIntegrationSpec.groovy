@@ -16,13 +16,12 @@
 package de.gliderpilot.gradle.semanticrelease.integration
 
 import nebula.test.IntegrationSpec
+import org.apache.commons.exec.util.StringUtils
 import spock.lang.Requires
 import spock.lang.Unroll
 
 import java.lang.management.ManagementFactory
 import java.lang.management.RuntimeMXBean
-
-import org.apache.commons.exec.util.StringUtils
 
 /**
  * Created by tobias on 7/2/15.
@@ -32,7 +31,10 @@ import org.apache.commons.exec.util.StringUtils
 @Requires({ env['TRAVIS'] || properties['integTest'] })
 class SemanticReleasePluginIntegrationSpec extends IntegrationSpec {
 
-    def setup() {
+    final static gradleVersions = ["2.0", "3.0", "4.0", "5.0", "6.0", "7.0"]
+
+    def setupTestProject(String gradleVersion) {
+        this.gradleVersion = gradleVersion
         setupJvmArguments()
         setupGit()
         // create the gradle wrapper before the project is setup
@@ -58,31 +60,33 @@ class SemanticReleasePluginIntegrationSpec extends IntegrationSpec {
      * to create the wrapper (and the .gradle-test-kit/init.gradle script).
      */
     def setupGradleWrapper() {
+        if (gradleVersion == '7.0' || gradleVersion == '2.0') {
+            // workaround: nebula-test does not work with gradle 7.0 and 2.0
+            // initialize the wrapper with 6.0 first
+            def requestedVersion = gradleVersion
+            gradleVersion = '6.0'
+            runTasksSuccessfully(':wrapper')
+            // remove spockframework jar from init.gradle
+            def initGradle = file('.gradle-test-kit/init.gradle')
+            def lines = initGradle.readLines().findAll { !it.contains('spockframework') }
+            initGradle.text = lines.join(System.getProperty("line.separator"))
+            // and now use the wrapper to upgrade to the requested version
+            gradleVersion = requestedVersion
+            gradlew 'wrapper', '--gradle-version', gradleVersion
+            return
+        }
         runTasksSuccessfully(':wrapper')
-    }
-
-    /**
-     * extract the buildscript block from the file .gradle-test-kit/init.gradle
-     */
-    def buildscript() {
-        def lines = file('.gradle-test-kit/init.gradle').readLines()
-        lines.remove(0)
-        lines.remove(lines.size() - 1)
-        lines.join(System.getProperty("line.separator")).stripIndent()
     }
 
     def setupGitignore() {
         file('.gitignore') << '''\
-            .gradle-test-kit/
             .gradle/
-            gradle/
             build/
             cobertura.ser
             '''.stripIndent()
     }
 
     def setupGradleProject() {
-        buildFile << buildscript()
         buildFile << """
             apply plugin: 'de.gliderpilot.semantic-release'
             println version
@@ -103,31 +107,59 @@ class SemanticReleasePluginIntegrationSpec extends IntegrationSpec {
 
         execute 'git', 'remote', 'add', 'origin', "$origin"
         commit 'initial commit'
+        // just in case, branch name might be main in newer git versions
+        execute 'git', 'branch', '-m', 'master'
         push()
     }
 
     @Unroll
-    def "initial version is 1.0.0 after #type commit"() {
+    def "[gradle #gv] initial version is 1.0.0 after feat commit"() {
+        setupTestProject(gv)
+
         when:
-        "a commit with type $type is made"
-        commit("$type: foo")
+        "a commit with type feat is made"
+        commit("feat: foo")
 
         then:
         release() == 'v1.0.0'
 
         where:
-        type << ['feat', 'fix']
+        gv << gradleVersions
     }
 
-    def "initial version is 1.0.0 even after breaking change"() {
+    @Unroll
+    def "[gradle #gv] initial version is 1.0.0 after fix commit"() {
+        setupTestProject(gv)
+
+        when:
+        "a commit with type fix is made"
+        commit("fix: foo")
+
+        then:
+        release() == 'v1.0.0'
+
+        where:
+        gv << gradleVersions
+    }
+
+    @Unroll
+    def "[gradle #gv] initial version is 1.0.0 even after breaking change"() {
+        setupTestProject(gv)
+
         when: "a breaking change commit is made without prior version"
         commit("feat: foo\n\nBREAKING CHANGE: bar")
 
         then:
         release() == 'v1.0.0'
+
+        where:
+        gv << gradleVersions
     }
 
-    def "complete lifecycle"() {
+    @Unroll
+    def "[gradle #gv] complete lifecycle"() {
+        setupTestProject(gv)
+
         expect: 'no initial release without feature commit'
         release() == ''
 
@@ -176,9 +208,15 @@ class SemanticReleasePluginIntegrationSpec extends IntegrationSpec {
 
         then: 'no new version'
         release() == 'v2.0.0'
+
+        where:
+        gv << gradleVersions
     }
 
-    def "supports git flow (travis can execute ./gradlew release on all branches)"() {
+    @Unroll
+    def "[gradle #gv] supports git flow (travis can execute ./gradlew release on all branches)"() {
+        setupTestProject(gv)
+
         given: "branch develop"
         createBranch "develop"
 
@@ -211,9 +249,15 @@ class SemanticReleasePluginIntegrationSpec extends IntegrationSpec {
 
         then: "no new release"
         release() == 'v1.0.0'
+
+        where:
+        gv << gradleVersions
     }
 
-    def "supports release/MAJOR_X"() {
+    @Unroll
+    def "[gradle #gv] supports release/MAJOR_X"() {
+        setupTestProject(gv)
+
         given: "branch release/1.x"
         createBranch "release/1.x"
         push()
@@ -256,9 +300,15 @@ class SemanticReleasePluginIntegrationSpec extends IntegrationSpec {
 
         then: "no release, because branch disallows this"
         thrown(RuntimeException)
+
+        where:
+        gv << gradleVersions
     }
 
-    def "supports release/MAJOR_MINOR_X"() {
+    @Unroll
+    def "[gradle #gv] supports release/MAJOR_MINOR_X"() {
+        setupTestProject(gv)
+
         given: "branch release/1.0.x"
         createBranch "release/1.0.x"
         push()
@@ -295,6 +345,9 @@ class SemanticReleasePluginIntegrationSpec extends IntegrationSpec {
 
         then: "no release, because branch disallows this"
         thrown(RuntimeException)
+
+        where:
+        gv << gradleVersions
     }
 
     def execute(File dir = projectDir, String... args) {
@@ -318,8 +371,12 @@ class SemanticReleasePluginIntegrationSpec extends IntegrationSpec {
     }
 
     def release() {
-        execute "${isWindows() ? 'gradlew.bat' : './gradlew'}", 'release', '--info', '--stacktrace'
+        gradlew 'release', '--info', '--stacktrace'
         lastVersion()
+    }
+
+    def gradlew(String... args) {
+        execute(["${isWindows() ? 'gradlew.bat' : './gradlew'}", '-I', '.gradle-test-kit/init.gradle', Arrays.asList(args)].flatten() as String[])
     }
 
     def lastVersion() {

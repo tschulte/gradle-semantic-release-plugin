@@ -80,8 +80,23 @@ class SemanticReleasePluginExtension {
     }
 
     boolean isRelease(SemVerStrategyState state) {
-        !state.repoDirty && releaseBranches.isReleaseBranch(state.currentBranch.name) &&
-                semanticStrategy.canRelease(state) && project.gradle.startParameter.taskNames.find { it == 'release' }
+        if (state.repoDirty) {
+            project.logger.info("repo is dirty --> no release possible")
+            return false
+        }
+        if (!releaseBranches.isReleaseBranch(state.currentBranch.name)) {
+            project.logger.info("not on release branch --> no release possible")
+            return false
+        }
+        if (!semanticStrategy.canRelease(state)) {
+            project.logger.info("no feat or fix commit --> no release necessary")
+            return false
+        }
+        if (!project.gradle.startParameter.taskNames.find { it == 'release' }) {
+            project.logger.info("no task 'release' specified --> no release")
+            return false
+        }
+        return true
     }
 
     @Deprecated
