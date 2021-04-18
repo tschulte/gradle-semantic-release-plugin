@@ -42,7 +42,8 @@ class SemanticReleasePlugin implements Plugin<Project> {
                     releaseTask.dependsOn prj.tasks.build
                 }
                 prj.plugins.withType(BasePlugin) {
-                    releaseTask.finalizedBy prj.tasks.uploadArchives
+                    if (prj.tasks.findByName('uploadArchives'))
+                        releaseTask.finalizedBy prj.tasks.uploadArchives
                 }
                 prj.plugins.withType(PublishingPlugin) {
                     releaseTask.finalizedBy prj.tasks.publish

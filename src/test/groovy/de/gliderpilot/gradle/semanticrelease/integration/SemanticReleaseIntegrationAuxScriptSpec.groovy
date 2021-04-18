@@ -23,21 +23,14 @@ import spock.lang.Requires
 class SemanticReleaseIntegrationAuxScriptSpec extends SemanticReleasePluginIntegrationSpec {
 
     @Override
-    def setupGradleWrapper() {
-        gradleVersion = '2.1'
-        super.setupGradleWrapper()
-    }
-
-    @Override
     def setupGradleProject() {
         buildFile << '''
-            apply from:'release.gradle'
+            apply from: 'release.gradle'
             println version
         '''.stripIndent()
         def releaseScript = file('release.gradle')
-        releaseScript << buildscript()
         releaseScript << """
-            apply plugin: de.gliderpilot.gradle.semanticrelease.SemanticReleasePlugin
+            apply plugin: 'de.gliderpilot.semantic-release'
         """.stripIndent()
     }
 
