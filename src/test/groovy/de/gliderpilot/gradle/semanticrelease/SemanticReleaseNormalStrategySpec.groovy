@@ -123,7 +123,7 @@ class SemanticReleaseNormalStrategySpec extends Specification {
         def inferredState = strategy.infer(initialState)
 
         then:
-        1 * grgit.methodMissing("log", { it[0].delegate = logConfig; it[0](); true })
+        1 * grgit.methodMissing("log", _) >> { it[1][0].delegate = logConfig; it[1][0](); null }
         since == expectedSince
         until == ['HEAD']
 
