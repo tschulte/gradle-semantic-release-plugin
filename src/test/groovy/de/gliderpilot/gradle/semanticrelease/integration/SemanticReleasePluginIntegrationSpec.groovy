@@ -89,7 +89,6 @@ class SemanticReleasePluginIntegrationSpec extends IntegrationSpec {
     def setupGradleProject() {
         buildFile << """
             apply plugin: 'de.gliderpilot.semantic-release'
-            println version
             """.stripIndent()
     }
 
@@ -352,9 +351,7 @@ class SemanticReleasePluginIntegrationSpec extends IntegrationSpec {
 
     def execute(File dir = projectDir, String... args) {
         def argsString = args.collect { StringUtils.quoteArgument(it) }.join(' ')
-        println "========"
-        println "executing $argsString"
-        println "--------"
+        println "\$ $argsString"
         def lastLine
         def process = new ProcessBuilder(args)
                 .directory(dir)
@@ -371,7 +368,7 @@ class SemanticReleasePluginIntegrationSpec extends IntegrationSpec {
     }
 
     def release() {
-        gradlew 'release', '--info', '--stacktrace'
+        gradlew 'release', '--stacktrace'
         lastVersion()
     }
 

@@ -26,7 +26,6 @@ class SemanticReleaseIntegrationAuxScriptSpec extends SemanticReleasePluginInteg
     def setupGradleProject() {
         buildFile << '''
             apply from: 'release.gradle'
-            println version
         '''.stripIndent()
         def releaseScript = file('release.gradle')
         releaseScript << """
