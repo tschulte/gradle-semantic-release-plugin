@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.com/github/tschulte/gradle-semantic-release-plugin.svg?branch=master)](https://travis-ci.com/github/tschulte/gradle-semantic-release-plugin)
+[![Build Status](https://api.travis-ci.com/tschulte/gradle-semantic-release-plugin.svg?branch=master)](https://travis-ci.com/github/tschulte/gradle-semantic-release-plugin)
 [![Coverage Status](https://coveralls.io/repos/tschulte/gradle-semantic-release-plugin/badge.png?branch=master)](https://coveralls.io/r/tschulte/gradle-semantic-release-plugin?branch=master)
 
 # Gradle implementation of [semantic release](http://github.com/semantic-release/semantic-release)
