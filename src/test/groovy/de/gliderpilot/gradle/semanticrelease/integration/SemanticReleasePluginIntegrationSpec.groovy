@@ -89,6 +89,13 @@ class SemanticReleasePluginIntegrationSpec extends IntegrationSpec {
     def setupGradleProject() {
         buildFile << """
             apply plugin: 'de.gliderpilot.semantic-release'
+            semanticRelease {
+                repo.ghToken = 'anything'
+                repo.useGhEnterprise('https://example.com')
+            }
+            tasks.updateGithubRelease.actions.clear()
+            tasks.updateGithubRelease.doFirst {
+            }
             """.stripIndent()
     }
 

@@ -20,6 +20,7 @@ import org.gradle.api.DefaultTask
 import org.gradle.api.logging.Logger
 import org.gradle.api.logging.Logging
 import org.gradle.api.tasks.Input
+import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.TaskAction
 
 class UpdateGithubRelease extends DefaultTask {
@@ -38,6 +39,7 @@ class UpdateGithubRelease extends DefaultTask {
         project.version.inferredVersion
     }
 
+    @Internal
     protected String getTagName() {
         project.release.tagStrategy.toTagString(version.version)
     }
@@ -47,10 +49,12 @@ class UpdateGithubRelease extends DefaultTask {
         return repo.releaseAssets
     }
 
+    @Internal
     GithubRepo getRepo() {
         project.semanticRelease.repo
     }
 
+    @Internal
     SemanticReleaseChangeLogService getChangeLog() {
         project.semanticRelease.changeLog
     }
