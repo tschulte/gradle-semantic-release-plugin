@@ -17,7 +17,7 @@ targetCompatibility = 8
 
 buildscript {
     repositories {
-        jcenter()
+        mavenCentral()
         maven {
             url "https://plugins.gradle.org/m2/"
         }
@@ -34,19 +34,19 @@ buildscript {
 }
 
 repositories {
-    jcenter()
+    mavenCentral()
 }
 
 dependencies {
-    compile localGroovy()
-    compile gradleApi()
-    compile "org.ajoberstar:gradle-git:1.7.2"
-    compile "com.github.zafarkhaja:java-semver:0.9.0"
-    compile "org.ajoberstar:grgit:1.9.3"
-    compile "com.sun.jersey:jersey-core:1.18.1"
-    compile "com.jcabi:jcabi-github:0.28"
-    testCompile 'com.netflix.nebula:nebula-test:8.1.0'
-    testCompile 'org.apache.commons:commons-exec:1.3'
+    implementation localGroovy()
+    implementation gradleApi()
+    implementation "org.ajoberstar:gradle-git:1.7.2"
+    implementation "com.github.zafarkhaja:java-semver:0.9.0"
+    implementation "org.ajoberstar:grgit:1.9.3"
+    implementation "com.sun.jersey:jersey-core:1.18.1"
+    implementation "com.jcabi:jcabi-github:0.28"
+    testImplementation 'com.netflix.nebula:nebula-test:8.1.0'
+    testImplementation 'org.apache.commons:commons-exec:1.3'
 }
 
 group = 'de.gliderpilot.gradle.semantic-release'
