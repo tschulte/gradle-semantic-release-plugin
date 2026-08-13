@@ -1,312 +1,332 @@
-[![Build Status](https://api.travis-ci.com/tschulte/gradle-semantic-release-plugin.svg?branch=master)](https://travis-ci.com/github/tschulte/gradle-semantic-release-plugin)
-[![Coverage Status](https://coveralls.io/repos/tschulte/gradle-semantic-release-plugin/badge.png?branch=master)](https://coveralls.io/r/tschulte/gradle-semantic-release-plugin?branch=master)
+# gradle-semantic-release-plugin
 
-# Gradle implementation of [semantic release](http://github.com/semantic-release/semantic-release)
+> ## ⚠️ This project is discontinued
+>
+> **Do not use this plugin for new projects. It does not work with Gradle 9.**
+>
+> Use [semantic-release](https://semantic-release.org/) itself, driving Gradle through
+> [`@semantic-release/exec`](https://github.com/semantic-release/exec). This README is
+> now a migration guide. See [Why](#why-this-project-is-discontinued) for the reasoning
+> and [Migration reference](#migration-reference) for a mapping of every configuration
+> option this plugin offered.
 
-## What is `semantic-release` about?
+## Why this project is discontinued
 
-At its core `semantic-release` is a set of conventions that gives you **entirely automated, semver-compliant package publishing**. _Coincidentally_ these conventions make sense on their own – like meaningful commit messages.
+This plugin was written in 2015, when there was no practical way to run the JavaScript
+`semantic-release` alongside a JVM build. That is no longer true, and the foundation this
+plugin was built on has gone away:
 
-This removes the immediate connection between human emotions and version numbers, so strictly following the [SemVer](http://semver.org/) spec is not a problem anymore – and that’s ultimately `semantic-release`’s goal.
+- The entire version inference — roughly half the codebase — sits on top of
+  [`org.ajoberstar:gradle-git`](https://github.com/ajoberstar/gradle-git) 1.7.2, which has
+  been dead since around 2017. Its successor, [reckon](https://github.com/ajoberstar/reckon),
+  uses a fundamentally different model, so there is no migration path — only a rewrite.
+- The `grgit` Gradle plugin is explicitly not compatible with Gradle's configuration cache,
+  and its author has stated that this is out of scope.
+- `com.sun.jersey`, Bintray, Artifactory, Coveralls and Travis CI — all dependencies of this
+  build — are dead or discontinued.
+- `ConfigureUtil`, used by this plugin's extension, was removed in Gradle 9.
 
-> ### “We fail to follow SemVer – and why it needn’t matter”
-> #### JSConf Budapest 2015
+Rewriting all of that would produce something that `semantic-release` plus a four-line
+`exec` configuration already does, usually better. So this plugin is being retired instead.
 
-> [![JSConfBP Talk](https://cloud.githubusercontent.com/assets/908178/8032541/e9bf6300-0dd6-11e5-92c9-8a39211368af.png)](https://www.youtube.com/watch?v=tc2UgG5L7WM&index=6&list=PLFZ5NyC0xHDaaTy6tY9p0C0jd_rRRl5Zm)
+**One thing genuinely gets harder:** the replacement requires Node.js in your CI. On GitHub
+Actions and most hosted runners it is preinstalled, so this is rarely a practical concern —
+but if your organisation does not allow npm dependencies in the build pipeline at all, this
+migration is not for you, and there is currently no maintained JVM-native equivalent.
 
-This talk gives you a complete introduction to the underlying concepts of this module
--- <cite>[semantic release](http://github.com/semantic-release/semantic-release)</cite>
+## Quick start
 
-## How does it work?
+The setup below reproduces what this plugin did: infer the version from commit messages,
+tag the release, generate release notes, create a GitHub release with attached artifacts,
+and publish through Gradle.
 
-Instead of writing [meaningless commit messages](http://whatthecommit.com/), we can take our time to think about the changes in the codebase and write them down. Following formalized conventions it this then possible to generate a helpful changelog and to derive the next semantic version number from them.
+### 1. Pin a placeholder version in `gradle.properties`
 
-When `semantic-release` got setup it will do that after every successful continuous integration build of your master branch (or any other branch you specify) and publish the new version for you. That way no human is directly involved in the release process and your releases are guaranteed to be [unromantic and unsentimental](http://sentimentalversioning.org/).
-
-This module ships with the [AngularJS Commit Message Conventions](https://github.com/angular/angular.js/blob/master/CONTRIBUTING.md#commit) and changelog generator, but you can [define your own](#configuration) style.
-
-### Commit Message Format
-
-Each commit message consists of a **header**, a **body** and a **footer**.  The header has a special
-format that includes a **type**, a **scope** and a **subject**:
-
+```properties
+version=0.0.0-SNAPSHOT
 ```
-<type>(<scope>): <subject>
-<BLANK LINE>
-<body>
-<BLANK LINE>
-<footer>
-```
 
-> [Full explanation](https://github.com/conventional-changelog/conventional-changelog-angular/blob/master/convention.md)
+Remove any `version = ...` assignment from `build.gradle` / `build.gradle.kts`. This
+placeholder is never updated in the repository — the real version is passed in at release
+time. This mirrors what `semantic-release` does in its own repository, where `package.json`
+permanently reads `"version": "0.0.0-development"`.
 
-Under the hood this plugin uses [gradle-git](https://github.com/ajoberstar/gradle-git)'s release-base plugin and configures it to automatically increment the major, minor or patch version depending on the commit messages since the last release. Releases are only performed on certain branches (/master/ and /(?:release[-\/])?\d+(?:\.\d+)?\.x/ by default). On other branches only SNAPSHOT versions are built. On these branches the branch name is automatically appended to the version.
+### 2. Add `.releaserc.json`
 
-When doing a final release -- in addition to the default behavior of gradle-git to tag the release and push the tag -- if the origin repository is a github repository, the plugin generates a changelog and creates a [release](https://help.github.com/articles/about-releases/) on GitHub.
-
-## Setup
-
-### Apply the plugin in the rootProject (and only there) of your gradle build.
-
-#### Gradle >= 2.1
-
-```groovy
-plugins {
-    id 'de.gliderpilot.semantic-release' version '1.0.0'
+```json
+{
+  "branches": [
+    "master",
+    "+([0-9])?(.{+([0-9]),x}).x"
+  ],
+  "plugins": [
+    "@semantic-release/commit-analyzer",
+    "@semantic-release/release-notes-generator",
+    [
+      "@semantic-release/exec",
+      {
+        "prepareCmd": "./gradlew -Pversion=${nextRelease.version} build",
+        "publishCmd": "./gradlew -Pversion=${nextRelease.version} publish"
+      }
+    ],
+    [
+      "@semantic-release/github",
+      {
+        "assets": [
+          { "path": "build/libs/*.jar" }
+        ]
+      }
+    ]
+  ]
 }
 ```
 
-#### Gradle < 2.1
+Replace `publish` with whatever your build actually uses — `publishPlugins`,
+`publishToSonatype closeAndReleaseSonatypeStagingRepository`, `artifactoryPublish`, and so on.
 
-```groovy
-buildscript {
-    repositories {
-        jcenter()
-    }
-    dependencies {
-        classpath 'de.gliderpilot.gradle.semantic-release:gradle-semantic-release-plugin:1.0.0'
-    }
-}
-apply plugin: 'de.gliderpilot.semantic-release'
+### 3. Add a GitHub Actions workflow
+
+```yaml
+name: Release
+on:
+  push:
+    branches: [master]
+
+permissions:
+  contents: write
+  issues: write
+  pull-requests: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0          # semantic-release needs the full history and all tags
+          persist-credentials: false
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - uses: gradle/actions/setup-gradle@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24        # semantic-release 25 requires ^22.14.0 || >=24.10.0
+
+      - run: npx semantic-release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 ```
 
-### Setup the release task
+Add whatever publishing credentials your Gradle build needs as further `env` entries — for
+the Gradle Plugin Portal, for instance, `GRADLE_PUBLISH_KEY` and `GRADLE_PUBLISH_SECRET`,
+wired through in the `publishCmd`.
 
-Don't configure the version property of the gradle project (no version in `gradle.properties`, no version in `build.gradle`)
+That is the whole setup. Note the direction: Node starts, Node calls Gradle. Your Gradle
+build knows nothing about `semantic-release`, and local development is unaffected —
+developers keep running `./gradlew` directly.
 
-Example for a java project deploying to maven
-```groovy
-apply plugin: 'java'
-apply plugin: 'maven-publish'
-group = 'org.example'
-publishing {
-    [...]
-}
-```
+## Migration reference
 
-There is a new `release` task, which automatically dependsOn the `build` task and is finalizedBy the `publish` task
-(and the `uploadArchives` task, if you use the old publishing mechanism).
+| `gradle-semantic-release-plugin` | Replacement |
+| --- | --- |
+| `semanticRelease.changeLog.changeScope` | `@semantic-release/commit-analyzer` → `releaseRules` |
+| `semanticRelease.changeLog.changeLog` | `@semantic-release/release-notes-generator` → `preset` / `writerOpts` |
+| `semanticRelease.releaseBranches` | top-level `branches` |
+| `semanticRelease.branchNames` | no equivalent needed — see [SNAPSHOT versions](#snapshot-versions-on-feature-branches) |
+| `semanticRelease.repo.ghToken` | `GITHUB_TOKEN` / `GH_TOKEN` environment variable |
+| `semanticRelease.repo.releaseAsset` | `@semantic-release/github` → `assets` |
+| `semanticRelease.repo.useGhEnterprise` | `@semantic-release/github` → `githubUrl` |
+| `release.versionStrategy` (rc branches etc.) | `branches` entries with `prerelease: true` |
+| `release` task, `dependsOn build`, `finalizedBy publish` | `prepareCmd` / `publishCmd` |
 
-### Uploading SNAPSHOT and releases to different repositories
+### Release branches
 
-Because the `release` task does automatically execute the `publish` task, you must take care of configuring only valid
-repositories.
+The old default was `master` plus `/(?:release[-\/])?\d+(?:\.\d+)?\.x/`. `semantic-release`
+ships an equivalent maintenance-branch pattern out of the box:
 
-```groovy
-publishing {
-    repositories {
-        maven {
-            if (version.toString().endsWith("-SNAPSHOT") {
-                url "http://.../snapshots"
-            } else {
-                url "http://.../releases"
-            }
-        }
-    }
-}
-```
-
-### Uploading using other plugins
-
-If you need other mechanisms to upload your artifacts, you need to manually configure this.
-
-```groovy
-if (!version.toString().endsWith('-SNAPSHOT'))
-    publish.dependsOn publishPlugins, bintrayUpload
-else if ((System.getenv('TRAVIS_PULL_REQUEST') ?: "false") == "false")
-    publish.dependsOn artifactoryPublish
-```
-
-### Enable upload of the changelog to GitHub
-
-In order to automatically upload the changelog to GitHub, you need a [GitHub token](https://help.github.com/articles/creating-an-access-token-for-command-line-use/) and tell the plugin about it.
-
-```groovy
-project.ext.ghToken = project.hasProperty('ghToken') ? project.getProperty('ghToken') : System.getenv('GH_TOKEN') ?: null
-semanticRelease {
-    repo {
-        ghToken = project.ghToken
-    }
-}
-```
-
-### Enable upload release files to GitHub
-
-The **ghToken** is mandatory.
-
-```groovy
-apply plugin: 'java'
-task sourcesJar(type: Jar) {
-    classifier = 'sources'
-    from sourceSets.main.allSource
-}
-semanticRelease {
-    repo {
-        releaseAsset jar
-        // optionally set name, label and/or contentType
-        releaseAsset sourcesJar, name: "the-sources.jar", label: 'the sources jar', contentType: 'application/zip'
-        // or
-        // releaseAsset sourcesJar name "the-sources.jar" label "the sources jar" contentType "application/zip"
-    }
+```json
+{
+  "branches": [
+    "master",
+    "stable",
+    "+([0-9])?(.{+([0-9]),x}).x"
+  ]
 }
 ```
 
-### Using with GitHub Enterprise
+`+([0-9])?(.{+([0-9]),x}).x` matches `1.x`, `1.0.x`, `2.x` and so on — the same guarantee
+against accidental major or minor bumps that the old branch patterns gave you.
 
-By specifying `useGhEnterprise` this plugin can be used to publish releases along with the changelog to a GitHub Enterprise server.
+### Custom change scopes
 
-```groovy
-semanticRelease {
-  repo {
-    ghToken = project.ext.ghToken
-    useGhEnterprise "https://github.enterprise" // GitHub Enterprise URL
+The old `changeScope` closure returned `MAJOR`, `MINOR`, `PATCH` or `null` per commit. The
+declarative equivalent:
+
+```json
+[
+  "@semantic-release/commit-analyzer",
+  {
+    "preset": "conventionalcommits",
+    "releaseRules": [
+      { "type": "docs", "scope": "README", "release": "patch" },
+      { "type": "refactor", "release": "patch" },
+      { "scope": "no-release", "release": false }
+    ]
   }
+]
+```
+
+Defaults, if you specify nothing: breaking changes → `major`, `feat` → `minor`,
+`fix` and `perf` → `patch`, everything else → no release. That is exactly what this plugin
+did by default.
+
+### Custom changelog
+
+The old `changeLog` closure built the release notes string by hand. Use
+`@semantic-release/release-notes-generator` with a preset, or `writerOpts` for full control:
+
+```json
+[
+  "@semantic-release/release-notes-generator",
+  {
+    "preset": "conventionalcommits",
+    "presetConfig": {
+      "types": [
+        { "type": "feat", "section": "Features" },
+        { "type": "fix", "section": "Bug Fixes" },
+        { "type": "perf", "section": "Performance" },
+        { "type": "chore", "hidden": true }
+      ]
+    }
+  }
+]
+```
+
+If you also want a committed `CHANGELOG.md`, add
+[`@semantic-release/changelog`](https://github.com/semantic-release/changelog) together with
+[`@semantic-release/git`](https://github.com/semantic-release/git).
+
+### Release assets
+
+```json
+[
+  "@semantic-release/github",
+  {
+    "assets": [
+      { "path": "build/libs/*.jar" },
+      {
+        "path": "build/libs/*-sources.jar",
+        "name": "the-sources.jar",
+        "label": "The sources jar"
+      }
+    ]
+  }
+]
+```
+
+`path` is a glob rather than a task reference, so make sure `prepareCmd` builds the
+artifacts before this step runs. `name` and `label` support templating with
+`${nextRelease.version}` and friends.
+
+### GitHub Enterprise
+
+```json
+[
+  "@semantic-release/github",
+  {
+    "githubUrl": "https://github.enterprise",
+    "githubApiPathPrefix": "/api/v3"
+  }
+]
+```
+
+Or via the `GH_URL` and `GH_PREFIX` environment variables.
+
+### Release candidates and other pre-releases
+
+This used to require composing `VersionStrategy` objects with `copyWith`, `StrategyUtil.all`
+and `Strategies.PreRelease.COUNT_INCREMENTED`. It is now one line:
+
+```json
+{
+  "branches": [
+    "master",
+    { "name": "rc", "prerelease": true }
+  ]
 }
 ```
 
+Commits on `rc` produce `1.2.0-rc.1`, `1.2.0-rc.2`, and so on.
 
-### Setup travis-ci
+### SNAPSHOT versions on feature branches
 
-First, you need to [configure the environment variable GH_TOKEN in travis](http://docs.travis-ci.com/user/environment-variables/). Then you need a `.travis.yml`
+This has no direct equivalent, by design. The old plugin inferred a
+`1.2.3-branchname-SNAPSHOT` version for every build on a non-release branch; the
+`branchNames` extension existed only to tidy up those branch names.
 
-```yml
-sudo: false
-addons:
-  apt:
-    packages:
-    - git
-language: java
-jdk: oraclejdk7
-env: TERM=dumb
-branches:
-  except:
-    - /^v\d+\.\d+\.\d+$/
-before_install:
-  - git fetch --unshallow
-  - git config user.email "name@example.com"
-  - git config user.name "Travis-CI"
-  - git config url.https://.insteadOf git://
-  - git checkout -qf $TRAVIS_BRANCH
-install:
-  - echo "skip default gradlew assemble"
-script:
-  - ./gradlew release -Dorg.ajoberstar.grgit.auth.username=${GH_TOKEN} -Dorg.ajoberstar.grgit.auth.password
-```
+`semantic-release` does not model unreleased builds at all — the version is treated as a
+property of the published artifact, not of the source tree. Local and feature-branch builds
+simply keep the `0.0.0-SNAPSHOT` placeholder.
 
-## Supported workflows
+In practice the main thing this affects is `publishToMavenLocal`, and a fixed coordinate is
+arguably better there: a downstream project declares `0.0.0-SNAPSHOT` once and always
+resolves your latest local build, instead of chasing a version that changes every commit.
 
-By default the plugin allows a couple of workflows (aka branching strategies).
+If you genuinely need a descriptive version for local builds, derive it on the Gradle side
+with a `ValueSource` wrapping `git describe --tags --abbrev=0`. That stays
+configuration-cache safe, works in the IDE, and does not require Node. Do not wrap local
+builds in an npm script for this — IDEs invoke Gradle directly and would silently bypass the
+wrapper, giving you different versions on the command line and in the IDE.
 
-### Master only
+## FAQ
 
-Just commit on `master`. As soon as you push to origin, travis will build a new version.
+### Can I preview which version would be published?
 
-### [Git-Flow](http://nvie.com/posts/a-successful-git-branching-model/)
+`npx semantic-release --dry-run`. This is better than what the old plugin offered, which
+was reading the version out of the build log.
 
-Develop on `develop` and feature branches. Travis will build SNAPSHOT versions on these branches.
+### Can I run a release from my own machine?
 
-To create a release, just create a branch `release/1.x` or `release/1.0.x`, and travis will create the release.
+You can, but you probably should not, for the same reasons as before: releasing from an
+independent machine that has run the tests is the point of the workflow, and it means no
+long-lived tokens on developer laptops.
 
-### [GitHub-Flow](https://guides.github.com/introduction/flow/index.html)
+### Does the version get committed back to the repository?
 
-Develop features on branches branched from master. Once a feature is merged back to master, a version is released.
+Not with the setup above, and that is deliberate. The git tag remains the single source of
+truth, and no chore commit is created per release. `semantic-release` itself recommends
+against committing the version back, since it adds meaningful complexity to the release
+process. If you want it anyway, add `@semantic-release/git` and have it commit
+`gradle.properties`.
 
-## Configuration
+### What about the npm package `gradle-semantic-release-plugin`?
 
-You can tweak the default behavior of the plugin using two extensions.
+Unrelated to this project despite the identical name — it is a `semantic-release` plugin by
+Kengo TODA that also drives Gradle. It works, and it auto-detects your publish task by
+parsing the output of `gradle tasks`. That detection is its only advantage over
+`@semantic-release/exec`, and it costs two extra full Gradle configuration phases per
+release. If you already know your publish task, prefer `exec`.
 
-### Semantic Release extension
+Note that the scoped `@gradle/semantic-release-plugin` on npm is an obsolete alias by the
+same author, last released in 2019. Do not use it.
 
-```groovy
-semanticRelease {
-    changeLog {
-        changeScope = { org.ajoberstar.grgit.Commit ->
-            // return org.ajoberstar.gradle.git.release.semver.ChangeScope
-            // return MAJOR, MINOR or PATH to create a release
-            // return null, if this commit is not relevant (e.g. only doc)
-            [...]
-        }
-        changeLog = { List<Commit> commits, org.ajoberstar.gradle.git.release.base.ReleaseVersion version ->
-            """\
-                Release of $version.version
+### Should I use reckon instead?
 
-                [...]
-            """.stripIndent()
-        }
-    }
-    releaseBranches {
-        include 'stable'
-    }
-    branchNames {
-        // feature branches are dev/... instead of feature/...
-        // the version on branch dev/foo should be 1.0.0-foo-SNAPSHOT
-        // and not 1.0.0-dev-foo-SNAPSHOT
-        replace ~/^dev\/(.*)$/, '$1'
-    }
-}
-```
-
-### Version Strategies
-
-Since this plugin uses gradle-git under the cover, you can configure this plugin as [described in their wiki](https://github.com/ajoberstar/gradle-git/wiki/Release%20Plugins%201.x).
-
-The plugin does configure gradle-git with one versionStrategy and one defaultVersionStrategy. The defaultVersionStrategy is responsible for building SNAPSHOT versions. The semantic-release versionStrategy is only used, if there are
-
-* relevant changes (features with or without BREAKING CHANGES, bugfixes or performance improvements)
-* the branch is master or a release branch
-* the task `release` was used and
-* the workspace is clean
-
-The `gradle-semantic-release-plugin` defines it's own extension `semanticRelease`. When configuring gradle-git, you **must not** use the VersionStrategies defined by gradle-git directly, but you **must use** the releaseStrategy or snapshotStrategy of the semanticRelease extension as a base and use copyWith. Otherwise the version will not be inferred based on the commit messages.
-
-```groovy
-import org.ajoberstar.gradle.git.release.semver.*
-import org.ajoberstar.gradle.git.release.opinion.Strategies
-release {
-    // replace the default strategy to add '-FINAL' to the version
-    versionStrategy semanticRelease.releaseStrategy.copyWith{
-        preReleaseStrategy: { it.copyWith(inferredPreRelease: 'FINAL') }
-    }
-
-    // add a second strategy to create release candidates from 'rc/.*' branches
-    versionStrategy semanticRelease.releaseStrategy.copyWith(
-        // the type is important, without type you would again replace the default strategy
-        type: 'rc',
-        selector: { SemVerStrategyState state ->
-            !state.repoDirty && state.currentBranch.name ==~ /rc\/.*/ &&
-                    semanticRelease.semanticStrategy.canRelease(state) && project.gradle.startParameter.taskNames.find { it == 'release' }
-        },
-        preReleaseStrategy: StrategyUtil.all({ it.copyWith(inferredPreRelease: 'rc') } as PartialSemVerStrategy, Strategies.PreRelease.COUNT_INCREMENTED)
-    )
-}
-```
-
-## ITYM*FAQ*LT
-> I think you might frequently ask questions like these
-
-### Is there a way to preview which version would currently get published?
-
-If you run `./gradlew` locally, the version that would be build gets logged (just remove `-SNAPSHOT`).
-
-### Can I run this on my own machine rather than on a CI server?
-
-Of course you can, but this doesn't necessarily mean you should. Running your tests on an independent machine before releasing software is a crucial part of this workflow. Also it is a pain to set this up locally, with tokens lying around and everything.
-
-### Can I manually trigger the release of a specific version?
-
-You can trigger a release by pushing to your GitHub repository. You deliberately cannot trigger a _specific_ version release, because this is the whole point of `semantic-release`. Start your packages with `1.0.0` and semver on. You can however prevent an accidental major version bump by using a branch pattern `release/\d+\.x`. And you can prevent an accidental minor version bump by using a branch pattern `release/\d+\.\d+\.x`. Using these two branchname patterns, you can also manually trigger a version bump without a correspondent commit message.
-
-### Is it _really_ a good idea to release on every push?
-
-It is indeed a great idea because it _forces_ you to follow best practices. If you don't feel comfortable making every passing feature or fix on your master branch addressable you might not treat your master right. Have a look at [branch workflows](https://guides.github.com/introduction/flow/index.html). If you still think you should have control over the exact point in time of your release, e.g. because you are following a release schedule, you can release only on the `release` branch and push your code there in certain intervals.
-
-### Why should I trust `semantic-release` with my releases?
-
-`gradle-semantic-release-plugin` has a full unit- and integration-test-suite. Additionally we eat our own dogfood and release using our own plugin -- A new version won't get published if there is an error.
+Only if you want Gradle-native version inference without Node. Be aware that
+[reckon](https://github.com/ajoberstar/reckon) is in maintenance mode — its GitHub
+repository was archived in September 2025 — and that its built-in commit-message scope
+calculator understands `major:` / `minor:` / `patch:` prefixes rather than Conventional
+Commits, so you would need to supply your own `ScopeCalculator`.
 
 ## License
 
-Apache License
-Version 2.0, January 2004
-http://www.apache.org/licenses/
-2015 © Tobias Schulte, based on the ideas of the semantic-release plugin of Stephan Bönnemann and [contributors](https://github.com/semantic-release/semantic-release/graphs/contributors)
+Apache License, Version 2.0
+<http://www.apache.org/licenses/>
+
+2015 © Tobias Schulte, based on the ideas of the semantic-release plugin of Stephan
+Bönnemann and [contributors](https://github.com/semantic-release/semantic-release/graphs/contributors)
